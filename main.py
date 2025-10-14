@@ -30,3 +30,4 @@ def add_msg(msg_name: str) -> dict[str, MsgPayload]:
 @app.get("/messages")
 def message_items() -> dict[str, dict[int, MsgPayload]]:
     return {"messages:": messages_list}
+
