@@ -25,25 +25,16 @@ mp_drawing_styles = mp.solutions.drawing_styles
 # LOGGING CONFIGURATION
 # ============================================================================
 
-# Configure logging - ONLY to file to avoid stdout conflicts with IPC
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler('safe_driver_debug.log'),
-        # Removed StreamHandler(sys.stdout) to keep stdout clean for IPC
-        logging.StreamHandler(sys.stdout)  # Log to stderr instead
+        logging.StreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
-
-logger.info("=" * 80)
-logger.info("SafeDriver Detection System Starting")
-logger.info("=" * 80)
-
-# ============================================================================
-# END LOGGING CONFIGURATION
-# ============================================================================
 
 # ============================================================================
 # CONFIGURATION SECTION - All configurable parameters
@@ -173,7 +164,6 @@ logger.info(f"Microsleep Duration: {CONFIG['MICROSLEEP_SEC']}s")
 logger.info(f"PERCLOS Window: {CONFIG['PERCLOS_WIN_SEC']}s")
 logger.info(f"Yawn Threshold: {CONFIG['YAWN_THRESH']}")
 logger.info(f"Display Modes - FPS: {CONFIG['SHOW_FPS']}, Metrics: {CONFIG['SHOW_METRICS']}, Warnings: {CONFIG['SHOW_WARNINGS']}")
-logger.info("=" * 80)
 
 # ============================================================================
 # END CONFIGURATION SECTION
@@ -225,8 +215,8 @@ def send_behavior_to_parent(tag="BEHAVIOR_EVENT", type="behavior", message="", t
         }
         # Write JSON to stdout with a newline delimiter
         # Use sys.stdout directly and flush immediately
-        sys.stdout.write(f"BEHAVIOR_DATA:{json.dumps(message)}\n")
-        sys.stdout.flush()
+        # sys.stdout.write(f"BEHAVIOR_DATA:{json.dumps(message)}\n")
+        # sys.stdout.flush()
     except Exception as e:
         # Log errors to stderr instead of stdout
         sys.stderr.write(f"Failed to send behavior data to parent: {e}\n")
@@ -395,7 +385,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
         }
         
         # Send to parent process
-        # send_behavior_to_parent(behavior_data)
+        send_behavior_to_parent(behavior_data)
         
         return behavior_data
 
@@ -736,13 +726,6 @@ def main():
         default=960)
     
     args = parser.parse_args()
-    
-    logger.info("Command line arguments parsed:")
-    logger.info(f"  Model: {args.model}")
-    logger.info(f"  Number of faces: {args.numFaces}")
-    logger.info(f"  Detection confidence: {args.minFaceDetectionConfidence}")
-    logger.info(f"  Camera ID: {args.cameraId}")
-    logger.info(f"  Frame size: {args.frameWidth}x{args.frameHeight}")
 
     run(args.model, int(args.numFaces), args.minFaceDetectionConfidence,
         args.minFacePresenceConfidence, args.minTrackingConfidence,

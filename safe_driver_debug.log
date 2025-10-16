@@ -2528,3 +2528,506 @@ KeyError: 'ALERT_TYPES'
 2025-10-16 19:00:23,432 - model.detect - INFO - Final stats - Yawns: 0, Microsleeps: 0, Drowsy Events: 0
 2025-10-16 19:00:23,774 - model.detect - INFO - SafeDriver Monitoring System stopped successfully
 2025-10-16 19:00:23,774 - model.detect - INFO - ================================================================================
+2025-10-16 19:51:52,883 - INFO - Initializing Firebase Admin SDK
+2025-10-16 19:51:52,932 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 19:51:52,938 - INFO - ================================================================================
+2025-10-16 19:51:52,939 - INFO - SafeDriver Backend Starting
+2025-10-16 19:51:52,940 - INFO - ================================================================================
+2025-10-16 19:51:52,991 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 19:51:54,495 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 19:51:54,495 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 19:51:55,372 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 19:51:55,372 - INFO - Device status updated to active
+2025-10-16 19:51:55,373 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 19:51:55,382 - INFO - Started detect.py with PID: 7680
+2025-10-16 19:51:55,383 - INFO - Started output monitoring tasks
+2025-10-16 19:51:55,383 - INFO - Started monitoring detect.py output
+2025-10-16 19:51:57,342 - model.detect - INFO - ================================================================================
+2025-10-16 19:51:57,342 - model.detect - INFO - SafeDriver Detection System Starting
+2025-10-16 19:51:57,342 - model.detect - INFO - ================================================================================
+2025-10-16 19:51:57,342 - model.detect - INFO - ================================================================================
+2025-10-16 19:51:57,342 - model.detect - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 19:51:57,342 - model.detect - INFO - ================================================================================
+2025-10-16 19:51:57,343 - model.detect - INFO - Eye Closed Threshold: 0.6
+2025-10-16 19:51:57,343 - model.detect - INFO - Microsleep Duration: 1.5s
+2025-10-16 19:51:57,343 - model.detect - INFO - PERCLOS Window: 60.0s
+2025-10-16 19:51:57,343 - model.detect - INFO - Yawn Threshold: 0.8
+2025-10-16 19:51:57,343 - model.detect - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 19:51:57,343 - model.detect - INFO - ================================================================================
+2025-10-16 19:51:57,345 - model.detect - INFO - Command line arguments parsed:
+2025-10-16 19:51:57,345 - model.detect - INFO -   Model: model/face_landmarker.task
+2025-10-16 19:51:57,345 - model.detect - INFO -   Number of faces: 1
+2025-10-16 19:51:57,345 - model.detect - INFO -   Detection confidence: 0.5
+2025-10-16 19:51:57,345 - model.detect - INFO -   Camera ID: 0
+2025-10-16 19:51:57,345 - model.detect - INFO -   Frame size: 720x960
+2025-10-16 19:51:57,346 - model.detect - INFO - ================================================================================
+2025-10-16 19:51:57,346 - model.detect - INFO - Starting SafeDriver Monitoring System
+2025-10-16 19:51:57,346 - model.detect - INFO - ================================================================================
+2025-10-16 19:51:57,346 - model.detect - INFO - Model path: model/face_landmarker.task
+2025-10-16 19:51:57,346 - model.detect - INFO - Camera ID: 0
+2025-10-16 19:51:57,346 - model.detect - INFO - Resolution: 720x960
+2025-10-16 19:51:57,346 - model.detect - INFO - Max faces: 1
+2025-10-16 19:51:57,346 - model.detect - INFO - Detection confidence: 0.5
+2025-10-16 19:51:57,346 - model.detect - INFO - Presence confidence: 0.5
+2025-10-16 19:51:57,346 - model.detect - INFO - Tracking confidence: 0.5
+2025-10-16 19:51:57,347 - model.detect - INFO - ================================================================================
+2025-10-16 19:51:57,347 - model.detect - INFO - Initializing camera 0...
+2025-10-16 19:52:10,571 - model.detect - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 19:52:10,604 - model.detect - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 19:52:10,604 - model.detect - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 19:52:10,648 - model.detect - INFO - Face landmarker model loaded successfully
+2025-10-16 19:52:10,648 - model.detect - INFO - Starting video processing loop...
+2025-10-16 19:52:10,648 - model.detect - INFO - Press ESC to exit
+2025-10-16 19:52:11,117 - model.detect - INFO - First frame processed successfully
+2025-10-16 19:55:15,974 - model.detect - WARNING - YAWN DETECTED! Duration: 1.01s, Total count: 1
+2025-10-16 19:55:16,120 - model.detect - WARNING - DROWSINESS DETECTED! Total count: 1, PERCLOS: 0.00
+2025-10-16 19:55:16,120 - INFO - Behavior event received: yawn - Yawn detected (Total: 1)
+2025-10-16 19:55:32,882 - model.detect - INFO - ESC key pressed - Exiting...
+2025-10-16 19:55:32,882 - model.detect - INFO - Cleaning up resources...
+2025-10-16 19:55:32,883 - model.detect - INFO - Total frames processed: 5922
+2025-10-16 19:55:32,883 - model.detect - INFO - Final stats - Yawns: 1, Microsleeps: 0, Drowsy Events: 1
+2025-10-16 19:55:33,228 - model.detect - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 19:55:33,228 - model.detect - INFO - ================================================================================
+2025-10-16 19:55:33,526 - WARNING - detect.py process terminated with code 0
+2025-10-16 19:55:33,527 - INFO - Stopped monitoring detect.py output
+2025-10-16 19:59:50,826 - INFO - Shutting down SafeDriver Backend
+2025-10-16 19:59:50,827 - INFO - Stopped detect.py successfully
+2025-10-16 19:59:52,767 - INFO - Initializing Firebase Admin SDK
+2025-10-16 19:59:52,854 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 19:59:52,866 - INFO - ================================================================================
+2025-10-16 19:59:52,867 - INFO - SafeDriver Backend Starting
+2025-10-16 19:59:52,867 - INFO - ================================================================================
+2025-10-16 19:59:52,948 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 19:59:54,277 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 19:59:54,277 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 19:59:55,326 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 19:59:55,327 - INFO - Device status updated to active
+2025-10-16 19:59:55,327 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 19:59:55,337 - INFO - Started detect.py with PID: 19620
+2025-10-16 19:59:55,337 - INFO - Started output monitoring tasks
+2025-10-16 19:59:55,338 - INFO - Started monitoring detect.py output
+2025-10-16 19:59:57,616 - model.detect - INFO - ================================================================================
+2025-10-16 19:59:57,616 - model.detect - INFO - SafeDriver Detection System Starting
+2025-10-16 19:59:57,616 - model.detect - INFO - ================================================================================
+2025-10-16 19:59:57,616 - model.detect - INFO - ================================================================================
+2025-10-16 19:59:57,616 - INFO - Started monitoring detect.py stderr
+2025-10-16 19:59:57,617 - model.detect - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 19:59:57,617 - model.detect - INFO - ================================================================================
+2025-10-16 19:59:57,617 - model.detect - INFO - Eye Closed Threshold: 0.6
+2025-10-16 19:59:57,617 - model.detect - INFO - Microsleep Duration: 1.5s
+2025-10-16 19:59:57,617 - model.detect - INFO - PERCLOS Window: 60.0s
+2025-10-16 19:59:57,617 - model.detect - INFO - Yawn Threshold: 0.8
+2025-10-16 19:59:57,617 - model.detect - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 19:59:57,617 - model.detect - INFO - ================================================================================
+2025-10-16 19:59:57,619 - model.detect - INFO - Command line arguments parsed:
+2025-10-16 19:59:57,619 - model.detect - INFO -   Model: model/face_landmarker.task
+2025-10-16 19:59:57,619 - model.detect - INFO -   Number of faces: 1
+2025-10-16 19:59:57,619 - model.detect - INFO -   Detection confidence: 0.5
+2025-10-16 19:59:57,619 - model.detect - INFO -   Camera ID: 0
+2025-10-16 19:59:57,619 - model.detect - INFO -   Frame size: 720x960
+2025-10-16 19:59:57,619 - model.detect - INFO - ================================================================================
+2025-10-16 19:59:57,620 - model.detect - INFO - Starting SafeDriver Monitoring System
+2025-10-16 19:59:57,620 - model.detect - INFO - ================================================================================
+2025-10-16 19:59:57,620 - model.detect - INFO - Model path: model/face_landmarker.task
+2025-10-16 19:59:57,620 - model.detect - INFO - Camera ID: 0
+2025-10-16 19:59:57,620 - model.detect - INFO - Resolution: 720x960
+2025-10-16 19:59:57,620 - model.detect - INFO - Max faces: 1
+2025-10-16 19:59:57,620 - model.detect - INFO - Detection confidence: 0.5
+2025-10-16 19:59:57,620 - model.detect - INFO - Presence confidence: 0.5
+2025-10-16 19:59:57,620 - model.detect - INFO - Tracking confidence: 0.5
+2025-10-16 19:59:57,620 - model.detect - INFO - ================================================================================
+2025-10-16 19:59:57,620 - model.detect - INFO - Initializing camera 0...
+2025-10-16 20:00:11,413 - model.detect - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 20:00:11,445 - model.detect - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 20:00:11,446 - model.detect - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 20:00:11,451 - INFO - [detect.py] WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+2025-10-16 20:00:11,453 - INFO - [detect.py] W0000 00:00:1760625011.451243   21392 face_landmarker_graph.cc:174] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+2025-10-16 20:00:11,472 - INFO - [detect.py] INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+2025-10-16 20:00:11,498 - INFO - [detect.py] W0000 00:00:1760625011.475200   12256 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+2025-10-16 20:00:11,503 - model.detect - INFO - Face landmarker model loaded successfully
+2025-10-16 20:00:11,503 - model.detect - INFO - Starting video processing loop...
+2025-10-16 20:00:11,503 - model.detect - INFO - Press ESC to exit
+2025-10-16 20:00:11,514 - INFO - [detect.py] W0000 00:00:1760625011.496679   24348 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+2025-10-16 20:00:12,157 - model.detect - INFO - First frame processed successfully
+2025-10-16 20:05:21,249 - model.detect - INFO - Keyboard interrupt received - Shutting down...
+2025-10-16 20:05:21,249 - model.detect - INFO - Cleaning up resources...
+2025-10-16 20:05:21,249 - model.detect - INFO - Total frames processed: 9020
+2025-10-16 20:05:21,249 - model.detect - INFO - Final stats - Yawns: 0, Microsleeps: 0, Drowsy Events: 0
+2025-10-16 20:05:21,583 - model.detect - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 20:05:21,583 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:21,726 - INFO - Stopped monitoring detect.py stderr
+2025-10-16 20:05:21,746 - WARNING - detect.py process terminated with code 0
+2025-10-16 20:05:21,746 - INFO - Stopped monitoring detect.py output
+2025-10-16 20:05:21,840 - INFO - Shutting down SafeDriver Backend
+2025-10-16 20:05:21,840 - INFO - Stopped detect.py successfully
+2025-10-16 20:05:23,320 - INFO - Initializing Firebase Admin SDK
+2025-10-16 20:05:23,371 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 20:05:23,377 - INFO - ================================================================================
+2025-10-16 20:05:23,377 - INFO - SafeDriver Backend Starting
+2025-10-16 20:05:23,378 - INFO - ================================================================================
+2025-10-16 20:05:23,434 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 20:05:23,434 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 20:05:24,720 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 20:05:24,721 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 20:05:24,721 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 20:05:25,540 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 20:05:25,540 - INFO - Device status updated to active
+2025-10-16 20:05:25,541 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 20:05:25,548 - INFO - Started detect.py with PID: 6668
+2025-10-16 20:05:25,549 - INFO - Started output monitoring tasks
+2025-10-16 20:05:25,549 - INFO - Started monitoring detect.py output
+2025-10-16 20:05:27,475 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:27,475 - model.detect - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 20:05:27,475 - INFO - Started monitoring detect.py stderr
+==========================================================
+2025-10-16 20:05:27,475 - model.detect - INFO - Eye Closed Threshold: 0.6
+2025-10-16 20:05:27,476 - model.detect - INFO - Microsleep Duration: 1.5s
+2025-10-16 20:05:27,476 - model.detect - INFO - PERCLOS Window: 60.0s
+2025-10-16 20:05:27,498 - model.detect - INFO - Yawn Threshold: 0.8
+2025-10-16 20:05:27,499 - model.detect - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 20:05:27,499 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:27,499 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:27,499 - model.detect - INFO - SafeDriver Driver Monitoring System Starting...
+2025-10-16 20:05:27,499 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:27,499 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:27,499 - model.detect - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 20:05:27,499 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:27,499 - model.detect - INFO - Eye Closed Threshold: 0.6
+2025-10-16 20:05:27,499 - model.detect - INFO - Microsleep Duration: 1.5s
+2025-10-16 20:05:27,500 - model.detect - INFO - PERCLOS Window: 60.0s
+2025-10-16 20:05:27,500 - model.detect - INFO - Yawn Threshold: 0.8
+2025-10-16 20:05:27,500 - model.detect - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 20:05:27,500 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:27,501 - model.detect - INFO - Command line arguments parsed:
+2025-10-16 20:05:27,502 - model.detect - INFO -   Model: model/face_landmarker.task
+2025-10-16 20:05:27,502 - model.detect - INFO -   Number of faces: 1
+2025-10-16 20:05:27,502 - model.detect - INFO -   Detection confidence: 0.5
+2025-10-16 20:05:27,502 - model.detect - INFO -   Camera ID: 0
+2025-10-16 20:05:27,502 - model.detect - INFO -   Frame size: 720x960
+2025-10-16 20:05:27,502 - model.detect - INFO - Model path: model/face_landmarker.task
+2025-10-16 20:05:27,502 - model.detect - INFO - Resolution: 960x720
+2025-10-16 20:05:27,502 - model.detect - INFO - Detection confidence: 0.5
+2025-10-16 20:05:27,502 - model.detect - INFO - Presence confidence: 0.5
+2025-10-16 20:05:27,502 - model.detect - INFO - Tracking confidence: 0.5
+2025-10-16 20:05:27,503 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:27,503 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:27,503 - model.detect - INFO - Starting SafeDriver Monitoring System
+2025-10-16 20:05:27,503 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:27,503 - model.detect - INFO - Model path: model/face_landmarker.task
+2025-10-16 20:05:27,503 - model.detect - INFO - Camera ID: 0
+2025-10-16 20:05:27,503 - model.detect - INFO - Resolution: 720x960
+2025-10-16 20:05:27,503 - model.detect - INFO - Max faces: 1
+2025-10-16 20:05:27,503 - model.detect - INFO - Detection confidence: 0.5
+2025-10-16 20:05:27,503 - model.detect - INFO - Presence confidence: 0.5
+2025-10-16 20:05:27,503 - model.detect - INFO - Tracking confidence: 0.5
+2025-10-16 20:05:27,503 - model.detect - INFO - ================================================================================
+2025-10-16 20:05:27,504 - model.detect - INFO - Initializing camera 0...
+2025-10-16 20:05:40,339 - model.detect - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 20:09:02,309 - INFO - Initializing Firebase Admin SDK
+2025-10-16 20:09:02,347 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 20:09:02,352 - INFO - ================================================================================
+2025-10-16 20:09:02,352 - INFO - SafeDriver Backend Starting
+2025-10-16 20:09:02,353 - INFO - ================================================================================
+2025-10-16 20:09:02,398 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 20:09:02,399 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 20:09:03,664 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 20:09:03,665 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 20:09:03,665 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 20:09:04,582 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 20:09:04,582 - INFO - Device status updated to active
+2025-10-16 20:09:04,583 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 20:09:04,590 - INFO - Started detect.py with PID: 15052
+2025-10-16 20:09:04,590 - INFO - Started output monitoring tasks
+2025-10-16 20:09:04,591 - INFO - Started monitoring detect.py output
+2025-10-16 20:09:06,258 - INFO - ================================================================================
+2025-10-16 20:09:06,258 - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 20:09:06,258 - INFO - ================================================================================
+2025-10-16 20:09:06,258 - INFO - Started monitoring detect.py stderr
+2025-10-16 20:09:06,258 - INFO - Eye Closed Threshold: 0.6
+2025-10-16 20:09:06,259 - INFO - Microsleep Duration: 1.5s
+2025-10-16 20:09:06,259 - INFO - PERCLOS Window: 60.0s
+2025-10-16 20:09:06,259 - INFO - Yawn Threshold: 0.8
+2025-10-16 20:09:06,259 - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 20:09:06,259 - INFO - ================================================================================
+2025-10-16 20:09:06,260 - INFO - Command line arguments parsed:
+2025-10-16 20:09:06,260 - INFO -   Model: model/face_landmarker.task
+2025-10-16 20:09:06,261 - INFO -   Number of faces: 1
+2025-10-16 20:09:06,261 - INFO -   Detection confidence: 0.5
+2025-10-16 20:09:06,261 - INFO -   Camera ID: 0
+2025-10-16 20:09:06,261 - INFO -   Frame size: 720x960
+2025-10-16 20:09:06,261 - INFO - ================================================================================
+2025-10-16 20:09:06,261 - INFO - Starting SafeDriver Monitoring System
+2025-10-16 20:09:06,261 - INFO - ================================================================================
+2025-10-16 20:09:06,261 - INFO - Model path: model/face_landmarker.task
+2025-10-16 20:09:06,261 - INFO - Camera ID: 0
+2025-10-16 20:09:06,261 - INFO - Resolution: 720x960
+2025-10-16 20:09:06,261 - INFO - Max faces: 1
+2025-10-16 20:09:06,262 - INFO - Detection confidence: 0.5
+2025-10-16 20:09:06,262 - INFO - Presence confidence: 0.5
+2025-10-16 20:09:06,262 - INFO - Tracking confidence: 0.5
+2025-10-16 20:09:06,262 - INFO - ================================================================================
+2025-10-16 20:09:06,262 - INFO - Initializing camera 0...
+2025-10-16 20:09:16,189 - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 20:09:16,225 - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 20:09:16,225 - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 20:09:16,229 - INFO - [detect.py] WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+2025-10-16 20:09:16,231 - INFO - [detect.py] W0000 00:00:1760625556.229461   16804 face_landmarker_graph.cc:174] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+2025-10-16 20:09:16,249 - INFO - [detect.py] INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+2025-10-16 20:09:16,265 - INFO - [detect.py] W0000 00:00:1760625556.251302   20584 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+2025-10-16 20:09:16,277 - INFO - Face landmarker model loaded successfully
+2025-10-16 20:09:16,277 - INFO - Starting video processing loop...
+2025-10-16 20:09:16,277 - INFO - Press ESC to exit
+2025-10-16 20:09:16,281 - INFO - [detect.py] W0000 00:00:1760625556.273599   32652 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+2025-10-16 20:09:16,746 - INFO - First frame processed successfully
+2025-10-16 20:09:25,655 - WARNING - YAWN DETECTED! Duration: 1.00s, Total count: 1
+2025-10-16 20:09:25,656 - WARNING - DROWSINESS DETECTED! Total count: 1, PERCLOS: 0.00
+2025-10-16 20:09:30,940 - INFO - ESC key pressed - Exiting...
+2025-10-16 20:09:30,940 - INFO - Cleaning up resources...
+2025-10-16 20:09:30,940 - INFO - Total frames processed: 424
+2025-10-16 20:09:30,940 - INFO - Final stats - Yawns: 1, Microsleeps: 0, Drowsy Events: 1
+2025-10-16 20:09:31,282 - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 20:09:31,282 - INFO - ================================================================================
+2025-10-16 20:09:31,574 - WARNING - detect.py process terminated with code 0
+2025-10-16 20:09:31,577 - INFO - Stopped monitoring detect.py output
+2025-10-16 20:09:31,580 - INFO - Stopped monitoring detect.py stderr
+2025-10-16 20:17:29,837 - INFO - Shutting down SafeDriver Backend
+2025-10-16 20:17:29,838 - INFO - Stopped detect.py successfully
+2025-10-16 20:17:31,370 - INFO - ================================================================================
+2025-10-16 20:17:31,371 - INFO - SafeDriver Backend Starting...
+2025-10-16 20:17:31,372 - INFO - ================================================================================
+2025-10-16 20:17:31,372 - INFO - Initializing Firebase Admin SDK
+2025-10-16 20:17:31,424 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 20:17:33,356 - INFO - ================================================================================
+2025-10-16 20:17:33,356 - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 20:17:33,357 - INFO - ================================================================================
+2025-10-16 20:17:33,357 - INFO - Eye Closed Threshold: 0.6
+2025-10-16 20:17:33,358 - INFO - Microsleep Duration: 1.5s
+2025-10-16 20:17:33,358 - INFO - PERCLOS Window: 60.0s
+2025-10-16 20:17:33,359 - INFO - Yawn Threshold: 0.8
+2025-10-16 20:17:33,359 - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 20:17:33,359 - INFO - ================================================================================
+2025-10-16 20:17:33,362 - INFO - Command line arguments parsed:
+2025-10-16 20:17:33,363 - INFO -   Model: model/face_landmarker.task
+2025-10-16 20:17:33,363 - INFO -   Number of faces: 1
+2025-10-16 20:17:33,364 - INFO -   Detection confidence: 0.5
+2025-10-16 20:17:33,364 - INFO -   Camera ID: 0
+2025-10-16 20:17:33,364 - INFO -   Frame size: 720x960
+2025-10-16 20:17:33,365 - INFO - ================================================================================
+2025-10-16 20:17:33,365 - INFO - Starting SafeDriver Monitoring System
+2025-10-16 20:17:33,366 - INFO - ================================================================================
+2025-10-16 20:17:33,366 - INFO - Model path: model/face_landmarker.task
+2025-10-16 20:17:33,366 - INFO - Camera ID: 0
+2025-10-16 20:17:33,367 - INFO - Resolution: 720x960
+2025-10-16 20:17:33,367 - INFO - Max faces: 1
+2025-10-16 20:17:33,367 - INFO - Detection confidence: 0.5
+2025-10-16 20:17:33,368 - INFO - Presence confidence: 0.5
+2025-10-16 20:17:33,368 - INFO - Tracking confidence: 0.5
+2025-10-16 20:17:33,368 - INFO - ================================================================================
+2025-10-16 20:17:33,369 - INFO - Initializing camera 0...
+2025-10-16 20:17:45,379 - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 20:17:45,428 - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 20:17:45,429 - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 20:17:45,492 - INFO - Face landmarker model loaded successfully
+2025-10-16 20:17:45,493 - INFO - Starting video processing loop...
+2025-10-16 20:17:45,493 - INFO - Press ESC to exit
+2025-10-16 20:17:46,007 - INFO - First frame processed successfully
+2025-10-16 20:17:52,620 - WARNING - YAWN DETECTED! Duration: 1.01s, Total count: 1
+2025-10-16 20:17:52,620 - WARNING - DROWSINESS DETECTED! Total count: 1, PERCLOS: 0.00
+2025-10-16 20:18:12,019 - WARNING - FREQUENT EYE CLOSURES DETECTED! 5 closures in 15.0s
+2025-10-16 20:18:12,020 - WARNING - DROWSINESS DETECTED! Total count: 2, PERCLOS: 0.00
+2025-10-16 20:18:15,557 - WARNING - FREQUENT EYE CLOSURES DETECTED! 5 closures in 15.0s
+2025-10-16 20:18:15,558 - WARNING - DROWSINESS DETECTED! Total count: 3, PERCLOS: 0.00
+2025-10-16 20:18:30,475 - WARNING - FREQUENT EYE CLOSURES DETECTED! 5 closures in 15.0s
+2025-10-16 20:18:30,476 - WARNING - DROWSINESS DETECTED! Total count: 4, PERCLOS: 0.00
+2025-10-16 20:18:32,266 - WARNING - FREQUENT EYE CLOSURES DETECTED! 5 closures in 15.0s
+2025-10-16 20:18:32,266 - WARNING - DROWSINESS DETECTED! Total count: 5, PERCLOS: 0.00
+2025-10-16 20:18:34,066 - WARNING - FREQUENT EYE CLOSURES DETECTED! 5 closures in 15.0s
+2025-10-16 20:18:34,067 - WARNING - DROWSINESS DETECTED! Total count: 6, PERCLOS: 0.00
+2025-10-16 20:18:48,348 - INFO - ESC key pressed - Exiting...
+2025-10-16 20:18:48,348 - INFO - Cleaning up resources...
+2025-10-16 20:18:48,349 - INFO - Total frames processed: 1794
+2025-10-16 20:18:48,349 - INFO - Final stats - Yawns: 1, Microsleeps: 0, Drowsy Events: 6
+2025-10-16 20:18:48,708 - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 20:18:48,710 - INFO - ================================================================================
+2025-10-16 20:19:10,211 - INFO - Shutting down SafeDriver Backend
+2025-10-16 20:19:10,212 - INFO - Stopped detect.py successfully
+2025-10-16 20:19:12,052 - INFO - ================================================================================
+2025-10-16 20:19:12,053 - INFO - SafeDriver Backend Starting...
+2025-10-16 20:19:12,053 - INFO - ================================================================================
+2025-10-16 20:19:12,053 - INFO - Initializing Firebase Admin SDK
+2025-10-16 20:19:12,114 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 20:19:14,359 - INFO - ================================================================================
+2025-10-16 20:19:14,359 - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 20:19:14,359 - INFO - ================================================================================
+2025-10-16 20:19:14,359 - INFO - Eye Closed Threshold: 0.6
+2025-10-16 20:19:14,359 - INFO - Microsleep Duration: 1.5s
+2025-10-16 20:19:14,359 - INFO - PERCLOS Window: 60.0s
+2025-10-16 20:19:14,359 - INFO - Yawn Threshold: 0.8
+2025-10-16 20:19:14,359 - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 20:19:14,359 - INFO - ================================================================================
+2025-10-16 20:19:14,361 - INFO - Command line arguments parsed:
+2025-10-16 20:19:14,361 - INFO -   Model: model/face_landmarker.task
+2025-10-16 20:19:14,361 - INFO -   Number of faces: 1
+2025-10-16 20:19:14,361 - INFO -   Detection confidence: 0.5
+2025-10-16 20:19:14,361 - INFO -   Camera ID: 0
+2025-10-16 20:19:14,361 - INFO -   Frame size: 720x960
+2025-10-16 20:19:14,361 - INFO - ================================================================================
+2025-10-16 20:19:14,361 - INFO - Starting SafeDriver Monitoring System
+2025-10-16 20:19:14,362 - INFO - ================================================================================
+2025-10-16 20:19:14,362 - INFO - Model path: model/face_landmarker.task
+2025-10-16 20:19:14,362 - INFO - Camera ID: 0
+2025-10-16 20:19:14,362 - INFO - Resolution: 720x960
+2025-10-16 20:19:14,362 - INFO - Max faces: 1
+2025-10-16 20:19:14,362 - INFO - Detection confidence: 0.5
+2025-10-16 20:19:14,362 - INFO - Presence confidence: 0.5
+2025-10-16 20:19:14,362 - INFO - Tracking confidence: 0.5
+2025-10-16 20:19:14,362 - INFO - ================================================================================
+2025-10-16 20:19:14,362 - INFO - Initializing camera 0...
+2025-10-16 20:19:26,296 - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 20:19:26,340 - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 20:19:26,340 - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 20:19:26,401 - INFO - Face landmarker model loaded successfully
+2025-10-16 20:19:26,401 - INFO - Starting video processing loop...
+2025-10-16 20:19:26,401 - INFO - Press ESC to exit
+2025-10-16 20:19:26,909 - INFO - First frame processed successfully
+2025-10-16 20:19:32,405 - INFO - ESC key pressed - Exiting...
+2025-10-16 20:19:32,406 - INFO - Cleaning up resources...
+2025-10-16 20:19:32,406 - INFO - Total frames processed: 157
+2025-10-16 20:19:32,406 - INFO - Final stats - Yawns: 0, Microsleeps: 0, Drowsy Events: 0
+2025-10-16 20:19:32,792 - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 20:19:32,792 - INFO - ================================================================================
+2025-10-16 20:19:39,300 - INFO - Shutting down SafeDriver Backend
+2025-10-16 20:19:39,301 - INFO - Stopped detect.py successfully
+2025-10-16 20:19:40,659 - INFO - ================================================================================
+2025-10-16 20:19:40,660 - INFO - SafeDriver Backend Starting...
+2025-10-16 20:19:40,660 - INFO - ================================================================================
+2025-10-16 20:19:40,661 - INFO - Initializing Firebase Admin SDK
+2025-10-16 20:19:40,709 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 20:19:42,848 - INFO - ================================================================================
+2025-10-16 20:19:42,848 - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 20:19:42,849 - INFO - ================================================================================
+2025-10-16 20:19:42,849 - INFO - Eye Closed Threshold: 0.6
+2025-10-16 20:19:42,850 - INFO - Microsleep Duration: 1.5s
+2025-10-16 20:19:42,850 - INFO - PERCLOS Window: 60.0s
+2025-10-16 20:19:42,851 - INFO - Yawn Threshold: 0.8
+2025-10-16 20:19:42,851 - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 20:19:42,851 - INFO - ================================================================================
+2025-10-16 20:19:42,854 - INFO - Command line arguments parsed:
+2025-10-16 20:19:42,854 - INFO -   Model: model/face_landmarker.task
+2025-10-16 20:19:42,855 - INFO -   Number of faces: 1
+2025-10-16 20:19:42,856 - INFO -   Detection confidence: 0.5
+2025-10-16 20:19:42,856 - INFO -   Camera ID: 0
+2025-10-16 20:19:42,856 - INFO -   Frame size: 720x960
+2025-10-16 20:19:42,857 - INFO - ================================================================================
+2025-10-16 20:19:42,857 - INFO - Starting SafeDriver Monitoring System
+2025-10-16 20:19:42,857 - INFO - ================================================================================
+2025-10-16 20:19:42,858 - INFO - Model path: model/face_landmarker.task
+2025-10-16 20:19:42,858 - INFO - Camera ID: 0
+2025-10-16 20:19:42,859 - INFO - Resolution: 720x960
+2025-10-16 20:19:42,859 - INFO - Max faces: 1
+2025-10-16 20:19:42,860 - INFO - Detection confidence: 0.5
+2025-10-16 20:19:42,861 - INFO - Presence confidence: 0.5
+2025-10-16 20:19:42,862 - INFO - Tracking confidence: 0.5
+2025-10-16 20:19:42,862 - INFO - ================================================================================
+2025-10-16 20:19:42,863 - INFO - Initializing camera 0...
+2025-10-16 20:19:56,171 - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 20:19:56,243 - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 20:19:56,244 - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 20:19:56,431 - INFO - Face landmarker model loaded successfully
+2025-10-16 20:19:56,432 - INFO - Starting video processing loop...
+2025-10-16 20:19:56,433 - INFO - Press ESC to exit
+2025-10-16 20:19:57,619 - INFO - First frame processed successfully
+2025-10-16 20:21:57,077 - INFO - Keyboard interrupt received - Shutting down...
+2025-10-16 20:21:57,077 - INFO - Cleaning up resources...
+2025-10-16 20:21:57,079 - INFO - Total frames processed: 3517
+2025-10-16 20:21:57,079 - INFO - Final stats - Yawns: 0, Microsleeps: 0, Drowsy Events: 0
+2025-10-16 20:21:57,293 - INFO - Shutting down SafeDriver Backend
+2025-10-16 20:21:57,295 - INFO - Stopped detect.py successfully
+2025-10-16 20:22:05,825 - INFO - ================================================================================
+2025-10-16 20:22:05,826 - INFO - SafeDriver Backend Starting...
+2025-10-16 20:22:05,826 - INFO - ================================================================================
+2025-10-16 20:22:05,827 - INFO - Initializing Firebase Admin SDK
+2025-10-16 20:22:05,867 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 20:22:07,549 - INFO - ================================================================================
+2025-10-16 20:22:07,550 - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 20:22:07,550 - INFO - ================================================================================
+2025-10-16 20:22:07,551 - INFO - Eye Closed Threshold: 0.6
+2025-10-16 20:22:07,551 - INFO - Microsleep Duration: 1.5s
+2025-10-16 20:22:07,551 - INFO - PERCLOS Window: 60.0s
+2025-10-16 20:22:07,552 - INFO - Yawn Threshold: 0.8
+2025-10-16 20:22:07,552 - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 20:22:07,552 - INFO - ================================================================================
+2025-10-16 20:22:07,554 - INFO - Command line arguments parsed:
+2025-10-16 20:22:07,554 - INFO -   Model: model/face_landmarker.task
+2025-10-16 20:22:07,555 - INFO -   Number of faces: 1
+2025-10-16 20:22:07,555 - INFO -   Detection confidence: 0.5
+2025-10-16 20:22:07,555 - INFO -   Camera ID: 0
+2025-10-16 20:22:07,556 - INFO -   Frame size: 720x960
+2025-10-16 20:22:07,556 - INFO - ================================================================================
+2025-10-16 20:22:07,557 - INFO - Starting SafeDriver Monitoring System
+2025-10-16 20:22:07,557 - INFO - ================================================================================
+2025-10-16 20:22:07,557 - INFO - Model path: model/face_landmarker.task
+2025-10-16 20:22:07,558 - INFO - Camera ID: 0
+2025-10-16 20:22:07,558 - INFO - Resolution: 720x960
+2025-10-16 20:22:07,558 - INFO - Max faces: 1
+2025-10-16 20:22:07,558 - INFO - Detection confidence: 0.5
+2025-10-16 20:22:07,559 - INFO - Presence confidence: 0.5
+2025-10-16 20:22:07,559 - INFO - Tracking confidence: 0.5
+2025-10-16 20:22:07,559 - INFO - ================================================================================
+2025-10-16 20:22:07,559 - INFO - Initializing camera 0...
+2025-10-16 20:22:18,511 - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 20:22:18,553 - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 20:22:18,553 - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 20:22:18,614 - INFO - Face landmarker model loaded successfully
+2025-10-16 20:22:18,614 - INFO - Starting video processing loop...
+2025-10-16 20:22:18,615 - INFO - Press ESC to exit
+2025-10-16 20:22:19,110 - INFO - First frame processed successfully
+2025-10-16 20:24:06,312 - INFO - Keyboard interrupt received - Shutting down...
+2025-10-16 20:24:06,313 - INFO - Cleaning up resources...
+2025-10-16 20:24:06,313 - INFO - Total frames processed: 3057
+2025-10-16 20:24:06,314 - INFO - Final stats - Yawns: 0, Microsleeps: 0, Drowsy Events: 0
+2025-10-16 20:24:06,458 - INFO - Shutting down SafeDriver Backend
+2025-10-16 20:24:06,466 - INFO - Stopped detect.py successfully
+2025-10-16 20:24:08,345 - INFO - ================================================================================
+2025-10-16 20:24:08,346 - INFO - SafeDriver Backend Starting...
+2025-10-16 20:24:08,347 - INFO - ================================================================================
+2025-10-16 20:24:08,347 - INFO - Initializing Firebase Admin SDK
+2025-10-16 20:24:08,408 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 20:24:10,403 - INFO - ================================================================================
+2025-10-16 20:24:10,404 - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 20:24:10,404 - INFO - ================================================================================
+2025-10-16 20:24:10,405 - INFO - Eye Closed Threshold: 0.6
+2025-10-16 20:24:10,405 - INFO - Microsleep Duration: 1.5s
+2025-10-16 20:24:10,406 - INFO - PERCLOS Window: 60.0s
+2025-10-16 20:24:10,406 - INFO - Yawn Threshold: 0.8
+2025-10-16 20:24:10,407 - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 20:24:10,407 - INFO - ================================================================================
+2025-10-16 20:24:10,409 - INFO - ================================================================================
+2025-10-16 20:24:10,409 - INFO - Starting SafeDriver Monitoring System
+2025-10-16 20:24:10,410 - INFO - ================================================================================
+2025-10-16 20:24:10,410 - INFO - Model path: model/face_landmarker.task
+2025-10-16 20:24:10,411 - INFO - Camera ID: 0
+2025-10-16 20:24:10,411 - INFO - Resolution: 720x960
+2025-10-16 20:24:10,411 - INFO - Max faces: 1
+2025-10-16 20:24:10,412 - INFO - Detection confidence: 0.5
+2025-10-16 20:24:10,412 - INFO - Presence confidence: 0.5
+2025-10-16 20:24:10,412 - INFO - Tracking confidence: 0.5
+2025-10-16 20:24:10,413 - INFO - ================================================================================
+2025-10-16 20:24:10,413 - INFO - Initializing camera 0...
+2025-10-16 20:24:23,267 - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 20:24:23,316 - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 20:24:23,316 - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 20:24:23,383 - INFO - Face landmarker model loaded successfully
+2025-10-16 20:24:23,383 - INFO - Starting video processing loop...
+2025-10-16 20:24:23,384 - INFO - Press ESC to exit
+2025-10-16 20:24:23,894 - INFO - First frame processed successfully
+2025-10-16 20:25:58,741 - WARNING - YAWN DETECTED! Duration: 1.00s, Total count: 1
+2025-10-16 20:25:58,742 - WARNING - DROWSINESS DETECTED! Total count: 1, PERCLOS: 0.00
+2025-10-16 20:26:07,901 - INFO - ESC key pressed - Exiting...
+2025-10-16 20:26:07,902 - INFO - Cleaning up resources...
+2025-10-16 20:26:07,902 - INFO - Total frames processed: 3120
+2025-10-16 20:26:07,902 - INFO - Final stats - Yawns: 1, Microsleeps: 0, Drowsy Events: 1
+2025-10-16 20:26:08,253 - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 20:26:08,254 - INFO - ================================================================================
+2025-10-16 20:26:22,582 - INFO - Shutting down SafeDriver Backend
+2025-10-16 20:26:22,583 - INFO - Stopped detect.py successfully

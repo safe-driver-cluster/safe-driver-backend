@@ -27,6 +27,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+logger.info("=" * 80)
+logger.info("SafeDriver Backend Starting...")
+logger.info("=" * 80)
+
 # ============================================================================
 # END LOGGING CONFIGURATION
 # ============================================================================
@@ -58,36 +62,6 @@ latest_behavior_data = {
     "data": None
 }
 
-async def read_detect_process_stderr():
-    """Read and log stderr output from detect.py subprocess"""
-    global detect_process
-    
-    if not detect_process:
-        return
-    
-    logger.info("Started monitoring detect.py stderr")
-    
-    try:
-        while True:
-            if detect_process.poll() is not None:
-                break
-            
-            line = detect_process.stderr.readline()
-            
-            if line:
-                line = line.strip()
-                if line:
-                    # Log detect.py messages with prefix
-                    logger.info(f"[detect.py] {line}")
-            
-            await asyncio.sleep(0.01)
-            
-    except Exception as e:
-        logger.error(f"Error reading detect process stderr: {e}", exc_info=True)
-    finally:
-        logger.info("Stopped monitoring detect.py stderr")
-
-
 async def read_detect_process_output():
     """Read and process output from detect.py subprocess"""
     global detect_process, latest_behavior_data, device_mac
@@ -105,7 +79,7 @@ async def read_detect_process_output():
                 logger.warning(f"detect.py process terminated with code {detect_process.returncode}")
                 break
             
-            # Read line from stdout (behavior data only)
+            # Read line from stdout (already decoded in text mode)
             line = detect_process.stdout.readline()
             
             if line:
@@ -120,7 +94,9 @@ async def read_detect_process_output():
                         # Update latest behavior data
                         latest_behavior_data = behavior_message
                         
-                        logger.info(f"Behavior event received: {behavior_message.get('type')} - {behavior_message.get('message')}")
+                        logger.info(f"Received behavior data: tag={behavior_message.get('tag')}, "
+                                  f"type={behavior_message.get('type')}, "
+                                  f"message={behavior_message.get('message')}")
                         
                         # Save to Firebase
                         if device_mac:
@@ -130,8 +106,11 @@ async def read_detect_process_output():
                         logger.error(f"Failed to parse behavior data: {e}")
                     except Exception as e:
                         logger.error(f"Error processing behavior data: {e}", exc_info=True)
+                else:
+                    # Regular log output from detect.py
+                    logger.debug(f"detect.py: {line}")
             
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.1)  # Small delay to prevent busy waiting
             
     except Exception as e:
         logger.error(f"Error reading detect process output: {e}", exc_info=True)
@@ -141,63 +120,17 @@ async def read_detect_process_output():
 
 @app.on_event("startup")
 async def startup_event():
-    global detect_process, monitor_task, device_mac
-
-    logger.info("=" * 80)
-    logger.info("SafeDriver Backend Starting")
-    logger.info("=" * 80)
-
-    # Get device MAC address
-    try:
-        device_details = model_service.check_device_registration()
-        device_mac = device_details.get("mac_address")
-        
-        if not device_mac:
-            logger.error("Could not retrieve device MAC address")
-        else:
-            logger.info(f"Device MAC: {device_mac}")
-            
-            # Register device if not already registered
-            if not device_details.get("registered"):
-                result = model_service.register_device(device_details)
-                logger.info(f"Device registration result: {result}")
-            else:
-                db_helper.update_device_status(
-                    mac=device_mac, 
-                    status="active"
-                )
-                logger.info("Device status updated to active")
-                
-    except Exception as e:
-        logger.error(f"Failed to check device registration: {e}", exc_info=True)
+    global detect_process
 
     # Path to the same Python executable used by the current venv
     venv_python = sys.executable  
-    logger.info(f"Using Python executable: {venv_python}")
 
-    try:
-        # Start detect.py with stdout and stderr piped
-        detect_process = subprocess.Popen(
-            [venv_python, "-c", "from model.detect import main; main()"],
-            cwd=os.path.dirname(os.path.abspath(__file__)),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True  # Text mode
-        )
-        logger.info(f"Started detect.py with PID: {detect_process.pid}")
-        
-        # Start monitoring tasks
-        monitor_task = asyncio.create_task(read_detect_process_output())
-        # asyncio.create_task(read_detect_process_stderr())
-        logger.info("Started output monitoring tasks")
-        
-    except Exception as e:
-        logger.error(f"Failed to start detect.py: {e}", exc_info=True)
-        if device_mac:
-            db_helper.update_device_status(
-                mac=device_mac, 
-                status="inactive"
-            )
+    # Start detect.py using that interpreter
+    detect_process = subprocess.Popen(
+        [venv_python, "-c", "from model.detect import main; main()"],
+        cwd=os.path.dirname(os.path.abspath(__file__))
+    )
+    print(f"Started detect.py with PID: {detect_process.pid}")
 
 
 @app.on_event("shutdown")
