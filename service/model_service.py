@@ -101,7 +101,7 @@ def register_device(device_info: dict) -> bool:
         logger.error(f"Failed to register device with MAC {mac_address}: {result.get('message')}")
         return False
     
-def update_device_status(mac: str, status: str) -> bool:
+def update_device_status(mac: str, status: str):
     """
     Update the status of a registered device.
     
@@ -116,7 +116,5 @@ def update_device_status(mac: str, status: str) -> bool:
     
     if result.get('success'):
         logger.info(f"Device {mac} status updated to {status}")
-        return True
     else:
         logger.error(f"Failed to update status for device {mac}: {result.get('message')}")
-        return False

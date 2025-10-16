@@ -2,7 +2,7 @@ import argparse
 import sys
 import time
 import logging
-from datetime import datetime
+import json
 
 import numpy as np
 from collections import deque
@@ -13,6 +13,8 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
+
+import utils.utils as utils
 
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
@@ -178,6 +180,7 @@ MICROSLEEP_COUNT = 0
 YAWN_COUNTED = False
 MICROSLEEP_COUNTED = False
 DROWSY_COUNTED = False
+FREQUENT_CLOSURES_COUNTED = False
 
 # Scroll variables
 SCROLL_OFFSET = 0
@@ -189,6 +192,24 @@ def _bs_score(blendshapes, name: str) -> float:
         if c.category_name == name:
             return float(c.score)
     return 0.0
+
+def send_behavior_to_parent(behavior_data: dict, type: str):
+    """Send behavior data to parent process via stdout"""
+    try:
+        # Create a structured message
+        message = {
+            "type": type,
+            "data": behavior_data,
+            "timestamp": utils.now()
+        }
+        # Write JSON to stdout with a newline delimiter
+        # Use sys.stdout directly and flush immediately
+        sys.stdout.write(f"BEHAVIOR_DATA:{json.dumps(message)}\n")
+        sys.stdout.flush()
+    except Exception as e:
+        # Log errors to stderr instead of stdout
+        sys.stderr.write(f"Failed to send behavior data to parent: {e}\n")
+        sys.stderr.flush()
 
 def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) -> dict:
     """Detect driver drowsiness behaviors based on facial blendshapes."""
@@ -214,7 +235,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
         perclos = (sum(v for _, v in PERCLOS_WIN) / len(PERCLOS_WIN)) if PERCLOS_WIN else 0.0
 
         # --- Eye closure frequency tracking ---
-        global EYE_CLOSURE_EVENTS, EYE_PARTIAL_CLOSURE_START
+        global EYE_CLOSURE_EVENTS, EYE_PARTIAL_CLOSURE_START, FREQUENT_CLOSURES_COUNTED
         
         if eye_closed_score > CONFIG['EYE_PARTIAL_THRESH']:
             if EYE_PARTIAL_CLOSURE_START is None:
@@ -235,8 +256,12 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
             EYE_CLOSURE_EVENTS.popleft()
         
         frequent_closures = len(EYE_CLOSURE_EVENTS) > CONFIG['EYE_CLOSURE_FREQ_THRESH']
-        if frequent_closures:
-            logger.warning(f"Frequent eye closures detected: {len(EYE_CLOSURE_EVENTS)} closures in {CONFIG['EYE_CLOSURE_FREQ_WIN']}s")
+        
+        if frequent_closures and not FREQUENT_CLOSURES_COUNTED:
+            FREQUENT_CLOSURES_COUNTED = True
+            logger.warning(f"FREQUENT EYE CLOSURES DETECTED! {len(EYE_CLOSURE_EVENTS)} closures in {CONFIG['EYE_CLOSURE_FREQ_WIN']}s")
+        elif not frequent_closures:
+            FREQUENT_CLOSURES_COUNTED = False
 
         # --- Microsleep & blink counting ---
         global EYE_CLOSED_START, MICROSLEEP_COUNT, MICROSLEEP_COUNTED
@@ -293,7 +318,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
         elif not drowsy:
             DROWSY_COUNTED = False
 
-        return {
+        behavior_data = {
             'drowsy': drowsy,
             'yawning': yawning,
             'microsleep': microsleep,
@@ -305,6 +330,12 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
             'drowsy_count': DROWSY_COUNT,
             'microsleep_count': MICROSLEEP_COUNT
         }
+        
+        # Send to parent process
+        send_behavior_to_parent(behavior_data)
+        
+        return behavior_data
+
     return None
 
 def run(model: str, num_faces: int,

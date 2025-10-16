@@ -1,13 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from models import MsgPayload
 import subprocess
 import os
 import sys
 import logging
+import asyncio
+import json
 import service.model_service as model_service
+from database import db_helper
 
 import firebase_admin
-from firebase_admin import credentials
+from firebase_admin import credentials, db
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -41,52 +44,142 @@ logger.info("Firebase Admin SDK initialized successfully")
 
 app = FastAPI()
 
-# Store the detect.py process
+# Store the detect.py process and monitoring task
 detect_process = None
+monitor_task = None
+device_mac = None
+
+# Store latest behavior data in memory
+latest_behavior_data = {
+    "timestamp": None,
+    "data": None
+}
+
+async def read_detect_process_output():
+    """Read and process output from detect.py subprocess"""
+    global detect_process, latest_behavior_data, device_mac
+    
+    if not detect_process:
+        logger.error("detect_process is not initialized")
+        return
+    
+    logger.info("Started monitoring detect.py output")
+    
+    try:
+        while True:
+            # Check if process is still running
+            if detect_process.poll() is not None:
+                logger.warning(f"detect.py process terminated with code {detect_process.returncode}")
+                break
+            
+            # Read line from stdout
+            line = detect_process.stdout.readline()
+            
+            if line:
+                line = line.decode('utf-8').strip()
+                
+                # Check if it's a behavior data message
+                if line.startswith("BEHAVIOR_DATA:"):
+                    try:
+                        json_str = line.replace("BEHAVIOR_DATA:", "")
+                        behavior_message = json.loads(json_str)
+                        
+                        # Update latest behavior data
+                        latest_behavior_data = behavior_message
+                        
+                        # logger.info(f"Received behavior data: drowsy={behavior_message['data'].get('drowsy')}, "
+                        #           f"yawning={behavior_message['data'].get('yawning')}, "
+                        #           f"microsleep={behavior_message['data'].get('microsleep')}")
+                        
+                        # Save to Firebase
+                        if device_mac:
+                            db_helper.save_behavior_to_firebase(device_mac, behavior_message)
+                        
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse behavior data: {e}")
+                else:
+                    # Regular log output from detect.py
+                    logger.debug(f"detect.py: {line}")
+            
+            await asyncio.sleep(0.1)  # Small delay to prevent busy waiting
+            
+    except Exception as e:
+        logger.error(f"Error reading detect process output: {e}", exc_info=True)
+    finally:
+        logger.info("Stopped monitoring detect.py output")
 
 
 @app.on_event("startup")
 async def startup_event():
-    global detect_process
+    global detect_process, monitor_task, device_mac
 
     logger.info("=" * 80)
     logger.info("SafeDriver Backend Starting")
     logger.info("=" * 80)
+
+    # Get device MAC address
+    try:
+        device_details = model_service.check_device_registration()
+        device_mac = device_details.get("mac_address")
+        
+        if not device_mac:
+            logger.error("Could not retrieve device MAC address")
+        else:
+            logger.info(f"Device MAC: {device_mac}")
+            
+            # Register device if not already registered
+            if not device_details.get("registered"):
+                result = model_service.register_device(device_details)
+                logger.info(f"Device registration result: {result}")
+            else:
+                model_service.update_device_status(
+                    mac=device_mac, 
+                    status="active"
+                )
+                
+    except Exception as e:
+        logger.error(f"Failed to check device registration: {e}", exc_info=True)
 
     # Path to the same Python executable used by the current venv
     venv_python = sys.executable  
     logger.info(f"Using Python executable: {venv_python}")
 
     try:
-        # Start detect.py using that interpreter
+        # Start detect.py with stdout piped
         detect_process = subprocess.Popen(
             [venv_python, "-c", "from model.detect import main; main()"],
-            cwd=os.path.dirname(os.path.abspath(__file__))
+            cwd=os.path.dirname(os.path.abspath(__file__)),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=1,  # Line buffered
+            universal_newlines=False  # We'll handle decoding ourselves
         )
         logger.info(f"Started detect.py with PID: {detect_process.pid}")
+        
+        # Start monitoring task
+        monitor_task = asyncio.create_task(read_detect_process_output())
+        logger.info("Started output monitoring task")
+        
     except Exception as e:
         logger.error(f"Failed to start detect.py: {e}", exc_info=True)
-
-    try:
-        device_details = model_service.check_device_registration()
-        
-        # register the device if not already registered
-        if not device_details.get("registered"):
-            result = model_service.register_device(device_details)
-        else:
-            result = model_service.update_device_status(
-                mac=device_details.get("mac_address"), 
-                status="active"
-            )
-
-    except Exception as e:
-        logger.error(f"Failed to check device registration: {e}", exc_info=True)
+        model_service.update_device_status(
+            mac=device_mac, 
+            status="inactive"
+        )
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    global detect_process
+    global detect_process, monitor_task
     logger.info("Shutting down SafeDriver Backend")
+    
+    # Cancel monitoring task
+    if monitor_task:
+        monitor_task.cancel()
+        try:
+            await monitor_task
+        except asyncio.CancelledError:
+            logger.info("Monitoring task cancelled")
     
     # Stop detect.py when the API shuts down
     if detect_process:
@@ -103,29 +196,84 @@ async def shutdown_event():
 @app.get("/")
 def root() -> dict[str, str]:
     logger.debug("Root endpoint accessed")
-    return {"message": "Hello"}
+    return {"message": "SafeDriver API is running"}
 
 
-# About page route
+@app.get("/behavior/latest")
+async def get_latest_behavior():
+    """Get the latest behavior data from detect process"""
+    global latest_behavior_data, device_mac
+    
+    if not latest_behavior_data.get("data"):
+        return {
+            "success": False,
+            "message": "No behavior data available yet"
+        }
+    
+    return {
+        "success": True,
+        "mac_address": device_mac,
+        "behavior": latest_behavior_data
+    }
+
+
+@app.get("/behavior/history")
+async def get_behavior_history(limit: int = 10):
+    """Get behavior event history from Firebase"""
+    global device_mac
+    
+    if not device_mac:
+        raise HTTPException(status_code=400, detail="Device MAC not available")
+    
+    try:
+        ref = db.reference(f'behavior_events/{device_mac}/history')
+        history_data = ref.order_by_key().limit_to_last(limit).get()
+        
+        if history_data:
+            events = [{"id": k, **v} for k, v in history_data.items()]
+            return {
+                "success": True,
+                "mac_address": device_mac,
+                "count": len(events),
+                "events": events
+            }
+        else:
+            return {
+                "success": False,
+                "message": "No behavior history available"
+            }
+            
+    except Exception as e:
+        logger.error(f"Error retrieving behavior history: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/process/status")
+def check_process_status() -> dict:
+    """Check if detect.py process is running"""
+    global detect_process
+    
+    if detect_process is None:
+        return {
+            "running": False,
+            "message": "Process not started"
+        }
+    
+    return_code = detect_process.poll()
+    
+    return {
+        "running": return_code is None,
+        "pid": detect_process.pid,
+        "exit_code": return_code if return_code is not None else None
+    }
+
+
 @app.get("/about")
 def about() -> dict[str, str]:
     logger.debug("About endpoint accessed")
-    return {"message": "This is the about page."}
-
-
-# Route to add a message
-# @app.post("/messages/{msg_name}/")
-# def add_msg(msg_name: str) -> dict[str, MsgPayload]:
-#     # Generate an ID for the item based on the highest ID in the messages_list
-#     msg_id = max(messages_list.keys()) + 1 if messages_list else 0
-#     messages_list[msg_id] = MsgPayload(msg_id=msg_id, msg_name=msg_name)
-#     logger.info(f"Message added: {msg_name} with ID: {msg_id}")
-#     return {"message": messages_list[msg_id]}
-
-
-# # Route to list all messages
-# @app.get("/messages")
-# def message_items() -> dict[str, dict[int, MsgPayload]]:
-#     logger.debug("Messages endpoint accessed")
-#     return {"messages:": messages_list}
+    return {
+        "message": "SafeDriver Backend API",
+        "version": "1.0.0",
+        "device_mac": device_mac
+    }
 

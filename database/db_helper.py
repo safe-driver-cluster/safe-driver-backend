@@ -1,15 +1,8 @@
 import logging
 from firebase_admin import db
-from datetime import datetime
-import pytz
+import utils.utils as utils
 
 logger = logging.getLogger(__name__)
-
-def now():
-    """Return current timestamp in Sri Lanka time in ISO 8601 format"""
-    # Get Sri Lanka timezone
-    sri_lanka_tz = pytz.timezone('Asia/Colombo')
-    return datetime.now(sri_lanka_tz).isoformat()
 
 def is_registered_device(mac: str) -> bool:
     """
@@ -102,7 +95,7 @@ def register_device(mac: str, reg_no: str = None) -> dict:
             }
         
         # Create/update device entry
-        current_time = now()
+        current_time = utils.now()
         device_data = {
             'vehicle_reg_no': reg_no or '',
             'is_registered': True,
@@ -283,3 +276,22 @@ def delete_device(mac: str) -> dict:
             'success': False,
             'message': str(e)
         }
+
+def save_behavior_to_firebase(mac: str, behavior_data: dict):
+    """Save behavior data to Firebase Realtime Database"""
+    try:
+        ref = db.reference(f'behavior_events/{mac}')
+        
+        # Save to latest
+        ref.child('latest').set(behavior_data)
+        
+        # If significant event, save to history
+        data = behavior_data.get('data', {})
+        if data.get('drowsy') or data.get('microsleep') or data.get('yawning'):
+            ref.child('history').push(behavior_data)
+            logger.info(f"Significant behavior event saved to Firebase")
+        
+        logger.debug(f"Behavior data saved to Firebase for device {mac}")
+        
+    except Exception as e:
+        logger.error(f"Failed to save behavior data to Firebase: {e}", exc_info=True)
