@@ -15,6 +15,7 @@ from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
 
 import utils.utils as utils
+from beans.bean import CommonResponse, BehaviorResponseData
 
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
@@ -24,16 +25,25 @@ mp_drawing_styles = mp.solutions.drawing_styles
 # LOGGING CONFIGURATION
 # ============================================================================
 
-# Configure logging
+# Configure logging - ONLY to file to avoid stdout conflicts with IPC
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler('safe_driver_debug.log'),
-        logging.StreamHandler(sys.stdout)
+        # Removed StreamHandler(sys.stdout) to keep stdout clean for IPC
+        logging.StreamHandler(sys.stdout)  # Log to stderr instead
     ]
 )
 logger = logging.getLogger(__name__)
+
+logger.info("=" * 80)
+logger.info("SafeDriver Detection System Starting")
+logger.info("=" * 80)
+
+# ============================================================================
+# END LOGGING CONFIGURATION
+# ============================================================================
 
 # ============================================================================
 # CONFIGURATION SECTION - All configurable parameters
@@ -119,12 +129,21 @@ CONFIG = {
     'WARNING_YAWNING': 'Yawning Detected!',
     'WARNING_FREQUENT_CLOSURES': 'Frequent Eye Closures!',
     'WARNING_DROWSY': 'Drowsiness Detected!',
+    'WARNING_PERCLOS': 'High PERCLOS Level!',
     
     # Console Messages
     'CONSOLE_MICROSLEEP': 'Microsleep detected (Total: {})',
     'CONSOLE_YAWN': 'Yawn detected (Total: {})',
     'CONSOLE_FREQUENT_CLOSURES': 'Frequent eye closures detected',
     'CONSOLE_DROWSY': 'Drowsiness detected (Total: {})',
+    'CONSOLE_PERCLOS_REACHED': 'PERCLOS threshold reached: {:.2f}',
+
+    # behavior data message type
+    'BEHAVIOR_FREQUENT_CLOSURES': 'frequent_closures',
+    'BEHAVIOR_MICROSLEEP': 'microsleep',
+    'BEHAVIOR_YAWN': 'yawn',
+    'BEHAVIOR_DROWSY': 'drowsy',
+    'BEHAVIOR_PERCLOS_REACHED': 'perclos_threshold_reached',
     
     # Blendshapes Display
     'BLENDSHAPE_FONT': cv2.FONT_HERSHEY_SIMPLEX,
@@ -193,14 +212,16 @@ def _bs_score(blendshapes, name: str) -> float:
             return float(c.score)
     return 0.0
 
-def send_behavior_to_parent(behavior_data: dict, type: str):
+def send_behavior_to_parent(tag="BEHAVIOR_EVENT", type="behavior", message="", time=None, behavior_data={}):
     """Send behavior data to parent process via stdout"""
     try:
         # Create a structured message
         message = {
+            "tag": tag,
             "type": type,
-            "data": behavior_data,
-            "timestamp": utils.now()
+            "message": message,
+            "time": time or utils.now(),
+            "data": behavior_data
         }
         # Write JSON to stdout with a newline delimiter
         # Use sys.stdout directly and flush immediately
@@ -233,6 +254,18 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
         while PERCLOS_WIN and (now - PERCLOS_WIN[0][0]) > CONFIG['PERCLOS_WIN_SEC']:
             PERCLOS_WIN.popleft()
         perclos = (sum(v for _, v in PERCLOS_WIN) / len(PERCLOS_WIN)) if PERCLOS_WIN else 0.0
+        if perclos >= CONFIG['PERCLOS_DROWSY']:
+            logger.warning(f"PERCLOS THRESHOLD REACHED! PERCLOS: {perclos:.2f} over last {CONFIG['PERCLOS_WIN_SEC']}s")
+            send_behavior_to_parent(
+                tag="DROWSY_EVENT",
+                type=CONFIG['BEHAVIOR_PERCLOS_REACHED'],
+                message=CONFIG['CONSOLE_PERCLOS_REACHED'].format(perclos),
+                time=utils.now(),
+                behavior_data={
+                    "perclos": perclos,
+                    "time_window": CONFIG['PERCLOS_WIN_SEC']
+                }
+            )
 
         # --- Eye closure frequency tracking ---
         global EYE_CLOSURE_EVENTS, EYE_PARTIAL_CLOSURE_START, FREQUENT_CLOSURES_COUNTED
@@ -260,6 +293,16 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
         if frequent_closures and not FREQUENT_CLOSURES_COUNTED:
             FREQUENT_CLOSURES_COUNTED = True
             logger.warning(f"FREQUENT EYE CLOSURES DETECTED! {len(EYE_CLOSURE_EVENTS)} closures in {CONFIG['EYE_CLOSURE_FREQ_WIN']}s")
+            send_behavior_to_parent(
+                tag="DROWSY_EVENT",
+                type=CONFIG['BEHAVIOR_FREQUENT_CLOSURES'],
+                message=CONFIG['CONSOLE_FREQUENT_CLOSURES'],
+                time=utils.now(),
+                behavior_data={
+                    "closure_count": len(EYE_CLOSURE_EVENTS),
+                    "time_window": CONFIG['EYE_CLOSURE_FREQ_WIN']
+                }
+            )
         elif not frequent_closures:
             FREQUENT_CLOSURES_COUNTED = False
 
@@ -288,6 +331,16 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
             MICROSLEEP_COUNTED = True
             duration = now - EYE_CLOSED_START
             logger.warning(f"MICROSLEEP DETECTED! Duration: {duration:.2f}s, Total count: {MICROSLEEP_COUNT}")
+            send_behavior_to_parent(
+                tag="DROWSY_EVENT",
+                type=CONFIG['BEHAVIOR_MICROSLEEP'],
+                message=CONFIG['CONSOLE_MICROSLEEP'].format(MICROSLEEP_COUNT),
+                time=utils.now(),
+                behavior_data={
+                    "duration": duration,
+                    "total_count": MICROSLEEP_COUNT
+                }
+            )
 
         # --- Yawn detection ---
         global YAWN_START, YAWN_COUNT, YAWN_COUNTED
@@ -303,6 +356,16 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
                     YAWN_COUNTED = True
                     duration = now - YAWN_START
                     logger.warning(f"YAWN DETECTED! Duration: {duration:.2f}s, Total count: {YAWN_COUNT}")
+                    send_behavior_to_parent(
+                        tag="DROWSY_EVENT",
+                        type=CONFIG['BEHAVIOR_YAWN'],
+                        message=CONFIG['CONSOLE_YAWN'].format(YAWN_COUNT),
+                        time=utils.now(),
+                        behavior_data={
+                            "duration": duration,
+                            "total_count": YAWN_COUNT
+                        }
+                    )
         else:
             YAWN_START = None
             YAWN_COUNTED = False
@@ -332,7 +395,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
         }
         
         # Send to parent process
-        send_behavior_to_parent(behavior_data)
+        # send_behavior_to_parent(behavior_data)
         
         return behavior_data
 

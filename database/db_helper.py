@@ -1,6 +1,8 @@
 import logging
 from firebase_admin import db
 import utils.utils as utils
+from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
+import config.config as config
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +154,7 @@ def update_device_status(mac: str, status: str) -> dict:
         # Update status and last updated time
         ref.update({
             'status': status,
-            'last_updated_date_time': now()
+            'last_updated_date_time': utils.now()
         })
         
         logger.info(f"Device {mac} status updated to {status}")
@@ -196,7 +198,7 @@ def update_last_active(mac: str) -> dict:
         
         # Update last active time
         ref.update({
-            'last_active_date_time': now()
+            'last_active_date_time': utils.now()
         })
         
         logger.debug(f"Device {mac} last active time updated")
@@ -278,20 +280,29 @@ def delete_device(mac: str) -> dict:
         }
 
 def save_behavior_to_firebase(mac: str, behavior_data: dict):
-    """Save behavior data to Firebase Realtime Database"""
+    """
+    Save behavior data to Firebase Realtime Database
+    
+    Args:
+        mac (str): MAC address of the device
+        behavior_data (dict): Behavior data containing tag, type, message, time, and data
+    """
     try:
-        ref = db.reference(f'behavior_events/{mac}')
+        ref = db.reference(f'alerts/{mac}')
+        
+        # Extract the data to save
+        alert_data = {
+            'tag': behavior_data.get('tag'),
+            'type': behavior_data.get('type'),
+            'message': behavior_data.get('message'),
+            'time': behavior_data.get('time', utils.now())
+        }
         
         # Save to latest
-        ref.child('latest').set(behavior_data)
+        ref.child('latest').set(alert_data)
         
         # If significant event, save to history
-        data = behavior_data.get('data', {})
-        if data.get('drowsy') or data.get('microsleep') or data.get('yawning'):
-            ref.child('history').push(behavior_data)
-            logger.info(f"Significant behavior event saved to Firebase")
-        
-        logger.debug(f"Behavior data saved to Firebase for device {mac}")
+        ref.child('history').push(alert_data)
         
     except Exception as e:
-        logger.error(f"Failed to save behavior data to Firebase: {e}", exc_info=True)
+        logger.error(f"Failed to save behavior data to Firebase for MAC {mac}: {e}", exc_info=True)

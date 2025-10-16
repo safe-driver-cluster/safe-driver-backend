@@ -1693,3 +1693,838 @@ UnboundLocalError: local variable 'FREQUENT_CLOSURES_COUNTED' referenced before 
 2025-10-16 16:24:32,295 - INFO - ================================================================================
 2025-10-16 16:24:32,513 - WARNING - detect.py process terminated with code 0
 2025-10-16 16:24:32,513 - INFO - Stopped monitoring detect.py output
+2025-10-16 18:20:51,998 - INFO - Initializing Firebase Admin SDK
+2025-10-16 18:20:52,037 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 18:20:52,043 - INFO - ================================================================================
+2025-10-16 18:20:52,043 - INFO - SafeDriver Backend Starting
+2025-10-16 18:20:52,043 - INFO - ================================================================================
+2025-10-16 18:20:52,087 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 18:20:53,539 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 18:20:53,539 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 18:20:54,357 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:20:54,358 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:20:54,358 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 18:20:54,368 - INFO - Started detect.py with PID: 27876
+2025-10-16 18:20:54,369 - INFO - Started output monitoring task
+2025-10-16 18:20:54,370 - INFO - Started monitoring detect.py output
+2025-10-16 18:20:56,054 - INFO - ================================================================================
+2025-10-16 18:20:56,054 - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 18:20:56,054 - INFO - ================================================================================
+2025-10-16 18:20:56,055 - INFO - Eye Closed Threshold: 0.6
+2025-10-16 18:20:56,055 - INFO - Microsleep Duration: 1.5s
+2025-10-16 18:20:56,055 - INFO - PERCLOS Window: 60.0s
+2025-10-16 18:20:56,055 - INFO - Yawn Threshold: 0.8
+2025-10-16 18:20:56,055 - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 18:20:56,055 - INFO - ================================================================================
+2025-10-16 18:20:56,057 - INFO - Command line arguments parsed:
+2025-10-16 18:20:56,057 - INFO -   Model: model/face_landmarker.task
+2025-10-16 18:20:56,057 - INFO -   Number of faces: 1
+2025-10-16 18:20:56,058 - INFO -   Detection confidence: 0.5
+2025-10-16 18:20:56,058 - INFO -   Camera ID: 0
+2025-10-16 18:20:56,058 - INFO -   Frame size: 720x960
+2025-10-16 18:20:56,058 - INFO - ================================================================================
+2025-10-16 18:20:56,058 - INFO - Starting SafeDriver Monitoring System
+2025-10-16 18:20:56,058 - INFO - ================================================================================
+2025-10-16 18:20:56,058 - INFO - Model path: model/face_landmarker.task
+2025-10-16 18:20:56,058 - INFO - Camera ID: 0
+2025-10-16 18:20:56,059 - INFO - Resolution: 720x960
+2025-10-16 18:20:56,059 - INFO - Max faces: 1
+2025-10-16 18:20:56,059 - INFO - Detection confidence: 0.5
+2025-10-16 18:20:56,059 - INFO - Presence confidence: 0.5
+2025-10-16 18:20:56,059 - INFO - Tracking confidence: 0.5
+2025-10-16 18:20:56,059 - INFO - ================================================================================
+2025-10-16 18:20:56,059 - INFO - Initializing camera 0...
+2025-10-16 18:21:06,715 - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 18:21:06,760 - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 18:21:06,761 - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 18:21:06,828 - INFO - Face landmarker model loaded successfully
+2025-10-16 18:21:06,828 - INFO - Starting video processing loop...
+2025-10-16 18:21:06,828 - INFO - Press ESC to exit
+2025-10-16 18:21:07,356 - INFO - First frame processed successfully
+2025-10-16 18:21:07,847 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:08,259 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:08,693 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:09,101 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:09,491 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:09,872 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:10,292 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:10,676 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:11,079 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:11,519 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:11,971 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:12,381 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:12,798 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:13,178 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:13,580 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:13,962 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:14,385 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:14,768 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:15,362 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:15,783 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:16,190 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:16,587 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:17,000 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:17,384 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:17,772 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:18,164 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:18,548 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:18,930 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:19,332 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:19,715 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:20,119 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:20,507 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:20,909 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:21,284 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:21,671 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:22,061 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:22,446 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:22,836 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:23,217 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:23,615 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:24,003 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:24,429 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:24,823 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:25,257 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:25,672 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:26,103 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:26,502 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:26,902 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:27,278 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:27,661 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:28,035 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:28,421 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:28,811 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:29,267 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:29,658 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:30,036 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:30,431 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:30,822 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:31,214 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:31,604 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:32,010 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:32,402 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:32,784 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:33,159 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:33,265 - INFO - ESC key pressed - Exiting...
+2025-10-16 18:21:33,265 - INFO - Cleaning up resources...
+2025-10-16 18:21:33,265 - INFO - Total frames processed: 80
+2025-10-16 18:21:33,265 - INFO - Final stats - Yawns: 0, Microsleeps: 0, Drowsy Events: 0
+2025-10-16 18:21:33,598 - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 18:21:33,599 - INFO - ================================================================================
+2025-10-16 18:21:33,611 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:34,054 - ERROR - Failed to save behavior data to Firebase for MAC 48:89:E7:FA:15:AE: 'ALERT_TYPES'
+Traceback (most recent call last):
+  File "E:\Other_projects\SAFE_DRIVER\safe-driver-backend\database\db_helper.py", line 305, in save_behavior_to_firebase
+    if behavior_data.get('type') in config.CONFIG['ALERT_TYPES']:
+KeyError: 'ALERT_TYPES'
+2025-10-16 18:21:34,162 - WARNING - detect.py process terminated with code 0
+2025-10-16 18:21:34,162 - INFO - Stopped monitoring detect.py output
+2025-10-16 18:24:01,226 - INFO - Shutting down SafeDriver Backend
+2025-10-16 18:24:01,227 - INFO - Stopped detect.py successfully
+2025-10-16 18:24:02,706 - INFO - Initializing Firebase Admin SDK
+2025-10-16 18:24:02,757 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 18:24:02,763 - INFO - ================================================================================
+2025-10-16 18:24:02,764 - INFO - SafeDriver Backend Starting
+2025-10-16 18:24:02,764 - INFO - ================================================================================
+2025-10-16 18:24:02,819 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 18:24:03,545 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 18:24:03,546 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 18:24:04,263 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:24:04,265 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:24:04,266 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 18:24:04,285 - INFO - Started detect.py with PID: 6364
+2025-10-16 18:24:04,286 - INFO - Started output monitoring task
+2025-10-16 18:24:04,286 - INFO - Started monitoring detect.py output
+2025-10-16 18:24:06,177 - INFO - ================================================================================
+2025-10-16 18:24:06,177 - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 18:24:06,177 - INFO - ================================================================================
+2025-10-16 18:24:06,177 - INFO - Eye Closed Threshold: 0.6
+2025-10-16 18:24:06,177 - INFO - Microsleep Duration: 1.5s
+2025-10-16 18:24:06,178 - INFO - PERCLOS Window: 60.0s
+2025-10-16 18:24:06,178 - INFO - Yawn Threshold: 0.8
+2025-10-16 18:24:06,178 - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 18:24:06,178 - INFO - ================================================================================
+2025-10-16 18:24:06,180 - INFO - Command line arguments parsed:
+2025-10-16 18:24:06,180 - INFO -   Model: model/face_landmarker.task
+2025-10-16 18:24:06,180 - INFO -   Number of faces: 1
+2025-10-16 18:24:06,180 - INFO -   Detection confidence: 0.5
+2025-10-16 18:24:06,180 - INFO -   Camera ID: 0
+2025-10-16 18:24:06,180 - INFO -   Frame size: 720x960
+2025-10-16 18:24:06,180 - INFO - ================================================================================
+2025-10-16 18:24:06,180 - INFO - Starting SafeDriver Monitoring System
+2025-10-16 18:24:06,180 - INFO - ================================================================================
+2025-10-16 18:24:06,180 - INFO - Model path: model/face_landmarker.task
+2025-10-16 18:24:06,181 - INFO - Camera ID: 0
+2025-10-16 18:24:06,181 - INFO - Resolution: 720x960
+2025-10-16 18:24:06,181 - INFO - Max faces: 1
+2025-10-16 18:24:06,181 - INFO - Detection confidence: 0.5
+2025-10-16 18:24:06,181 - INFO - Presence confidence: 0.5
+2025-10-16 18:24:06,181 - INFO - Tracking confidence: 0.5
+2025-10-16 18:24:06,181 - INFO - ================================================================================
+2025-10-16 18:24:06,181 - INFO - Initializing camera 0...
+2025-10-16 18:24:18,361 - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 18:24:18,401 - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 18:24:18,401 - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 18:24:18,465 - INFO - Face landmarker model loaded successfully
+2025-10-16 18:24:18,465 - INFO - Starting video processing loop...
+2025-10-16 18:24:18,465 - INFO - Press ESC to exit
+2025-10-16 18:24:18,992 - INFO - First frame processed successfully
+2025-10-16 18:24:45,209 - INFO - ESC key pressed - Exiting...
+2025-10-16 18:24:45,209 - INFO - Cleaning up resources...
+2025-10-16 18:24:45,209 - INFO - Total frames processed: 57
+2025-10-16 18:24:45,209 - INFO - Final stats - Yawns: 0, Microsleeps: 0, Drowsy Events: 0
+2025-10-16 18:24:45,547 - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 18:24:45,548 - INFO - ================================================================================
+2025-10-16 18:24:45,848 - WARNING - detect.py process terminated with code 0
+2025-10-16 18:24:45,848 - INFO - Stopped monitoring detect.py output
+2025-10-16 18:25:43,781 - INFO - Shutting down SafeDriver Backend
+2025-10-16 18:25:43,782 - INFO - Stopped detect.py successfully
+2025-10-16 18:25:45,168 - INFO - Initializing Firebase Admin SDK
+2025-10-16 18:25:45,223 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 18:25:45,229 - INFO - ================================================================================
+2025-10-16 18:25:45,229 - INFO - SafeDriver Backend Starting
+2025-10-16 18:25:45,230 - INFO - ================================================================================
+2025-10-16 18:25:45,281 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 18:25:46,287 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 18:25:46,288 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 18:25:46,943 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:25:46,944 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:25:46,944 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 18:25:46,953 - INFO - Started detect.py with PID: 13888
+2025-10-16 18:25:46,954 - INFO - Started output monitoring task
+2025-10-16 18:25:48,701 - INFO - ================================================================================
+2025-10-16 18:25:48,701 - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 18:25:48,701 - INFO - ================================================================================
+2025-10-16 18:25:48,701 - INFO - Eye Closed Threshold: 0.6
+2025-10-16 18:25:48,702 - INFO - Microsleep Duration: 1.5s
+2025-10-16 18:25:48,702 - INFO - PERCLOS Window: 60.0s
+2025-10-16 18:25:48,702 - INFO - Yawn Threshold: 0.8
+2025-10-16 18:25:48,702 - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 18:25:48,702 - INFO - ================================================================================
+2025-10-16 18:25:48,703 - INFO - Command line arguments parsed:
+2025-10-16 18:25:48,703 - INFO -   Model: model/face_landmarker.task
+2025-10-16 18:25:48,703 - INFO -   Number of faces: 1
+2025-10-16 18:25:48,704 - INFO -   Detection confidence: 0.5
+2025-10-16 18:25:48,704 - INFO -   Camera ID: 0
+2025-10-16 18:25:48,704 - INFO -   Frame size: 720x960
+2025-10-16 18:25:48,704 - INFO - ================================================================================
+2025-10-16 18:25:48,704 - INFO - Starting SafeDriver Monitoring System
+2025-10-16 18:25:48,704 - INFO - ================================================================================
+2025-10-16 18:25:48,704 - INFO - Model path: model/face_landmarker.task
+2025-10-16 18:25:48,704 - INFO - Camera ID: 0
+2025-10-16 18:25:48,704 - INFO - Resolution: 720x960
+2025-10-16 18:25:48,704 - INFO - Max faces: 1
+2025-10-16 18:25:48,704 - INFO - Detection confidence: 0.5
+2025-10-16 18:25:48,704 - INFO - Presence confidence: 0.5
+2025-10-16 18:25:48,705 - INFO - Tracking confidence: 0.5
+2025-10-16 18:25:48,705 - INFO - ================================================================================
+2025-10-16 18:25:48,705 - INFO - Initializing camera 0...
+2025-10-16 18:26:00,636 - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 18:26:00,682 - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 18:26:00,682 - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 18:26:00,733 - INFO - Face landmarker model loaded successfully
+2025-10-16 18:26:00,733 - INFO - Starting video processing loop...
+2025-10-16 18:26:00,734 - INFO - Press ESC to exit
+2025-10-16 18:26:01,251 - INFO - First frame processed successfully
+2025-10-16 18:37:28,138 - INFO - Shutting down SafeDriver Backend
+2025-10-16 18:37:28,139 - INFO - Stopped detect.py successfully
+2025-10-16 18:37:29,448 - INFO - Initializing Firebase Admin SDK
+2025-10-16 18:37:29,493 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 18:37:29,498 - INFO - ================================================================================
+2025-10-16 18:37:29,498 - INFO - SafeDriver Backend Starting
+2025-10-16 18:37:29,499 - INFO - ================================================================================
+2025-10-16 18:37:29,544 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 18:37:30,688 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 18:37:30,689 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 18:37:31,350 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:37:31,351 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:37:31,351 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 18:37:31,360 - INFO - Started detect.py with PID: 24528
+2025-10-16 18:37:31,360 - INFO - Started output monitoring task
+2025-10-16 18:37:31,361 - INFO - Started monitoring detect.py output
+2025-10-16 18:37:33,208 - INFO - ================================================================================
+2025-10-16 18:37:33,209 - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 18:37:33,209 - INFO - ================================================================================
+2025-10-16 18:37:33,209 - INFO - Eye Closed Threshold: 0.6
+2025-10-16 18:37:33,210 - INFO - Microsleep Duration: 1.5s
+2025-10-16 18:37:33,210 - INFO - PERCLOS Window: 60.0s
+2025-10-16 18:37:33,210 - INFO - Yawn Threshold: 0.8
+2025-10-16 18:37:33,211 - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 18:37:33,211 - INFO - ================================================================================
+2025-10-16 18:37:33,213 - INFO - Command line arguments parsed:
+2025-10-16 18:37:33,214 - INFO -   Model: model/face_landmarker.task
+2025-10-16 18:37:33,214 - INFO -   Number of faces: 1
+2025-10-16 18:37:33,214 - INFO -   Detection confidence: 0.5
+2025-10-16 18:37:33,214 - INFO -   Camera ID: 0
+2025-10-16 18:37:33,215 - INFO -   Frame size: 720x960
+2025-10-16 18:37:33,215 - INFO - ================================================================================
+2025-10-16 18:37:33,215 - INFO - Starting SafeDriver Monitoring System
+2025-10-16 18:37:33,215 - INFO - ================================================================================
+2025-10-16 18:37:33,215 - INFO - Model path: model/face_landmarker.task
+2025-10-16 18:37:33,215 - INFO - Camera ID: 0
+2025-10-16 18:37:33,216 - INFO - Resolution: 720x960
+2025-10-16 18:37:33,216 - INFO - Max faces: 1
+2025-10-16 18:37:33,216 - INFO - Detection confidence: 0.5
+2025-10-16 18:37:33,216 - INFO - Presence confidence: 0.5
+2025-10-16 18:37:33,216 - INFO - Tracking confidence: 0.5
+2025-10-16 18:37:33,217 - INFO - ================================================================================
+2025-10-16 18:37:33,217 - INFO - Initializing camera 0...
+2025-10-16 18:37:45,563 - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 18:37:45,711 - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 18:37:45,711 - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 18:37:45,832 - INFO - Face landmarker model loaded successfully
+2025-10-16 18:37:45,833 - INFO - Starting video processing loop...
+2025-10-16 18:37:45,833 - INFO - Press ESC to exit
+2025-10-16 18:37:47,013 - INFO - First frame processed successfully
+2025-10-16 18:37:47,454 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:48,267 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:48,984 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:49,657 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:50,311 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:50,998 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:51,670 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:52,390 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:53,089 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:53,806 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:54,557 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:55,335 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:56,021 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:56,665 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:57,339 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:57,996 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:58,682 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:59,354 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:37:59,994 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:38:00,670 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:38:01,311 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:38:02,023 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:38:02,692 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:38:03,349 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:38:04,284 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:38:04,941 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:38:05,594 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:38:06,238 - INFO - Received behavior data: tag={'drowsy': False, 'yawning': False, 'microsleep': False, 'perclos': 0.0, 'blinks_per_min': 0, 'frequent_closures': False, 'closure_count': 0, 'yawn_count': 0, 'drowsy_count': 0, 'microsleep_count': 0}, type=behavior, message=
+2025-10-16 18:38:06,240 - INFO - ESC key pressed - Exiting...
+2025-10-16 18:38:06,240 - INFO - Cleaning up resources...
+2025-10-16 18:38:06,240 - INFO - Total frames processed: 44
+2025-10-16 18:38:06,240 - INFO - Final stats - Yawns: 0, Microsleeps: 0, Drowsy Events: 0
+2025-10-16 18:38:06,573 - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 18:38:06,574 - INFO - ================================================================================
+2025-10-16 18:38:06,897 - WARNING - detect.py process terminated with code 0
+2025-10-16 18:38:06,900 - INFO - Stopped monitoring detect.py output
+2025-10-16 18:40:11,024 - INFO - Initializing Firebase Admin SDK
+2025-10-16 18:40:11,063 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 18:40:11,068 - INFO - ================================================================================
+2025-10-16 18:40:11,069 - INFO - SafeDriver Backend Starting
+2025-10-16 18:40:11,069 - INFO - ================================================================================
+2025-10-16 18:40:11,115 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 18:40:12,141 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 18:40:12,142 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 18:40:12,810 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:40:12,810 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:40:12,811 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 18:40:12,821 - INFO - Started detect.py with PID: 19296
+2025-10-16 18:40:12,821 - INFO - Started output monitoring task
+2025-10-16 18:40:12,822 - INFO - Started monitoring detect.py output
+2025-10-16 18:40:14,754 - INFO - ================================================================================
+2025-10-16 18:40:14,754 - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 18:40:14,755 - INFO - ================================================================================
+2025-10-16 18:40:14,755 - INFO - Eye Closed Threshold: 0.6
+2025-10-16 18:40:14,755 - INFO - Microsleep Duration: 1.5s
+2025-10-16 18:40:14,755 - INFO - PERCLOS Window: 60.0s
+2025-10-16 18:40:14,755 - INFO - Yawn Threshold: 0.8
+2025-10-16 18:40:14,755 - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 18:40:14,755 - INFO - ================================================================================
+2025-10-16 18:40:14,756 - INFO - Command line arguments parsed:
+2025-10-16 18:40:14,757 - INFO -   Model: model/face_landmarker.task
+2025-10-16 18:40:14,757 - INFO -   Number of faces: 1
+2025-10-16 18:40:14,757 - INFO -   Detection confidence: 0.5
+2025-10-16 18:40:14,757 - INFO -   Camera ID: 0
+2025-10-16 18:40:14,757 - INFO -   Frame size: 720x960
+2025-10-16 18:40:14,757 - INFO - ================================================================================
+2025-10-16 18:40:14,757 - INFO - Starting SafeDriver Monitoring System
+2025-10-16 18:40:14,757 - INFO - ================================================================================
+2025-10-16 18:40:14,757 - INFO - Model path: model/face_landmarker.task
+2025-10-16 18:40:14,757 - INFO - Camera ID: 0
+2025-10-16 18:40:14,757 - INFO - Resolution: 720x960
+2025-10-16 18:40:14,757 - INFO - Max faces: 1
+2025-10-16 18:40:14,758 - INFO - Detection confidence: 0.5
+2025-10-16 18:40:14,758 - INFO - Presence confidence: 0.5
+2025-10-16 18:40:14,758 - INFO - Tracking confidence: 0.5
+2025-10-16 18:40:14,758 - INFO - ================================================================================
+2025-10-16 18:40:14,758 - INFO - Initializing camera 0...
+2025-10-16 18:40:24,926 - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 18:40:24,957 - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 18:40:24,958 - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 18:40:25,005 - INFO - Face landmarker model loaded successfully
+2025-10-16 18:40:25,006 - INFO - Starting video processing loop...
+2025-10-16 18:40:25,006 - INFO - Press ESC to exit
+2025-10-16 18:40:25,524 - INFO - First frame processed successfully
+2025-10-16 18:40:33,576 - WARNING - YAWN DETECTED! Duration: 1.01s, Total count: 1
+2025-10-16 18:40:33,735 - WARNING - DROWSINESS DETECTED! Total count: 1, PERCLOS: 0.00
+2025-10-16 18:40:33,735 - INFO - Received behavior data: tag=DROWSY_EVENT, type=yawn, message=Yawn detected (Total: 1)
+2025-10-16 18:42:55,402 - WARNING - YAWN DETECTED! Duration: 1.00s, Total count: 2
+2025-10-16 18:42:55,403 - WARNING - DROWSINESS DETECTED! Total count: 2, PERCLOS: 0.01
+2025-10-16 18:42:55,511 - INFO - Received behavior data: tag=DROWSY_EVENT, type=yawn, message=Yawn detected (Total: 2)
+2025-10-16 18:44:17,827 - INFO - ESC key pressed - Exiting...
+2025-10-16 18:44:17,827 - INFO - Cleaning up resources...
+2025-10-16 18:44:17,828 - INFO - Total frames processed: 6821
+2025-10-16 18:44:17,828 - INFO - Final stats - Yawns: 2, Microsleeps: 0, Drowsy Events: 2
+2025-10-16 18:44:18,191 - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 18:44:18,192 - INFO - ================================================================================
+2025-10-16 18:44:18,491 - WARNING - detect.py process terminated with code 0
+2025-10-16 18:44:18,491 - INFO - Stopped monitoring detect.py output
+2025-10-16 18:52:44,842 - INFO - Shutting down SafeDriver Backend
+2025-10-16 18:52:44,843 - INFO - Stopped detect.py successfully
+2025-10-16 18:52:46,144 - INFO - Initializing Firebase Admin SDK
+2025-10-16 18:52:46,188 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 18:52:46,194 - INFO - ================================================================================
+2025-10-16 18:52:46,195 - INFO - SafeDriver Backend Starting
+2025-10-16 18:52:46,195 - INFO - ================================================================================
+2025-10-16 18:52:46,246 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 18:52:47,422 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 18:52:47,423 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 18:52:48,103 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:52:48,103 - INFO - Device status updated to active
+2025-10-16 18:52:48,104 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 18:52:48,112 - INFO - Started detect.py with PID: 11476
+2025-10-16 18:52:48,112 - INFO - Started output monitoring tasks
+2025-10-16 18:52:48,113 - INFO - Started monitoring detect.py output
+2025-10-16 18:57:30,822 - INFO - Started monitoring detect.py stderr
+2025-10-16 18:57:30,823 - INFO - Stopped monitoring detect.py stderr
+2025-10-16 18:57:30,825 - WARNING - detect.py process terminated with code 3489660927
+2025-10-16 18:57:30,825 - INFO - Stopped monitoring detect.py output
+2025-10-16 18:59:27,440 - INFO - Shutting down SafeDriver Backend
+2025-10-16 18:59:27,441 - INFO - Stopped detect.py successfully
+2025-10-16 18:59:29,765 - INFO - Initializing Firebase Admin SDK
+2025-10-16 18:59:29,839 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 18:59:29,847 - INFO - ================================================================================
+2025-10-16 18:59:29,848 - INFO - SafeDriver Backend Starting
+2025-10-16 18:59:29,848 - INFO - ================================================================================
+2025-10-16 18:59:29,914 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 18:59:30,797 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 18:59:30,798 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 18:59:31,461 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:59:31,461 - INFO - Device status updated to active
+2025-10-16 18:59:31,462 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 18:59:31,470 - INFO - Started detect.py with PID: 28928
+2025-10-16 18:59:31,470 - INFO - Started output monitoring tasks
+2025-10-16 18:59:31,471 - INFO - Started monitoring detect.py output
+2025-10-16 18:59:33,387 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:33,387 - model.detect - INFO - SafeDriver Detection System Starting
+2025-10-16 18:59:33,387 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:33,387 - INFO - Started monitoring detect.py stderr
+2025-10-16 18:59:33,387 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:33,388 - model.detect - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 18:59:33,388 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:33,388 - model.detect - INFO - Eye Closed Threshold: 0.6
+2025-10-16 18:59:33,388 - model.detect - INFO - Microsleep Duration: 1.5s
+2025-10-16 18:59:33,388 - model.detect - INFO - PERCLOS Window: 60.0s
+2025-10-16 18:59:33,388 - model.detect - INFO - Yawn Threshold: 0.8
+2025-10-16 18:59:33,388 - model.detect - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 18:59:33,388 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:33,390 - model.detect - INFO - Command line arguments parsed:
+2025-10-16 18:59:33,390 - model.detect - INFO -   Model: model/face_landmarker.task
+2025-10-16 18:59:33,391 - model.detect - INFO -   Number of faces: 1
+2025-10-16 18:59:33,391 - model.detect - INFO -   Detection confidence: 0.5
+2025-10-16 18:59:33,391 - model.detect - INFO -   Camera ID: 0
+2025-10-16 18:59:33,391 - model.detect - INFO -   Frame size: 720x960
+2025-10-16 18:59:33,391 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:33,391 - model.detect - INFO - Starting SafeDriver Monitoring System
+2025-10-16 18:59:33,391 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:33,391 - model.detect - INFO - Model path: model/face_landmarker.task
+2025-10-16 18:59:33,392 - model.detect - INFO - Camera ID: 0
+2025-10-16 18:59:33,392 - model.detect - INFO - Resolution: 720x960
+2025-10-16 18:59:33,392 - model.detect - INFO - Max faces: 1
+2025-10-16 18:59:33,392 - model.detect - INFO - Detection confidence: 0.5
+2025-10-16 18:59:33,392 - model.detect - INFO - Presence confidence: 0.5
+2025-10-16 18:59:33,392 - model.detect - INFO - Tracking confidence: 0.5
+2025-10-16 18:59:33,392 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:33,393 - model.detect - INFO - Initializing camera 0...
+2025-10-16 18:59:45,857 - model.detect - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 18:59:45,891 - model.detect - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 18:59:45,891 - model.detect - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 18:59:45,895 - INFO - [detect.py] WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+2025-10-16 18:59:45,897 - INFO - [detect.py] W0000 00:00:1760621385.895460   16428 face_landmarker_graph.cc:174] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+2025-10-16 18:59:45,913 - INFO - [detect.py] INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+2025-10-16 18:59:45,929 - INFO - [detect.py] W0000 00:00:1760621385.914345   19464 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+2025-10-16 18:59:45,945 - INFO - [detect.py] W0000 00:00:1760621385.940512   12056 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+2025-10-16 18:59:45,947 - model.detect - INFO - Face landmarker model loaded successfully
+2025-10-16 18:59:45,947 - model.detect - INFO - Starting video processing loop...
+2025-10-16 18:59:45,948 - model.detect - INFO - Press ESC to exit
+2025-10-16 18:59:46,520 - model.detect - INFO - First frame processed successfully
+2025-10-16 18:59:51,097 - model.detect - INFO - Keyboard interrupt received - Shutting down...
+2025-10-16 18:59:51,097 - model.detect - INFO - Cleaning up resources...
+2025-10-16 18:59:51,097 - model.detect - INFO - Total frames processed: 140
+2025-10-16 18:59:51,097 - model.detect - INFO - Final stats - Yawns: 0, Microsleeps: 0, Drowsy Events: 0
+2025-10-16 18:59:51,438 - model.detect - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 18:59:51,438 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:51,718 - INFO - Stopped monitoring detect.py stderr
+2025-10-16 18:59:51,719 - WARNING - detect.py process terminated with code 0
+2025-10-16 18:59:51,720 - INFO - Stopped monitoring detect.py output
+2025-10-16 18:59:51,813 - INFO - Shutting down SafeDriver Backend
+2025-10-16 18:59:51,814 - INFO - Stopped detect.py successfully
+2025-10-16 18:59:53,549 - INFO - Initializing Firebase Admin SDK
+2025-10-16 18:59:53,598 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 18:59:53,603 - INFO - ================================================================================
+2025-10-16 18:59:53,604 - INFO - SafeDriver Backend Starting
+2025-10-16 18:59:53,605 - INFO - ================================================================================
+2025-10-16 18:59:53,660 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 18:59:54,785 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 18:59:54,786 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 18:59:55,491 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 18:59:55,492 - INFO - Device status updated to active
+2025-10-16 18:59:55,492 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 18:59:55,499 - INFO - Started detect.py with PID: 13400
+2025-10-16 18:59:55,500 - INFO - Started output monitoring tasks
+2025-10-16 18:59:55,500 - INFO - Started monitoring detect.py output
+2025-10-16 18:59:57,663 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:57,663 - model.detect - INFO - SafeDriver Detection System Starting
+2025-10-16 18:59:57,663 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:57,663 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:57,664 - model.detect - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 18:59:57,664 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:57,664 - model.detect - INFO - Eye Closed Threshold: 0.6
+2025-10-16 18:59:57,664 - model.detect - INFO - Microsleep Duration: 1.5s
+2025-10-16 18:59:57,664 - model.detect - INFO - PERCLOS Window: 60.0s
+2025-10-16 18:59:57,664 - model.detect - INFO - Yawn Threshold: 0.8
+2025-10-16 18:59:57,664 - model.detect - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 18:59:57,664 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:57,666 - model.detect - INFO - Command line arguments parsed:
+2025-10-16 18:59:57,666 - model.detect - INFO -   Model: model/face_landmarker.task
+2025-10-16 18:59:57,666 - model.detect - INFO -   Number of faces: 1
+2025-10-16 18:59:57,666 - model.detect - INFO -   Detection confidence: 0.5
+2025-10-16 18:59:57,666 - model.detect - INFO -   Camera ID: 0
+2025-10-16 18:59:57,667 - model.detect - INFO -   Frame size: 720x960
+2025-10-16 18:59:57,667 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:57,667 - model.detect - INFO - Starting SafeDriver Monitoring System
+2025-10-16 18:59:57,667 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:57,667 - model.detect - INFO - Model path: model/face_landmarker.task
+2025-10-16 18:59:57,667 - model.detect - INFO - Camera ID: 0
+2025-10-16 18:59:57,667 - model.detect - INFO - Resolution: 720x960
+2025-10-16 18:59:57,667 - model.detect - INFO - Max faces: 1
+2025-10-16 18:59:57,667 - model.detect - INFO - Detection confidence: 0.5
+2025-10-16 18:59:57,667 - model.detect - INFO - Presence confidence: 0.5
+2025-10-16 18:59:57,668 - model.detect - INFO - Tracking confidence: 0.5
+2025-10-16 18:59:57,668 - model.detect - INFO - ================================================================================
+2025-10-16 18:59:57,668 - model.detect - INFO - Initializing camera 0...
+2025-10-16 19:00:01,598 - WARNING - detect.py process terminated with code 3221225786
+2025-10-16 19:00:01,599 - INFO - Stopped monitoring detect.py output
+2025-10-16 19:00:01,706 - INFO - Shutting down SafeDriver Backend
+2025-10-16 19:00:01,707 - INFO - Stopped detect.py successfully
+2025-10-16 19:00:03,461 - INFO - Initializing Firebase Admin SDK
+2025-10-16 19:00:03,512 - INFO - Firebase Admin SDK initialized successfully
+2025-10-16 19:00:03,519 - INFO - ================================================================================
+2025-10-16 19:00:03,519 - INFO - SafeDriver Backend Starting
+2025-10-16 19:00:03,520 - INFO - ================================================================================
+2025-10-16 19:00:03,575 - INFO - MAC Address retrieved: 48:89:e7:fa:15:ae
+2025-10-16 19:00:04,370 - INFO - Device with MAC 48:89:E7:FA:15:AE is registered
+2025-10-16 19:00:04,370 - INFO - Device MAC: 48:89:E7:FA:15:AE
+2025-10-16 19:00:05,046 - INFO - Device 48:89:E7:FA:15:AE status updated to active
+2025-10-16 19:00:05,047 - INFO - Device status updated to active
+2025-10-16 19:00:05,047 - INFO - Using Python executable: E:\Other_projects\SAFE_DRIVER\safe-driver-backend\venv\Scripts\python.exe
+2025-10-16 19:00:05,055 - INFO - Started detect.py with PID: 20904
+2025-10-16 19:00:05,055 - INFO - Started output monitoring tasks
+2025-10-16 19:00:06,754 - model.detect - INFO - ================================================================================
+2025-10-16 19:00:06,754 - model.detect - INFO - SafeDriver Detection System Starting
+2025-10-16 19:00:06,755 - model.detect - INFO - ================================================================================
+2025-10-16 19:00:06,755 - model.detect - INFO - ================================================================================
+2025-10-16 19:00:06,755 - model.detect - INFO - SafeDriver Monitoring System - Configuration Loaded
+2025-10-16 19:00:06,755 - model.detect - INFO - ================================================================================
+2025-10-16 19:00:06,755 - model.detect - INFO - Eye Closed Threshold: 0.6
+2025-10-16 19:00:06,755 - model.detect - INFO - Microsleep Duration: 1.5s
+2025-10-16 19:00:06,755 - model.detect - INFO - PERCLOS Window: 60.0s
+2025-10-16 19:00:06,755 - model.detect - INFO - Yawn Threshold: 0.8
+2025-10-16 19:00:06,755 - model.detect - INFO - Display Modes - FPS: True, Metrics: True, Warnings: True
+2025-10-16 19:00:06,755 - model.detect - INFO - ================================================================================
+2025-10-16 19:00:06,757 - model.detect - INFO - Command line arguments parsed:
+2025-10-16 19:00:06,757 - model.detect - INFO -   Model: model/face_landmarker.task
+2025-10-16 19:00:06,757 - model.detect - INFO -   Number of faces: 1
+2025-10-16 19:00:06,757 - model.detect - INFO -   Detection confidence: 0.5
+2025-10-16 19:00:06,757 - model.detect - INFO -   Camera ID: 0
+2025-10-16 19:00:06,758 - model.detect - INFO -   Frame size: 720x960
+2025-10-16 19:00:06,758 - model.detect - INFO - ================================================================================
+2025-10-16 19:00:06,758 - model.detect - INFO - Starting SafeDriver Monitoring System
+2025-10-16 19:00:06,758 - model.detect - INFO - ================================================================================
+2025-10-16 19:00:06,758 - model.detect - INFO - Model path: model/face_landmarker.task
+2025-10-16 19:00:06,758 - model.detect - INFO - Camera ID: 0
+2025-10-16 19:00:06,758 - model.detect - INFO - Resolution: 720x960
+2025-10-16 19:00:06,758 - model.detect - INFO - Max faces: 1
+2025-10-16 19:00:06,758 - model.detect - INFO - Detection confidence: 0.5
+2025-10-16 19:00:06,758 - model.detect - INFO - Presence confidence: 0.5
+2025-10-16 19:00:06,758 - model.detect - INFO - Tracking confidence: 0.5
+2025-10-16 19:00:06,759 - model.detect - INFO - ================================================================================
+2025-10-16 19:00:06,759 - model.detect - INFO - Initializing camera 0...
+2025-10-16 19:00:18,982 - model.detect - INFO - Camera initialized successfully - Actual resolution: 640.0x960
+2025-10-16 19:00:19,024 - model.detect - INFO - Display window 'SafeDriver Monitoring System' created
+2025-10-16 19:00:19,024 - model.detect - INFO - Loading face landmarker model from: model/face_landmarker.task
+2025-10-16 19:00:19,089 - model.detect - INFO - Face landmarker model loaded successfully
+2025-10-16 19:00:19,089 - model.detect - INFO - Starting video processing loop...
+2025-10-16 19:00:19,089 - model.detect - INFO - Press ESC to exit
+2025-10-16 19:00:19,608 - model.detect - INFO - First frame processed successfully
+2025-10-16 19:00:23,430 - model.detect - INFO - ESC key pressed - Exiting...
+2025-10-16 19:00:23,430 - model.detect - INFO - Cleaning up resources...
+2025-10-16 19:00:23,432 - model.detect - INFO - Total frames processed: 117
+2025-10-16 19:00:23,432 - model.detect - INFO - Final stats - Yawns: 0, Microsleeps: 0, Drowsy Events: 0
+2025-10-16 19:00:23,774 - model.detect - INFO - SafeDriver Monitoring System stopped successfully
+2025-10-16 19:00:23,774 - model.detect - INFO - ================================================================================
