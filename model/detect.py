@@ -16,6 +16,7 @@ from mediapipe.framework.formats import landmark_pb2
 
 import utils.utils as utils
 from beans.bean import CommonResponse, BehaviorResponseData
+import service.model_service as model_service
 
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
@@ -215,8 +216,10 @@ def send_behavior_to_parent(tag="BEHAVIOR_EVENT", type="behavior", message="", t
         }
         # Write JSON to stdout with a newline delimiter
         # Use sys.stdout directly and flush immediately
-        # sys.stdout.write(f"BEHAVIOR_DATA:{json.dumps(message)}\n")
-        # sys.stdout.flush()
+        sys.stdout.write(f"BEHAVIOR_DATA:{json.dumps(message)}\n")
+        sys.stdout.flush()
+        # model_service.save_behavior_event(message)
+
     except Exception as e:
         # Log errors to stderr instead of stdout
         sys.stderr.write(f"Failed to send behavior data to parent: {e}\n")
@@ -383,10 +386,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
             'drowsy_count': DROWSY_COUNT,
             'microsleep_count': MICROSLEEP_COUNT
         }
-        
-        # Send to parent process
-        send_behavior_to_parent(behavior_data)
-        
+                
         return behavior_data
 
     return None
@@ -682,6 +682,8 @@ def run(model: str, num_faces: int,
         
         logger.info("SafeDriver Monitoring System stopped successfully")
         logger.info("=" * 80)
+
+        model_service.update_device_status(status="inactive")
 
 
 def main():

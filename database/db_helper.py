@@ -157,7 +157,6 @@ def update_device_status(mac: str, status: str) -> dict:
             'last_updated_date_time': utils.now()
         })
         
-        logger.info(f"Device {mac} status updated to {status}")
         return {
             'success': True,
             'mac': mac,

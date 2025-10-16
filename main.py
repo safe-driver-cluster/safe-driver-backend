@@ -120,17 +120,41 @@ async def read_detect_process_output():
 
 @app.on_event("startup")
 async def startup_event():
-    global detect_process
+    global detect_process, device_mac
 
-    # Path to the same Python executable used by the current venv
-    venv_python = sys.executable  
+    # Get device MAC address
+    try:
+        device_details = model_service.check_device_registration()
+        device_mac = device_details.get("mac_address")
+        
+        if not device_mac:
+            logger.error("Could not retrieve device MAC address")
+        else:
+            logger.info(f"Device MAC: {device_mac}")
+            
+            # Register device if not already registered
+            if not device_details.get("registered"):
+                result = model_service.register_device(device_details)
+                logger.info(f"Device registration result: {result}")
+            else:
+                model_service.update_device_status(status="active")
+                
+        
+            # Start detect.py subprocess
+            # Path to the same Python executable used by the current venv
+            venv_python = sys.executable  
 
-    # Start detect.py using that interpreter
-    detect_process = subprocess.Popen(
-        [venv_python, "-c", "from model.detect import main; main()"],
-        cwd=os.path.dirname(os.path.abspath(__file__))
-    )
-    print(f"Started detect.py with PID: {detect_process.pid}")
+            # Start detect.py using that interpreter
+            detect_process = subprocess.Popen(
+                [venv_python, "-c", "from model.detect import main; main()"],
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+            print(f"Started detect.py with PID: {detect_process.pid}")
+            
+    except Exception as e:
+        logger.error(f"Failed to check device registration: {e}", exc_info=True)
+        shutdown_event()
+
 
 
 @app.on_event("shutdown")

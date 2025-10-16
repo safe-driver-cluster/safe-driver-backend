@@ -4,6 +4,7 @@ import database.db_helper as db_helper
 from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
 
 logger = logging.getLogger(__name__)
+mac_address = None
 
 def get_mac_address() -> str:
     """
@@ -20,7 +21,7 @@ def get_mac_address() -> str:
         mac_hex = ':'.join(['{:02x}'.format((mac_num >> elements) & 0xff) 
                            for elements in range(0, 8*6, 8)][::-1])
         
-        logger.info(f"MAC Address retrieved: {mac_hex}")
+        logger.info(f"MAC Address retrieved[Hex]: {mac_hex}")
         return mac_hex.upper()
     
     except Exception as e:
@@ -29,6 +30,7 @@ def get_mac_address() -> str:
 
 
 def check_device_registration() -> dict:
+    global mac_address
     """
     Check if device is registered by retrieving MAC address.
     
@@ -73,7 +75,7 @@ def get_mac_address_alternative() -> str:
         
         mac = gma()
         if mac:
-            logger.info(f"MAC Address retrieved: {mac}")
+            logger.info(f"MAC Address retrieved[getmac]: {mac}")
             return mac.upper()
         else:
             logger.warning("Could not retrieve MAC address")
@@ -108,7 +110,8 @@ def register_device(device_info: dict) -> bool:
         logger.error(f"Failed to register device with MAC {mac_address}: {result.get('message')}")
         return False
     
-def update_device_status(mac: str, status: str):
+def update_device_status(status: str):
+    global mac_address
     """
     Update the status of a registered device.
     
@@ -119,9 +122,33 @@ def update_device_status(mac: str, status: str):
     Returns:
         bool: True if update successful, False otherwise
     """
-    result = db_helper.update_device_status(mac, status)
+    logger.info(f"MAC before update status: {mac_address}")
+    result = db_helper.update_device_status(mac_address, status)
     
     if result.get('success'):
-        logger.info(f"Device {mac} status updated to {status}")
+        logger.info(f"Device {mac_address} status updated to {status}")
     else:
-        logger.error(f"Failed to update status for device {mac}: {result.get('message')}")
+        logger.error(f"Failed to update status for device {mac_address}: {result.get('message')}")
+
+def save_behavior_event(event_data: dict) -> bool:
+    global mac_address
+    """
+    Save a behavior event to the database.
+    
+    Args:
+        mac (str): MAC address of the device
+        event_data (dict): Data about the behavior event
+        
+    Returns:
+        bool: True if save successful, False otherwise
+    """
+    mac_address = get_mac_address_alternative()
+    logger.info(f"MAC before saving behavior event: {mac_address}")
+    result = db_helper.save_behavior_to_firebase(mac_address, event_data)
+    
+    if result.get('success'):
+        logger.info(f"Behavior event saved for device {mac_address}")
+        return True
+    else:
+        logger.error(f"Failed to save behavior event for device {mac_address}: {result.get('message')}")
+        return False
