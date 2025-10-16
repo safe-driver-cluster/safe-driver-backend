@@ -15,8 +15,6 @@ from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
 
 import utils.utils as utils
-from beans.bean import CommonResponse, BehaviorResponseData
-import service.model_service as model_service
 
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
@@ -218,7 +216,6 @@ def send_behavior_to_parent(tag="BEHAVIOR_EVENT", type="behavior", message="", t
         # Use sys.stdout directly and flush immediately
         sys.stdout.write(f"BEHAVIOR_DATA:{json.dumps(message)}\n")
         sys.stdout.flush()
-        # model_service.save_behavior_event(message)
 
     except Exception as e:
         # Log errors to stderr instead of stdout
@@ -682,8 +679,6 @@ def run(model: str, num_faces: int,
         
         logger.info("SafeDriver Monitoring System stopped successfully")
         logger.info("=" * 80)
-
-        model_service.update_device_status(status="inactive")
 
 
 def main():
