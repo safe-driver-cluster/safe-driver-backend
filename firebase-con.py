@@ -4,7 +4,7 @@ from firebase_admin import db
 
 cred = credentials.Certificate("firebase-admin-sdk\safe-driver-system-firebase-adminsdk-fbsvc-76241499ba.json")
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'  # Replace with your actual database URL
+    'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
 })
 
 # Firestore connection
