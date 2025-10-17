@@ -19,7 +19,7 @@ from firebase_admin import credentials, db
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler('safe_driver_debug.log'),
         logging.StreamHandler(sys.stdout)
@@ -142,8 +142,16 @@ async def read_detect_process_stderr():
             if line:
                 line = line.strip()
                 if line:
-                    # Log detect.py messages with prefix
-                    logger.info(f"[detect.py] {line}")
+                    # Extract just the message part after the log level
+                    # Format: 2025-10-17 11:17:30,966 - model.detect - INFO - Message
+                    parts = line.split(' - ', 3)
+                    if len(parts) >= 4:
+                        # Get just the message (last part)
+                        message = parts[3]
+                        logger.info(f"[detect.py] {message}")
+                    else:
+                        # If format doesn't match, log as-is
+                        logger.info(f"[detect.py] {line}")
             
             await asyncio.sleep(0.01)
             
