@@ -14,7 +14,7 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
 
-import utils.utils as utils
+import model.utilmethods as utils
 
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
@@ -24,149 +24,26 @@ mp_drawing_styles = mp.solutions.drawing_styles
 # LOGGING CONFIGURATION
 # ============================================================================
 
-# Configure logging
+# Configure logging - Log to stderr and file
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler('safe_driver_debug.log'),
-        logging.StreamHandler(sys.stdout)
+        logging.StreamHandler(sys.stderr)  # Log to stderr
     ]
 )
 logger = logging.getLogger(__name__)
 
 # ============================================================================
-# CONFIGURATION SECTION - All configurable parameters
+# END LOGGING CONFIGURATION
 # ============================================================================
 
-CONFIG = {
-    # Drowsiness Detection Thresholds
-    'EYE_CLOSED_THRESH': 0.60,
-    'EYE_PARTIAL_THRESH': 0.40,
-    'MICROSLEEP_SEC': 1.5,
-    'PERCLOS_WIN_SEC': 60.0,
-    'PERCLOS_DROWSY': 0.70,
-    'YAWN_THRESH': 0.80,
-    'YAWN_MIN_SEC': 1.0,
-    'EYE_CLOSURE_FREQ_WIN': 15.0,
-    'EYE_CLOSURE_FREQ_THRESH': 4,
-    'MIN_CLOSURE_DURATION': 0.4,
-    'BLINK_MAX_DURATION': 0.4,
-    'CLOSURE_DEBOUNCE_TIME': 0.5,
-    
-    # UI Layout Parameters
-    'WINDOW_NAME': 'SafeDriver Monitoring System',
-    'ROW_SIZE': 50,
-    'LEFT_MARGIN': 24,
-    'LABEL_PADDING_WIDTH': 1500,
-    'FPS_AVG_FRAME_COUNT': 10,
-    'SCROLL_STEP': 20,
-    
-    # Display Control Flags
-    'SHOW_BLENDSHAPES': False,
-    'SHOW_FACE_MESH': True,
-    'SHOW_FPS': True,
-    'SHOW_METRICS': True,
-    'SHOW_WARNINGS': True,
-    
-    # FPS Display
-    'FPS_FONT': cv2.FONT_HERSHEY_DUPLEX,
-    'FPS_FONT_SIZE': 0.5,
-    'FPS_FONT_THICKNESS': 1,
-    'FPS_COLOR': (0, 0, 0),
-    'FPS_TEXT_FORMAT': 'FPS = {:.1f}',
-    'FPS_Y_OFFSET': -20,
-    
-    # Metrics Box (Top Left)
-    'METRICS_PADDING': 10,
-    'METRICS_WIDTH': 175,
-    'METRICS_HEIGHT': 140,
-    'METRICS_Y_OFFSET': 0,
-    'METRICS_CORNER_RADIUS': 10,
-    'METRICS_BG_COLOR': (255, 255, 255),
-    'METRICS_BG_OPACITY': 0.5,
-    'METRICS_FONT': cv2.FONT_HERSHEY_SIMPLEX,
-    'METRICS_FONT_SIZE': 0.5,
-    'METRICS_FONT_THICKNESS': 1,
-    'METRICS_TEXT_COLOR': (0, 0, 0),
-    
-    # Metrics Text Labels
-    'LABEL_PERCLOS': 'PERCLOS: {:.2f}',
-    'LABEL_BLINKS': 'Blinks/min: {:02d}',
-    'LABEL_CLOSURES': 'Closures(15s): {}',
-    'LABEL_YAWNS': 'Yawns: {}',
-    'LABEL_MICROSLEEPS': 'Microsleeps: {}',
-    'LABEL_DROWSY_EVENTS': 'Drowsy Events: {}',
-    
-    # Metrics Text Positions
-    'PERCLOS_Y_OFFSET': 20,
-    'BLINKS_Y_OFFSET': 40,
-    'CLOSURES_Y_OFFSET': 60,
-    'YAWNS_Y_OFFSET': 85,
-    'MICROSLEEPS_Y_OFFSET': 105,
-    'DROWSY_EVENTS_Y_OFFSET': 125,
-    
-    # Warning Display
-    'WARNING_FONT': cv2.FONT_HERSHEY_DUPLEX,
-    'WARNING_FONT_SIZE': 1.0,
-    'WARNING_FONT_THICKNESS': 2,
-    'WARNING_COLOR': (0, 0, 255),
-    'WARNING_Y_POSITION': 50,
-    'WARNING_RIGHT_MARGIN': 20,
-    
-    # Warning Text Messages
-    'WARNING_MICROSLEEP': 'Microsleep Detected!',
-    'WARNING_YAWNING': 'Yawning Detected!',
-    'WARNING_FREQUENT_CLOSURES': 'Frequent Eye Closures!',
-    'WARNING_DROWSY': 'Drowsiness Detected!',
-    'WARNING_PERCLOS': 'High PERCLOS Level!',
-    
-    # Console Messages
-    'CONSOLE_MICROSLEEP': 'Microsleep detected (Total: {})',
-    'CONSOLE_YAWN': 'Yawn detected (Total: {})',
-    'CONSOLE_FREQUENT_CLOSURES': 'Frequent eye closures detected',
-    'CONSOLE_DROWSY': 'Drowsiness detected (Total: {})',
-    'CONSOLE_PERCLOS_REACHED': 'PERCLOS threshold reached: {:.2f}',
+# Log configuration on startup
+utils.log_config(logger)
 
-    # behavior data message type
-    'BEHAVIOR_FREQUENT_CLOSURES': 'frequent_closures',
-    'BEHAVIOR_MICROSLEEP': 'microsleep',
-    'BEHAVIOR_YAWN': 'yawn',
-    'BEHAVIOR_DROWSY': 'drowsy',
-    'BEHAVIOR_PERCLOS_REACHED': 'perclos_threshold_reached',
-    
-    # Blendshapes Display
-    'BLENDSHAPE_FONT': cv2.FONT_HERSHEY_SIMPLEX,
-    'BLENDSHAPE_FONT_SIZE': 0.4,
-    'BLENDSHAPE_FONT_THICKNESS': 1,
-    'BLENDSHAPE_TEXT_COLOR': (0, 0, 0),
-    'BLENDSHAPE_BAR_COLOR': (0, 255, 0),
-    'BLENDSHAPE_BAR_HEIGHT': 8,
-    'BLENDSHAPE_GAP_BETWEEN_BARS': 5,
-    'BLENDSHAPE_TEXT_GAP': 5,
-    'BLENDSHAPE_X_OFFSET': 20,
-    'BLENDSHAPE_Y_START': 30,
-    'BLENDSHAPE_TEXT_FORMAT': '{} ({:.2f})',
-    
-    # Face Mesh Drawing Colors
-    'LABEL_BG_COLOR': (255, 255, 255),
-    
-    # Camera Error Message
-    'CAMERA_ERROR_MSG': 'ERROR: Unable to read from webcam. Please verify your webcam settings.'
-}
-
-logger.info("=" * 80)
-logger.info("SafeDriver Monitoring System - Configuration Loaded")
-logger.info("=" * 80)
-logger.info(f"Eye Closed Threshold: {CONFIG['EYE_CLOSED_THRESH']}")
-logger.info(f"Microsleep Duration: {CONFIG['MICROSLEEP_SEC']}s")
-logger.info(f"PERCLOS Window: {CONFIG['PERCLOS_WIN_SEC']}s")
-logger.info(f"Yawn Threshold: {CONFIG['YAWN_THRESH']}")
-logger.info(f"Display Modes - FPS: {CONFIG['SHOW_FPS']}, Metrics: {CONFIG['SHOW_METRICS']}, Warnings: {CONFIG['SHOW_WARNINGS']}")
-
-# ============================================================================
-# END CONFIGURATION SECTION
-# ============================================================================
+# Import CONFIG for easier access
+CONFIG = utils.CONFIG
 
 # Global variables to calculate FPS
 COUNTER, FPS = 0, 0
@@ -194,6 +71,7 @@ FREQUENT_CLOSURES_COUNTED = False
 SCROLL_OFFSET = 0
 MAX_SCROLL = 0
 
+
 def _bs_score(blendshapes, name: str) -> float:
     """Return blendshape score by name or 0.0 if missing."""
     for c in blendshapes:
@@ -201,11 +79,12 @@ def _bs_score(blendshapes, name: str) -> float:
             return float(c.score)
     return 0.0
 
+
 def send_behavior_to_parent(tag="BEHAVIOR_EVENT", type="behavior", message="", time=None, behavior_data={}):
     """Send behavior data to parent process via stdout"""
     try:
         # Create a structured message
-        message = {
+        message_dict = {
             "tag": tag,
             "type": type,
             "message": message,
@@ -213,14 +92,13 @@ def send_behavior_to_parent(tag="BEHAVIOR_EVENT", type="behavior", message="", t
             "data": behavior_data
         }
         # Write JSON to stdout with a newline delimiter
-        # Use sys.stdout directly and flush immediately
-        sys.stdout.write(f"BEHAVIOR_DATA:{json.dumps(message)}\n")
+        sys.stdout.write(f"BEHAVIOR_DATA:{json.dumps(message_dict)}\n")
         sys.stdout.flush()
 
     except Exception as e:
         # Log errors to stderr instead of stdout
-        sys.stderr.write(f"Failed to send behavior data to parent: {e}\n")
-        sys.stderr.flush()
+        logger.error(f"Failed to send behavior data to parent: {e}")
+
 
 def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) -> dict:
     """Detect driver drowsiness behaviors based on facial blendshapes."""
