@@ -8,6 +8,7 @@ import json
 import service.model_service as model_service
 from database import db_helper
 from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
+import utils.utils as utils
 
 import firebase_admin
 from firebase_admin import credentials, db
@@ -27,6 +28,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Create a separate logger for detect.py output (console only, no file)
+detect_logger = logging.getLogger('detect_output')
+detect_logger.setLevel(logging.INFO)
+detect_console_handler = logging.StreamHandler(sys.stdout)
+detect_console_handler.setFormatter(logging.Formatter('%(message)s'))
+detect_logger.addHandler(detect_console_handler)
+detect_logger.propagate = False  # Don't propagate to root logger (prevents duplicate logs)
+
+utils.print_banner(detect_logger)
 logger.info("=" * 80)
 logger.info("SafeDriver Backend Starting...")
 logger.info("=" * 80)
@@ -139,19 +149,25 @@ async def read_detect_process_stderr():
                 None, detect_process.stderr.readline
             )
             
+            # if line:
+            #     line = line.strip()
+            #     if line:
+            #         # Extract just the message part after the log level
+            #         # Format: 2025-10-17 11:17:30,966 - model.detect - INFO - Message
+            #         parts = line.split(' - ', 3)
+            #         if len(parts) >= 4:
+            #             # Get just the message (last part)
+            #             message = parts[3]
+            #             detect_logger.info(f"{message}")
+            #         else:
+            #             # If format doesn't match, log as-is
+            #             detect_logger.info(f"{line}")
+
             if line:
                 line = line.strip()
                 if line:
-                    # Extract just the message part after the log level
-                    # Format: 2025-10-17 11:17:30,966 - model.detect - INFO - Message
-                    parts = line.split(' - ', 3)
-                    if len(parts) >= 4:
-                        # Get just the message (last part)
-                        message = parts[3]
-                        logger.info(f"[detect.py] {message}")
-                    else:
-                        # If format doesn't match, log as-is
-                        logger.info(f"[detect.py] {line}")
+                    # Log detect.py messages with prefix
+                    detect_logger.info(f"{line}")
             
             await asyncio.sleep(0.01)
             

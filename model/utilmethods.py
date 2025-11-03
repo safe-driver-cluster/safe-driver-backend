@@ -176,12 +176,12 @@ def log_config(logger):
     Args:
         logger: Logger instance to use
     """
-    logger.info("=" * 65)
+    logger.info("=" * 80)
     logger.info("SafeDriver Monitoring System - Configuration Loaded")
-    logger.info("=" * 65)
+    logger.info("=" * 80)
     logger.info(f"Eye Closed Threshold: {CONFIG['EYE_CLOSED_THRESH']}")
     logger.info(f"Microsleep Duration: {CONFIG['MICROSLEEP_SEC']}s")
     logger.info(f"PERCLOS Window: {CONFIG['PERCLOS_WIN_SEC']}s")
     logger.info(f"Yawn Threshold: {CONFIG['YAWN_THRESH']}")
     logger.info(f"Display Modes - FPS: {CONFIG['SHOW_FPS']}, Metrics: {CONFIG['SHOW_METRICS']}, Warnings: {CONFIG['SHOW_WARNINGS']}")
-    logger.info("=" * 65)
+    logger.info("=" * 80)

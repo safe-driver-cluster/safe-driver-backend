@@ -1,5 +1,6 @@
 import cv2
 
+VERSION_NO = "1.0.0"
 CONFIG = {
     # Drowsiness Detection Thresholds
     'EYE_CLOSED_THRESH': 0.60,
