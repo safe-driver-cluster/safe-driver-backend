@@ -2,6 +2,8 @@ import uuid
 import logging
 import database.db_helper as db_helper
 from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
+from getmac import get_mac_address as gma
+
 
 logger = logging.getLogger(__name__)
 mac_address = None
@@ -70,9 +72,7 @@ def get_mac_address_alternative() -> str:
     Returns:
         str: MAC address in format 'XX:XX:XX:XX:XX:XX'
     """
-    try:
-        from getmac import get_mac_address as gma
-        
+    try:        
         mac = gma()
         if mac:
             logger.info(f"MAC Address retrieved[getmac]: {mac}")
