@@ -83,6 +83,9 @@ WARNING_YAWNING = 'Yawning Detected!'
 WARNING_FREQUENT_CLOSURES = 'Frequent Eye Closures!'
 WARNING_DROWSY = 'Drowsiness Detected!'
 WARNING_PERCLOS = 'High PERCLOS Level!'
+WARNING_DISTRACTION = 'Driver Distraction Detected!'
+WARNING_MOBILE_USE = 'Mobile Phone Use Detected!'
+WARNING_SMOKING = 'Smoking Detected!'
 
 # Console Messages
 CONSOLE_MICROSLEEP = 'Microsleep detected (Total: {})'
@@ -90,6 +93,9 @@ CONSOLE_YAWN = 'Yawn detected (Total: {})'
 CONSOLE_FREQUENT_CLOSURES = 'Frequent eye closures detected'
 CONSOLE_DROWSY = 'Drowsiness detected (Total: {})'
 CONSOLE_PERCLOS_REACHED = 'PERCLOS threshold reached: {:.2f}'
+CONSOLE_DISTRACTION = 'Driver distraction detected'
+CONSOLE_MOBILE_USE = 'Mobile phone use detected'
+CONSOLE_SMOKING = 'Smoking detected'
 
 # Behavior Data Message Types
 BEHAVIOR_FREQUENT_CLOSURES = 'frequent_closures'
@@ -97,6 +103,9 @@ BEHAVIOR_MICROSLEEP = 'microsleep'
 BEHAVIOR_YAWN = 'yawn'
 BEHAVIOR_DROWSY = 'drowsy'
 BEHAVIOR_PERCLOS_REACHED = 'perclos_threshold_reached'
+BEHAVIOR_DISTRACTION = 'distraction'
+BEHAVIOR_MOBILE_USE = 'mobile_use'
+BEHAVIOR_SMOKING = 'smoking'
 
 # Blendshapes Display
 BLENDSHAPE_FONT = cv2.FONT_HERSHEY_SIMPLEX

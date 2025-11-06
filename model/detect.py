@@ -261,8 +261,15 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
         }
                 
         return behavior_data
-
-    return None
+    else:
+        logger.warning("DISTRACTION DETECTED! Missing focus on the road.")
+        send_behavior_to_parent(
+            tag="DISTRACTION_EVENT",
+            type=config.BEHAVIOR_DISTRACTION,
+            message=config.CONSOLE_DISTRACTION,
+            time=utils.now()
+        )
+        return None
 
 def run(model: str, num_faces: int,
         min_face_detection_confidence: float,
@@ -502,7 +509,7 @@ def run(model: str, num_faces: int,
                                                config.WARNING_FONT, config.WARNING_FONT_SIZE,
                                                config.WARNING_COLOR, config.WARNING_FONT_THICKNESS, cv2.LINE_AA)
                                     break
-                    
+
                     # Draw blendshapes
                     if config.SHOW_BLENDSHAPES:
                         legend_x = current_frame.shape[1] - config.LABEL_PADDING_WIDTH + config.BLENDSHAPE_X_OFFSET
@@ -533,6 +540,22 @@ def run(model: str, num_faces: int,
                                             config.BLENDSHAPE_BAR_COLOR, -1)
 
                             legend_y += (config.BLENDSHAPE_BAR_HEIGHT + config.BLENDSHAPE_GAP_BETWEEN_BARS)
+            else:
+                behavior_data = detect_driver_behavior(None, None, None)
+                if behavior_data is None:
+                    # Display warnings
+                    if config.SHOW_WARNINGS:
+                        frame_width = current_frame.shape[1] - (config.LABEL_PADDING_WIDTH if config.SHOW_BLENDSHAPES else 0)
+                        warning_text = config.WARNING_DISTRACTION
+                        (text_width, _), _ = cv2.getTextSize(warning_text,
+                                                                config.WARNING_FONT,
+                                                                config.WARNING_FONT_SIZE,
+                                                                config.WARNING_FONT_THICKNESS)
+                        right_x = frame_width - text_width - config.WARNING_RIGHT_MARGIN
+                        cv2.putText(current_frame, warning_text,
+                                    (right_x, config.WARNING_Y_POSITION),
+                                    config.WARNING_FONT, config.WARNING_FONT_SIZE,
+                                    config.WARNING_COLOR, config.WARNING_FONT_THICKNESS, cv2.LINE_AA)
 
             cv2.imshow(config.WINDOW_NAME, current_frame)
 
