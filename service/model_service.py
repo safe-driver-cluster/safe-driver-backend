@@ -38,7 +38,7 @@ def check_device_registration() -> dict:
         dict: Contains MAC address and registration status
     """
     mac_address = get_mac_address_alternative()
-    logger.info(f"MAC Address retrieved: {mac_address.lower()}")
+    logger.info(f"MAC Address retrieved: {mac_address}")
 
     is_registered = db_helper.is_registered_device(mac_address) if mac_address else False
     
@@ -122,7 +122,7 @@ def update_device_status(status: str):
     Returns:
         bool: True if update successful, False otherwise
     """
-    logger.info(f"MAC before update status: {mac_address}")
+    # logger.info(f"MAC before update status: {mac_address}")
     result = db_helper.update_device_status(mac_address, status)
     
     if result.get('success'):
