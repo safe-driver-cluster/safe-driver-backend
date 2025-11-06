@@ -36,9 +36,9 @@ detect_console_handler.setFormatter(logging.Formatter('%(message)s'))
 detect_logger.addHandler(detect_console_handler)
 detect_logger.propagate = False  # Don't propagate to root logger (prevents duplicate logs)
 
-utils.print_banner(detect_logger)
+utils.print_banner(logger)
 logger.info("=" * 80)
-logger.info("SafeDriver Backend Starting...")
+logger.info("SafeDriver Monitoring System Starting...")
 logger.info("=" * 80)
 
 # ============================================================================
@@ -56,6 +56,7 @@ firebase_admin.initialize_app(cred, {
 })
 logger.info("Firebase Admin SDK initialized successfully")
 
+# Initialize FastAPI app
 app = FastAPI()
 
 # Store the detect.py process and monitoring tasks
@@ -193,7 +194,7 @@ async def startup_event():
         if not device_mac:
             logger.error("Could not retrieve device MAC address")
         else:
-            logger.info(f"Device MAC: {device_mac}")
+            # logger.info(f"Device MAC: {device_mac}")
             
             # Register device if not already registered
             if not device_details.get("registered"):
