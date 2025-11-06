@@ -30,11 +30,6 @@ def is_registered_device(mac: str) -> bool:
         # Check if 'registered' field is True
         is_registered = device_data.get('is_registered', False)
         
-        if is_registered:
-            logger.info(f"Device with MAC {mac} is registered")
-        else:
-            logger.info(f"Device with MAC {mac} exists but is not registered")
-        
         return is_registered
         
     except Exception as e:
