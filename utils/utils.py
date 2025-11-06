@@ -21,26 +21,16 @@ def print_banner(logger):
             with open(banner_path, 'r', encoding='utf-8') as f:
                 banner_content = f.read()
                 
-                # Print to console without timestamp
-                # print(banner_content)
-                # print()  # Empty line for spacing
-                
                 # Also write to log file (with timestamps)
                 for line in banner_content.split('\n'):
-                    if line.strip():
-                        # Check if line contains version placeholder
-                        if ":" in line:
-                            line_parts = line.split(":", 1)
-                            # Format with version number
-                            new_line = f"{line_parts[0].strip()} : Version : {config.VERSION_NO.strip()}"
-                            logger.info(new_line)
-                        elif "©" in line:
-                            line_parts = line.split("©", 1)
-                            new_line = f"{line_parts[0].strip()}© {datetime.now().year}"
-                            logger.info(new_line)
-                        else:
-                            # Log line as-is
-                            logger.info(line)
+                    logger.info(line)
+
+                new_line1 = f"                   DRIVER MONITORING SYSTEM : Version : {config.VERSION_NO.strip()}"
+                new_line2 = f"            POWERED BY CODE CRAFTERS | ALL RIGHTS RESEREVED © {datetime.now().year}"
+
+                logger.info(new_line1)
+                logger.info(new_line2+"\n")
+
         else:
             logger.warning(f"Banner file not found at: {banner_path}")
             # Fallback banner if file doesn't exist
