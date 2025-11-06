@@ -297,7 +297,7 @@ def run(model: str, num_faces: int,
     
     actual_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     actual_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-    logger.info(f"Camera initialized successfully - Actual resolution: {actual_width}x{height}")
+    logger.info(f"Camera initialized successfully - Actual resolution: {actual_width} x {actual_height}")
 
     global SCROLL_OFFSET, MAX_SCROLL
 
