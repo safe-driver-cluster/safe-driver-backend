@@ -209,6 +209,7 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                         "face_lost": True
                     }
                 )
+                utils.perform_voice_alerts(config.VOICE_ALERT_DISTRACTION)
         
         return {
             'is_turned': True,
@@ -279,6 +280,7 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                         "roll": head_pose['roll']
                     }
                 )
+                utils.perform_voice_alerts(config.VOICE_ALERT_HEAD_TURN)
     else:
         HEAD_TURNED_START = None
         HEAD_TURN_COUNTED = False
@@ -328,6 +330,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                     "time_window": config.PERCLOS_WIN_SEC
                 }
             )
+            utils.perform_voice_alerts(config.VOICE_ALERT_PERCLOS)
 
         # --- Eye closure frequency tracking ---
         global EYE_CLOSURE_EVENTS, EYE_PARTIAL_CLOSURE_START, FREQUENT_CLOSURES_COUNTED
@@ -365,6 +368,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                     "time_window": config.EYE_CLOSURE_FREQ_WIN
                 }
             )
+            utils.perform_voice_alerts(config.VOICE_ALERT_DROWSY)
         elif not frequent_closures:
             FREQUENT_CLOSURES_COUNTED = False
 
@@ -403,6 +407,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                     "total_count": MICROSLEEP_COUNT
                 }
             )
+            utils.perform_voice_alerts(config.VOICE_ALERT_MICROSLEEP)
 
         # --- Yawn detection ---
         global YAWN_START, YAWN_COUNT, YAWN_COUNTED
@@ -428,6 +433,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                             "total_count": YAWN_COUNT
                         }
                     )
+                    utils.perform_voice_alerts(config.VOICE_ALERT_YAWNING)
         else:
             YAWN_START = None
             YAWN_COUNTED = False
@@ -494,6 +500,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 message=config.CONSOLE_DISTRACTION,
                 time=utils.now()
             )
+            utils.perform_voice_alerts(config.VOICE_ALERT_DISTRACTION)
             return {
                 'drowsy': False,
                 'yawning': False,

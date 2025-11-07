@@ -125,6 +125,7 @@ VOICE_ALERT_YAWNING = 'Yawning detected! Please stay focused.'
 VOICE_ALERT_DROWSY = 'Drowsiness detected! Please take a break.'
 VOICE_ALERT_DISTRACTION = 'Driver distraction detected! Please pay attention to the road.'
 VOICE_ALERT_HEAD_TURN = 'Head turn detected! Please keep your eyes on the road.'
+VOICE_ALERT_PERCLOS = 'High PERCLOS level detected! Please stay alert.'
 
 # Blendshapes Display
 BLENDSHAPE_FONT = cv2.FONT_HERSHEY_SIMPLEX

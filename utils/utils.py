@@ -36,21 +36,3 @@ def print_banner(logger):
     new_line2 = f"            POWERED BY CODE CRAFTERS | ALL RIGHTS RESEREVED © {datetime.now().year}"
     logger.info(new_line1)
     logger.info(new_line2+"\n")
-
-def perform_voice_alerts(message):
-    """Perform voice alerts using system TTS"""
-    try:
-        # For Windows
-        if os.name == 'nt':
-            import pyttsx3
-            engine = pyttsx3.init()
-            engine.say(message)
-            engine.runAndWait()
-        # For macOS
-        elif os.uname().sysname == 'Darwin':
-            os.system(f'say "{message}"')
-        # For Linux
-        else:
-            os.system(f'espeak "{message}"')
-    except Exception as e:
-        print(f"Error performing voice alert: {e}")
