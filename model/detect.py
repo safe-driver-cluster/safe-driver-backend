@@ -55,6 +55,8 @@ PERCLOS_WIN = deque()
 BLINK_TIMES = deque()
 EYE_CLOSURE_EVENTS = deque()
 EYE_PARTIAL_CLOSURE_START = None
+HEAD_TURNED_START = None  # Track when head turn started
+LAST_HEAD_POSE_STATE = "CENTER"  # Track head pose state
 
 # Event counters
 YAWN_COUNT = 0
@@ -64,6 +66,7 @@ YAWN_COUNTED = False
 MICROSLEEP_COUNTED = False
 DROWSY_COUNTED = False
 FREQUENT_CLOSURES_COUNTED = False
+HEAD_TURN_COUNTED = False  # Track head turn events
 
 # Scroll variables
 SCROLL_OFFSET = 0
@@ -98,7 +101,164 @@ def send_behavior_to_parent(tag="BEHAVIOR_EVENT", type="behavior", message="", t
         logger.error(f"Failed to send behavior data to parent: {e}")
 
 
-def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) -> dict:
+def calculate_head_pose(face_landmarks, image_width, image_height):
+    """Calculate head pose angles (yaw, pitch, roll) from facial landmarks."""
+    if not face_landmarks:
+        return None
+    
+    # Key landmark indices for head pose estimation
+    # Nose tip
+    nose_tip = face_landmarks[1]
+    # Chin
+    chin = face_landmarks[152]
+    # Left eye outer corner
+    left_eye = face_landmarks[263]
+    # Right eye outer corner 
+    right_eye = face_landmarks[33]
+    # Left mouth corner
+    left_mouth = face_landmarks[61]
+    # Right mouth corner
+    right_mouth = face_landmarks[291]
+    
+    # Convert normalized coordinates to pixel coordinates
+    nose_2d = (nose_tip.x * image_width, nose_tip.y * image_height)
+    chin_2d = (chin.x * image_width, chin.y * image_height)
+    left_eye_2d = (left_eye.x * image_width, left_eye.y * image_height)
+    right_eye_2d = (right_eye.x * image_width, right_eye.y * image_height)
+    left_mouth_2d = (left_mouth.x * image_width, left_mouth.y * image_height)
+    right_mouth_2d = (right_mouth.x * image_width, right_mouth.y * image_height)
+    
+    # Calculate yaw (left-right rotation)
+    # Based on the horizontal position of nose relative to eye centers
+    eye_center_x = (left_eye_2d[0] + right_eye_2d[0]) / 2
+    nose_x = nose_2d[0]
+    eye_width = abs(right_eye_2d[0] - left_eye_2d[0])
+    
+    if eye_width > 0:
+        # Normalize the offset (-1 to 1, where negative is left, positive is right)
+        yaw_normalized = (nose_x - eye_center_x) / (eye_width / 2)
+        # Convert to degrees (approximate, -45 to 45 degrees)
+        yaw = yaw_normalized * 45
+    else:
+        yaw = 0
+    
+    # Calculate pitch (up-down rotation)
+    # Based on vertical distance between nose and chin relative to face height
+    face_height = abs(chin_2d[1] - left_eye_2d[1])
+    nose_to_eye = abs(nose_2d[1] - left_eye_2d[1])
+    
+    if face_height > 0:
+        pitch_normalized = (nose_to_eye / face_height) - 0.5
+        pitch = pitch_normalized * 60  # Approximate pitch angle
+    else:
+        pitch = 0
+    
+    # Calculate roll (tilt rotation)
+    # Based on the angle between the two eyes
+    eye_dx = right_eye_2d[0] - left_eye_2d[0]
+    eye_dy = right_eye_2d[1] - left_eye_2d[1]
+    
+    if eye_dx != 0:
+        roll = np.degrees(np.arctan(eye_dy / eye_dx))
+    else:
+        roll = 0
+    
+    return {
+        'yaw': yaw,
+        'pitch': pitch,
+        'roll': roll
+    }
+
+
+def detect_head_turn_distraction(face_landmarks, image_width, image_height):
+    """Detect if driver is looking away based on head pose."""
+    global HEAD_TURNED_START, HEAD_TURN_COUNTED, LAST_HEAD_POSE_STATE
+    
+    if not face_landmarks:
+        # No face detected - this is handled separately
+        HEAD_TURNED_START = None
+        HEAD_TURN_COUNTED = False
+        LAST_HEAD_POSE_STATE = "NO_FACE"
+        return {
+            'is_turned': False,
+            'direction': None,
+            'yaw': None,
+            'pitch': None,
+            'roll': None,
+            'duration': 0
+        }
+    
+    head_pose = calculate_head_pose(face_landmarks, image_width, image_height)
+    
+    if not head_pose:
+        return {
+            'is_turned': False,
+            'direction': None,
+            'yaw': None,
+            'pitch': None,
+            'roll': None,
+            'duration': 0
+        }
+    
+    yaw = head_pose['yaw']
+    now = time.time()
+    
+    # Determine head direction based on yaw angle
+    is_turned = False
+    direction = None
+    
+    if yaw < -config.HEAD_YAW_THRESH_LEFT:
+        is_turned = True
+        direction = "LEFT"
+    elif yaw > config.HEAD_YAW_THRESH_RIGHT:
+        is_turned = True
+        direction = "RIGHT"
+    else:
+        direction = "CENTER"
+    
+    # Track head turn duration
+    duration = 0
+    if is_turned:
+        if HEAD_TURNED_START is None:
+            HEAD_TURNED_START = now
+            LAST_HEAD_POSE_STATE = direction
+            logger.debug(f"Head turn started - Direction: {direction}, Yaw: {yaw:.1f}°")
+        else:
+            duration = now - HEAD_TURNED_START
+            
+            # Send alert if head turned for too long
+            if duration >= config.HEAD_TURN_DISTRACTION_SEC and not HEAD_TURN_COUNTED:
+                HEAD_TURN_COUNTED = True
+                logger.warning(f"HEAD TURN DISTRACTION! Direction: {direction}, Duration: {duration:.2f}s, Yaw: {yaw:.1f}°")
+                send_behavior_to_parent(
+                    tag="DISTRACTION_EVENT",
+                    type=config.BEHAVIOR_HEAD_TURN,
+                    message=config.CONSOLE_HEAD_TURN.format(direction, duration),
+                    time=utils.now(),
+                    behavior_data={
+                        "direction": direction,
+                        "duration": duration,
+                        "yaw": yaw,
+                        "pitch": head_pose['pitch'],
+                        "roll": head_pose['roll']
+                    }
+                )
+    else:
+        HEAD_TURNED_START = None
+        HEAD_TURN_COUNTED = False
+        LAST_HEAD_POSE_STATE = "CENTER"
+    
+    return {
+        'is_turned': is_turned,
+        'direction': direction,
+        'yaw': yaw,
+        'pitch': head_pose['pitch'],
+        'roll': head_pose['roll'],
+        'duration': duration
+    }
+
+
+def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, face_landmarks=None, image_width=None, image_height=None) -> dict:
     """Detect driver drowsiness behaviors based on facial blendshapes."""
     if face_blendshapes:
         now = time.time()
@@ -257,8 +417,16 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame) 
             'closure_count': len(EYE_CLOSURE_EVENTS),
             'yawn_count': YAWN_COUNT,
             'drowsy_count': DROWSY_COUNT,
-            'microsleep_count': MICROSLEEP_COUNT
+            'microsleep_count': MICROSLEEP_COUNT,
+            'head_pose': None,  # Will be added below
+            'distracted': False  # Will be updated below
         }
+        
+        # Add head pose detection
+        if face_landmarks and image_width and image_height:
+            head_turn_data = detect_head_turn_distraction(face_landmarks, image_width, image_height)
+            behavior_data['head_pose'] = head_turn_data
+            behavior_data['distracted'] = head_turn_data['is_turned']
                 
         return behavior_data
     else:
@@ -430,9 +598,17 @@ def run(model: str, num_faces: int,
 
             if DETECTION_RESULT:
                 face_blendshapes = DETECTION_RESULT.face_blendshapes
+                face_landmarks = DETECTION_RESULT.face_landmarks[0] if DETECTION_RESULT.face_landmarks else None
 
                 if face_blendshapes:
-                    behavior_data = detect_driver_behavior(face_blendshapes, current_frame.shape[0], current_frame)
+                    behavior_data = detect_driver_behavior(
+                        face_blendshapes, 
+                        current_frame.shape[0], 
+                        current_frame,
+                        face_landmarks=face_landmarks,
+                        image_width=current_frame.shape[1],
+                        image_height=current_frame.shape[0]
+                    )
                     
                     if behavior_data:
                         # Draw metrics background
@@ -474,6 +650,7 @@ def run(model: str, num_faces: int,
                                 (config.LABEL_YAWNS.format(behavior_data['yawn_count']), config.YAWNS_Y_OFFSET),
                                 (config.LABEL_MICROSLEEPS.format(behavior_data['microsleep_count']), config.MICROSLEEPS_Y_OFFSET),
                                 (config.LABEL_DROWSY_EVENTS.format(behavior_data['drowsy_count']), config.DROWSY_EVENTS_Y_OFFSET),
+                                (config.LABEL_HEAD_POSE.format( behavior_data.get('head_pose', {}).get('direction', 'N/A')), config.HEAD_POSE_Y_OFFSET),
                             ]
                             
                             for text, y_offset in metrics_data:
@@ -493,6 +670,11 @@ def run(model: str, num_faces: int,
                                  config.CONSOLE_YAWN.format(behavior_data['yawn_count'])),
                                 (behavior_data['frequent_closures'], config.WARNING_FREQUENT_CLOSURES,
                                  config.CONSOLE_FREQUENT_CLOSURES),
+                                (behavior_data.get('distracted', False), config.WARNING_HEAD_TURN,
+                                 config.CONSOLE_HEAD_TURN.format(
+                                     behavior_data.get('head_pose', {}).get('direction', 'UNKNOWN'),
+                                     behavior_data.get('head_pose', {}).get('duration', 0)
+                                 )),
                                 (behavior_data['drowsy'], config.WARNING_DROWSY,
                                  config.CONSOLE_DROWSY.format(behavior_data['drowsy_count'])),
                             ]
@@ -509,6 +691,22 @@ def run(model: str, num_faces: int,
                                                config.WARNING_FONT, config.WARNING_FONT_SIZE,
                                                config.WARNING_COLOR, config.WARNING_FONT_THICKNESS, cv2.LINE_AA)
                                     break
+                        
+                        # Display head pose information if enabled
+                        if config.SHOW_HEAD_POSE_DETAILS and behavior_data.get('head_pose'):
+                            head_pose = behavior_data['head_pose']
+                            pose_text = f"Yaw: {head_pose['yaw']:.1f}° \nPitch: {head_pose['pitch']:.1f}° \nRoll: {head_pose['roll']:.1f}°"
+                            # direction_text = f"Head: {head_pose['direction']}"
+                            
+                            cv2.putText(current_frame, pose_text,
+                                       (config.LEFT_MARGIN, config.ROW_SIZE + config.HEAD_POSE_DETAILS_Y_OFFSET),
+                                       config.METRICS_FONT, config.HEAD_POSE_FONT_SIZE,
+                                       config.HEAD_POSE_COLOR, config.METRICS_FONT_THICKNESS, cv2.LINE_AA)
+                            
+                            # cv2.putText(current_frame, direction_text,
+                            #            (config.LEFT_MARGIN, config.ROW_SIZE + config.HEAD_POSE_Y_OFFSET + 25),
+                            #            config.METRICS_FONT, config.HEAD_POSE_FONT_SIZE,
+                            #            config.HEAD_POSE_COLOR, config.METRICS_FONT_THICKNESS, cv2.LINE_AA)
 
                     # Draw blendshapes
                     if config.SHOW_BLENDSHAPES:
