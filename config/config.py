@@ -119,6 +119,13 @@ BEHAVIOR_MOBILE_USE = 'mobile_use'
 BEHAVIOR_SMOKING = 'smoking'
 BEHAVIOR_HEAD_TURN = "head_turn"
 
+# Voice Alert Messages
+VOICE_ALERT_MICROSLEEP = 'Microsleep detected! Please stay alert.'
+VOICE_ALERT_YAWNING = 'Yawning detected! Please stay focused.'
+VOICE_ALERT_DROWSY = 'Drowsiness detected! Please take a break.'
+VOICE_ALERT_DISTRACTION = 'Driver distraction detected! Please pay attention to the road.'
+VOICE_ALERT_HEAD_TURN = 'Head turn detected! Please keep your eyes on the road.'
+
 # Blendshapes Display
 BLENDSHAPE_FONT = cv2.FONT_HERSHEY_SIMPLEX
 BLENDSHAPE_FONT_SIZE = 0.4
