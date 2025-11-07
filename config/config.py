@@ -106,6 +106,7 @@ CONSOLE_DISTRACTION = 'Driver distraction detected'
 CONSOLE_MOBILE_USE = 'Mobile phone use detected'
 CONSOLE_SMOKING = 'Smoking detected'
 CONSOLE_HEAD_TURN = "Head turned {} for {:.2f}s"
+CONSOLE_FACE_LOSS = "Driver face not visible for {:.2f}s - Complete turn away detected"
 
 # Behavior Data Message Types
 BEHAVIOR_FREQUENT_CLOSURES = 'frequent_closures'

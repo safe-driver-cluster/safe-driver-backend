@@ -57,6 +57,8 @@ EYE_CLOSURE_EVENTS = deque()
 EYE_PARTIAL_CLOSURE_START = None
 HEAD_TURNED_START = None  # Track when head turn started
 LAST_HEAD_POSE_STATE = "CENTER"  # Track head pose state
+NO_FACE_START = None  # Track when face disappeared
+NO_FACE_COUNTED = False  # Track if no-face event was counted
 
 # Event counters
 YAWN_COUNT = 0
@@ -172,21 +174,55 @@ def calculate_head_pose(face_landmarks, image_width, image_height):
 
 def detect_head_turn_distraction(face_landmarks, image_width, image_height):
     """Detect if driver is looking away based on head pose."""
-    global HEAD_TURNED_START, HEAD_TURN_COUNTED, LAST_HEAD_POSE_STATE
+    global HEAD_TURNED_START, HEAD_TURN_COUNTED, LAST_HEAD_POSE_STATE, NO_FACE_START, NO_FACE_COUNTED
     
     if not face_landmarks:
-        # No face detected - this is handled separately
+        # No face detected - track as distraction
         HEAD_TURNED_START = None
         HEAD_TURN_COUNTED = False
-        LAST_HEAD_POSE_STATE = "NO_FACE"
+        
+        now = time.time()
+        
+        # Start tracking no-face duration
+        if NO_FACE_START is None:
+            NO_FACE_START = now
+            LAST_HEAD_POSE_STATE = "NO_FACE"
+            logger.debug("Face lost - starting no-face tracking")
+        else:
+            duration = now - NO_FACE_START
+            
+            # Send alert if face missing for too long
+            if duration >= config.HEAD_TURN_DISTRACTION_SEC and not NO_FACE_COUNTED:
+                NO_FACE_COUNTED = True
+                logger.warning(f"NO FACE DETECTED! Duration: {duration:.2f}s")
+                send_behavior_to_parent(
+                    tag="DISTRACTION_EVENT",
+                    type=config.BEHAVIOR_HEAD_TURN,
+                    message=config.CONSOLE_FACE_LOSS.format(duration),
+                    time=utils.now(),
+                    behavior_data={
+                        "direction": "AWAY",
+                        "duration": duration,
+                        "yaw": None,
+                        "pitch": None,
+                        "roll": None,
+                        "face_lost": True
+                    }
+                )
+        
         return {
-            'is_turned': False,
-            'direction': None,
+            'is_turned': True,
+            'direction': "AWAY",
             'yaw': None,
             'pitch': None,
             'roll': None,
-            'duration': 0
+            'duration': now - NO_FACE_START if NO_FACE_START else 0,
+            'face_lost': True
         }
+    
+    # Face detected - reset no-face tracking
+    NO_FACE_START = None
+    NO_FACE_COUNTED = False
     
     head_pose = calculate_head_pose(face_landmarks, image_width, image_height)
     
@@ -419,7 +455,8 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
             'drowsy_count': DROWSY_COUNT,
             'microsleep_count': MICROSLEEP_COUNT,
             'head_pose': None,  # Will be added below
-            'distracted': False  # Will be updated below
+            'distracted': False,  # Will be updated below
+            'face_lost': False
         }
         
         # Add head pose detection
@@ -430,14 +467,49 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 
         return behavior_data
     else:
-        logger.warning("DISTRACTION DETECTED! Missing focus on the road.")
-        send_behavior_to_parent(
-            tag="DISTRACTION_EVENT",
-            type=config.BEHAVIOR_DISTRACTION,
-            message=config.CONSOLE_DISTRACTION,
-            time=utils.now()
-        )
-        return None
+        # No face detected - still check for head turn/distraction
+        if image_width and image_height:
+            head_turn_data = detect_head_turn_distraction(None, image_width, image_height)
+            
+            return {
+                'drowsy': False,
+                'yawning': False,
+                'microsleep': False,
+                'perclos': 0.0,
+                'blinks_per_min': 0,
+                'frequent_closures': False,
+                'closure_count': 0,
+                'yawn_count': YAWN_COUNT,
+                'drowsy_count': DROWSY_COUNT,
+                'microsleep_count': MICROSLEEP_COUNT,
+                'head_pose': head_turn_data,
+                'distracted': True,
+                'face_lost': True
+            }
+        else:
+            logger.warning("DISTRACTION DETECTED! Missing focus on the road.")
+            send_behavior_to_parent(
+                tag="DISTRACTION_EVENT",
+                type=config.BEHAVIOR_DISTRACTION,
+                message=config.CONSOLE_DISTRACTION,
+                time=utils.now()
+            )
+            return {
+                'drowsy': False,
+                'yawning': False,
+                'microsleep': False,
+                'perclos': 0.0,
+                'blinks_per_min': 0,
+                'frequent_closures': False,
+                'closure_count': 0,
+                'yawn_count': YAWN_COUNT,
+                'drowsy_count': DROWSY_COUNT,
+                'microsleep_count': MICROSLEEP_COUNT,
+                'head_pose': None,
+                'distracted': True,
+                'face_lost': True
+            }
+
 
 def run(model: str, num_faces: int,
         min_face_detection_confidence: float,
@@ -600,64 +672,63 @@ def run(model: str, num_faces: int,
                 face_blendshapes = DETECTION_RESULT.face_blendshapes
                 face_landmarks = DETECTION_RESULT.face_landmarks[0] if DETECTION_RESULT.face_landmarks else None
 
-                if face_blendshapes:
-                    behavior_data = detect_driver_behavior(
-                        face_blendshapes, 
-                        current_frame.shape[0], 
-                        current_frame,
-                        face_landmarks=face_landmarks,
-                        image_width=current_frame.shape[1],
-                        image_height=current_frame.shape[0]
-                    )
+                behavior_data = detect_driver_behavior(
+                    face_blendshapes, 
+                    current_frame.shape[0], 
+                    current_frame,
+                    face_landmarks=face_landmarks,
+                    image_width=current_frame.shape[1],
+                    image_height=current_frame.shape[0]
+                )
                     
-                    if behavior_data:
-                        # Draw metrics background
-                        if config.SHOW_METRICS:
-                            metrics_x = config.LEFT_MARGIN - config.METRICS_PADDING
-                            metrics_y = config.ROW_SIZE + config.METRICS_Y_OFFSET
-                            
-                            overlay = current_frame.copy()
-                            corner_radius = config.METRICS_CORNER_RADIUS
-                            
-                            # Draw rounded rectangle
-                            cv2.rectangle(overlay,
-                                        (metrics_x + corner_radius, metrics_y),
-                                        (metrics_x + config.METRICS_WIDTH - corner_radius, 
-                                         metrics_y + config.METRICS_HEIGHT),
-                                        config.METRICS_BG_COLOR, -1)
-                            cv2.rectangle(overlay,
-                                        (metrics_x, metrics_y + corner_radius),
-                                        (metrics_x + config.METRICS_WIDTH, 
-                                         metrics_y + config.METRICS_HEIGHT - corner_radius),
-                                        config.METRICS_BG_COLOR, -1)
-                            
-                            # Corner circles
-                            for dx, dy in [(corner_radius, corner_radius),
-                                           (config.METRICS_WIDTH - corner_radius, corner_radius),
-                                           (corner_radius, config.METRICS_HEIGHT - corner_radius),
-                                           (config.METRICS_WIDTH - corner_radius, config.METRICS_HEIGHT - corner_radius)]:
-                                cv2.circle(overlay, (metrics_x + dx, metrics_y + dy),
-                                         corner_radius, config.METRICS_BG_COLOR, -1)
-                            
-                            cv2.addWeighted(overlay, config.METRICS_BG_OPACITY, 
-                                          current_frame, 1 - config.METRICS_BG_OPACITY, 0, current_frame)
-                            
-                            # Display metrics
-                            metrics_data = [
-                                (config.LABEL_PERCLOS.format(behavior_data['perclos']), config.PERCLOS_Y_OFFSET),
-                                (config.LABEL_BLINKS.format(behavior_data['blinks_per_min']), config.BLINKS_Y_OFFSET),
-                                (config.LABEL_CLOSURES.format(behavior_data['closure_count']), config.CLOSURES_Y_OFFSET),
-                                (config.LABEL_YAWNS.format(behavior_data['yawn_count']), config.YAWNS_Y_OFFSET),
-                                (config.LABEL_MICROSLEEPS.format(behavior_data['microsleep_count']), config.MICROSLEEPS_Y_OFFSET),
-                                (config.LABEL_DROWSY_EVENTS.format(behavior_data['drowsy_count']), config.DROWSY_EVENTS_Y_OFFSET),
-                                (config.LABEL_HEAD_POSE.format( behavior_data.get('head_pose', {}).get('direction', 'N/A')), config.HEAD_POSE_Y_OFFSET),
-                            ]
-                            
-                            for text, y_offset in metrics_data:
-                                cv2.putText(current_frame, text,
-                                           (config.LEFT_MARGIN, config.ROW_SIZE + y_offset),
-                                           config.METRICS_FONT, config.METRICS_FONT_SIZE,
-                                           config.METRICS_TEXT_COLOR, config.METRICS_FONT_THICKNESS, cv2.LINE_AA)
+                if behavior_data:
+                    # Draw metrics background
+                    if config.SHOW_METRICS:
+                        metrics_x = config.LEFT_MARGIN - config.METRICS_PADDING
+                        metrics_y = config.ROW_SIZE + config.METRICS_Y_OFFSET
+                        
+                        overlay = current_frame.copy()
+                        corner_radius = config.METRICS_CORNER_RADIUS
+                        
+                        # Draw rounded rectangle
+                        cv2.rectangle(overlay,
+                                    (metrics_x + corner_radius, metrics_y),
+                                    (metrics_x + config.METRICS_WIDTH - corner_radius, 
+                                     metrics_y + config.METRICS_HEIGHT),
+                                    config.METRICS_BG_COLOR, -1)
+                        cv2.rectangle(overlay,
+                                    (metrics_x, metrics_y + corner_radius),
+                                    (metrics_x + config.METRICS_WIDTH, 
+                                     metrics_y + config.METRICS_HEIGHT - corner_radius),
+                                    config.METRICS_BG_COLOR, -1)
+                        
+                        # Corner circles
+                        for dx, dy in [(corner_radius, corner_radius),
+                                       (config.METRICS_WIDTH - corner_radius, corner_radius),
+                                       (corner_radius, config.METRICS_HEIGHT - corner_radius),
+                                       (config.METRICS_WIDTH - corner_radius, config.METRICS_HEIGHT - corner_radius)]:
+                            cv2.circle(overlay, (metrics_x + dx, metrics_y + dy),
+                                     corner_radius, config.METRICS_BG_COLOR, -1)
+                        
+                        cv2.addWeighted(overlay, config.METRICS_BG_OPACITY, 
+                                      current_frame, 1 - config.METRICS_BG_OPACITY, 0, current_frame)
+                        
+                        # Display metrics
+                        metrics_data = [
+                            (config.LABEL_PERCLOS.format(behavior_data['perclos']), config.PERCLOS_Y_OFFSET),
+                            (config.LABEL_BLINKS.format(behavior_data['blinks_per_min']), config.BLINKS_Y_OFFSET),
+                            (config.LABEL_CLOSURES.format(behavior_data['closure_count']), config.CLOSURES_Y_OFFSET),
+                            (config.LABEL_YAWNS.format(behavior_data['yawn_count']), config.YAWNS_Y_OFFSET),
+                            (config.LABEL_MICROSLEEPS.format(behavior_data['microsleep_count']), config.MICROSLEEPS_Y_OFFSET),
+                            (config.LABEL_DROWSY_EVENTS.format(behavior_data['drowsy_count']), config.DROWSY_EVENTS_Y_OFFSET),
+                            (config.LABEL_HEAD_POSE.format( behavior_data.get('head_pose', {}).get('direction', 'N/A')), config.HEAD_POSE_Y_OFFSET),
+                        ]
+                        
+                        for text, y_offset in metrics_data:
+                            cv2.putText(current_frame, text,
+                                       (config.LEFT_MARGIN, config.ROW_SIZE + y_offset),
+                                       config.METRICS_FONT, config.METRICS_FONT_SIZE,
+                                       config.METRICS_TEXT_COLOR, config.METRICS_FONT_THICKNESS, cv2.LINE_AA)
                         
                         # Display warnings
                         if config.SHOW_WARNINGS:
@@ -670,7 +741,10 @@ def run(model: str, num_faces: int,
                                  config.CONSOLE_YAWN.format(behavior_data['yawn_count'])),
                                 (behavior_data['frequent_closures'], config.WARNING_FREQUENT_CLOSURES,
                                  config.CONSOLE_FREQUENT_CLOSURES),
-                                (behavior_data.get('distracted', False), config.WARNING_HEAD_TURN,
+                                (behavior_data.get('face_lost', False), config.WARNING_DISTRACTION,
+                                 "Driver face not visible"),
+                                (behavior_data.get('distracted', False) and not behavior_data.get('face_lost', False), 
+                                 config.WARNING_HEAD_TURN,
                                  config.CONSOLE_HEAD_TURN.format(
                                      behavior_data.get('head_pose', {}).get('direction', 'UNKNOWN'),
                                      behavior_data.get('head_pose', {}).get('duration', 0)
@@ -696,17 +770,11 @@ def run(model: str, num_faces: int,
                         if config.SHOW_HEAD_POSE_DETAILS and behavior_data.get('head_pose'):
                             head_pose = behavior_data['head_pose']
                             pose_text = f"Yaw: {head_pose['yaw']:.1f}° \nPitch: {head_pose['pitch']:.1f}° \nRoll: {head_pose['roll']:.1f}°"
-                            # direction_text = f"Head: {head_pose['direction']}"
                             
                             cv2.putText(current_frame, pose_text,
                                        (config.LEFT_MARGIN, config.ROW_SIZE + config.HEAD_POSE_DETAILS_Y_OFFSET),
                                        config.METRICS_FONT, config.HEAD_POSE_FONT_SIZE,
                                        config.HEAD_POSE_COLOR, config.METRICS_FONT_THICKNESS, cv2.LINE_AA)
-                            
-                            # cv2.putText(current_frame, direction_text,
-                            #            (config.LEFT_MARGIN, config.ROW_SIZE + config.HEAD_POSE_Y_OFFSET + 25),
-                            #            config.METRICS_FONT, config.HEAD_POSE_FONT_SIZE,
-                            #            config.HEAD_POSE_COLOR, config.METRICS_FONT_THICKNESS, cv2.LINE_AA)
 
                     # Draw blendshapes
                     if config.SHOW_BLENDSHAPES:
@@ -739,12 +807,20 @@ def run(model: str, num_faces: int,
 
                             legend_y += (config.BLENDSHAPE_BAR_HEIGHT + config.BLENDSHAPE_GAP_BETWEEN_BARS)
             else:
-                behavior_data = detect_driver_behavior(None, None, None)
-                if behavior_data is None:
+                behavior_data = detect_driver_behavior(
+                    None, 
+                    None, 
+                    None,
+                    face_landmarks=None,
+                    image_width=current_frame.shape[1],
+                    image_height=current_frame.shape[0]
+                )
+                
+                if behavior_data:
                     # Display warnings
                     if config.SHOW_WARNINGS:
                         frame_width = current_frame.shape[1] - (config.LABEL_PADDING_WIDTH if config.SHOW_BLENDSHAPES else 0)
-                        warning_text = config.WARNING_DISTRACTION
+                        warning_text = "FACE NOT VISIBLE - TURN BACK" if behavior_data.get('face_lost', False) else config.WARNING_DISTRACTION
                         (text_width, _), _ = cv2.getTextSize(warning_text,
                                                                 config.WARNING_FONT,
                                                                 config.WARNING_FONT_SIZE,
