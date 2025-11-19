@@ -1,33 +1,54 @@
-# FastAPI Template
+# safe-driver
 
-This sample repo contains the recommended structure for a Python FastAPI project. In this sample, we use `fastapi` to build a web application and the `pytest` to run tests.
+### install python version 3.10.9
+        https://www.python.org/downloads/release/python-3109/
 
-For a more in-depth tutorial, see our [Fast API tutorial](https://code.visualstudio.com/docs/python/tutorial-fastapi).
+### install python extension to vs-code
+        Python by Microsoft microsoft.com
 
-The code in this repo aims to follow Python style guidelines as outlined in [PEP 8](https://peps.python.org/pep-0008/).
+### check python version [3.10.9]
+        python --version
 
-## Set up instructions
+## check the environment variables to ensure the path is correct
 
-This sample makes use of Dev Containers, in order to leverage this setup, make sure you have [Docker installed](https://www.docker.com/products/docker-desktop).
+### create python environment
+        python -m venv venv
+        .\venv\Scripts\Activate
 
-To successfully run this example, we recommend the following VS Code extensions:
+## - Temporarily Change Execution Policy
+        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 
-- [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-- [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
-- [Python Debugger](https://marketplace.visualstudio.com/items?itemName=ms-python.debugpy)
-- [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) 
+## - Permenantly Change Execution Policy
+        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
-In addition to these extension there a few settings that are also useful to enable. You can enable to following settings by opening the Settings editor (`Ctrl+,`) and searching for the following settings:
+## --------------------------------------------------------------------------
 
-- Python > Analysis > **Type Checking Mode** : `basic`
-- Python > Analysis > Inlay Hints: **Function Return Types** : `enable`
-- Python > Analysis > Inlay Hints: **Variable Types** : `enable`
+### Upgrade pip (Important)
+        pip install --upgrade pip
+        python.exe -m pip install --upgrade pip
 
-## Running the sample
-- Open the template folder in VS Code (**File** > **Open Folder...**)
-- Open the Command Palette in VS Code (**View > Command Palette...**) and run the **Dev Container: Reopen in Container** command.
-- Run the app using the Run and Debug view or by pressing `F5`
-- `Ctrl + click` on the URL that shows up on the terminal to open the running application 
-- Test the API functionality by navigating to `/docs` URL to view the Swagger UI
-- Configure your Python test in the Test Panel or by triggering the **Python: Configure Tests** command from the Command Palette
-- Run tests in the Test Panel or by clicking the Play Button next to the individual tests in the `test_main.py` file
+### install (or update) the project libraries
+        pip install -r requirements.txt
+
+## DEVELOPER MODE INSTRUCTIONS [DO NOT RUN BELLOW]
+
+### download dlib library
+        https://github.com/z-mahmud22/Dlib_Windows_Python3.x/blob/main/dlib-19.22.99-cp310-cp310-win_amd64.whl
+
+### copy the dlib library to 
+        path --> safe-driver-model/
+
+## install libraries
+        pip install mediapipe opencv-python numpy gps3
+        pip install cmake
+        pip install dlib-19.22.99-cp310-cp310-win_amd64.whl
+        pip install face_recognition
+
+### save the working environment (run only when new libraries installed)
+        pip freeze > requirements.txt
+
+## -----------------------------------
+## RUN SAFE DRIVER BACKEND APPLICATION
+## -----------------------------------
+
+uvicorn main:app --reload --host 0.0.0.0 --port 8000

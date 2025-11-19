@@ -38,6 +38,9 @@ SHOW_FPS = True
 SHOW_METRICS = True
 SHOW_WARNINGS = True
 
+# Voice Alert Control
+ENABLE_VOICE_ALERTS = True
+
 # FPS Display
 FPS_FONT = cv2.FONT_HERSHEY_DUPLEX
 FPS_FONT_SIZE = 0.5

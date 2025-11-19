@@ -2,6 +2,10 @@ import pytz
 import cv2
 from datetime import datetime
 import config.config as config
+import threading
+import os
+from playsound import playsound
+from gtts import gTTS
 
 def now():
     """Return current UTC timestamp in ISO format"""
@@ -66,16 +70,21 @@ def perform_voice_alerts(message):
     """Perform voice alerts using system TTS"""
     try:
         # For Windows
-        if os.name == 'nt':
-            import pyttsx3
-            engine = pyttsx3.init()
-            engine.say(message)
-            engine.runAndWait()
-        # For macOS
-        elif os.uname().sysname == 'Darwin':
-            os.system(f'say "{message}"')
-        # For Linux
-        else:
-            os.system(f'espeak "{message}"')
+        def _play_sound(text_inner):
+            try:
+                tts = gTTS(text=text_inner, lang='en')
+                filename = message+"alert.mp3"
+                tts.save(filename)
+                playsound(filename)
+                os.remove(filename)
+            except Exception as e:
+                print(f"[TTS Error] {e}")
+
+        if(not config.ENABLE_VOICE_ALERTS):
+            return
+        # Run TTS in a separate thread
+        t = threading.Thread(target=_play_sound, args=(message,))
+        t.daemon = True  # ensures thread exits when main program exits
+        t.start()
     except Exception as e:
         print(f"Error performing voice alert: {e}")
