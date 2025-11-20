@@ -1,4 +1,7 @@
-# safe-driver
+
+# ---------------------------------------------------
+# SAFE DRIVER MONITORING SYSTEM - BACKEND GUIDELINES
+# ---------------------------------------------------
 
 ### install python version 3.10.9
         https://www.python.org/downloads/release/python-3109/
@@ -46,23 +49,35 @@
 
 ### save the working environment (run only when new libraries installed)
         pip freeze > requirements_n.txt
-        pip freeze > requirements.txt ##[DO NOT RUN THIS]
 
-## -----------------------------------
+        ##[DO NOT RUN THIS COMMAND]
+        pip freeze > requirements.txt
+
+## ------------------------------------
 ## RUN SAFE DRIVER BACKEND APPLICATION
-## -----------------------------------
+## ------------------------------------
 
 # Run the application
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-## 🧪 How to Use
+## -------------------------------
+## 🧪 HOW TO USE API CALLS IN CMD
+## -------------------------------
 
-# Save configurations:
+# Set default configurations:
 curl -X POST http://localhost:8000/config/save
 
 # Retrieve configurations:
 curl -X GET http://localhost:8000/config/get
 
 # Update a specific config:
-curl -X PUT "http://localhost:8000/config/update?config_category=drowsiness_detection_thresholds&config_name=EYE_CLOSED_THRESH&config_value=0.65"
+curl -X PUT "http://localhost:8000/config/update?config_name=EYE_CLOSED_THRESH&config_value=0.65"
 
+# Update a specific config and restart the detection process
+curl -X PUT "http://localhost:8000/config/update-and-restart?config_name=ENABLE_VOICE_ALERTS&config_value=true"
+
+# Restart the detection process
+curl -X PUT "http://localhost:8000/process/restart"
+
+# Check application running status
+curl -X GET http://localhost:8000/process/status"
