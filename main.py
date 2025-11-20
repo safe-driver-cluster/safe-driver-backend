@@ -50,11 +50,21 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 logger.info("Initializing Firebase Admin SDK")
-cred = credentials.Certificate("firebase-admin-sdk/safe-driver-system-firebase-adminsdk-fbsvc-76241499ba.json")
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
-})
-logger.info("Firebase Admin SDK initialized successfully")
+try:
+    # Check if Firebase app is already initialized
+    firebase_admin.get_app()
+    logger.info("Firebase Admin SDK already initialized")
+except ValueError:
+    # Initialize Firebase if not already done
+    cred = credentials.Certificate("firebase-admin-sdk/safe-driver-system-firebase-adminsdk-fbsvc-76241499ba.json")
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
+    })
+    logger.info("Firebase Admin SDK initialized successfully")
+
+# Import firestore_helper after Firebase is initialized
+from database.firestore_helper import firestore_helper
+logger.info("Imported firestore_helper module")
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -372,4 +382,79 @@ def check_process_status():
         "pid": detect_process.pid,
         "exit_code": return_code
     }
+
+
+@app.post("/config/save")
+def save_model_configurations():
+    """Save all model configurations to Firestore"""
+    try:
+        result = firestore_helper.save_model_configurations_to_firestore()
+        return result
+    except Exception as e:
+        logger.error(f"Error in save configurations endpoint: {e}")
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+
+@app.get("/config/get")
+def get_model_configurations():
+    """Get model configurations from Firestore"""
+    try:
+        result = firestore_helper.get_model_configurations_from_firestore()
+        if result:
+            return {
+                "success": True,
+                "message": "Configurations retrieved successfully",
+                "data": result
+            }
+        else:
+            return {
+                "success": False,
+                "message": "No configurations found",
+                "data": None
+            }
+    except Exception as e:
+        logger.error(f"Error in get configurations endpoint: {e}")
+        return {
+            "success": False,
+            "message": str(e),
+            "data": None
+        }
+
+
+@app.put("/config/update")
+def update_specific_configuration(
+    config_category: str,
+    config_name: str,
+    config_value: str
+):
+    """Update a specific configuration value in Firestore"""
+    try:
+        # Try to convert the string value to appropriate type
+        processed_value = config_value
+        
+        # Attempt type conversion based on common patterns
+        if config_value.lower() in ['true', 'false']:
+            processed_value = config_value.lower() == 'true'
+        elif config_value.replace('.', '', 1).replace('-', '', 1).isdigit():
+            processed_value = float(config_value) if '.' in config_value else int(config_value)
+        elif config_value.startswith('[') and config_value.endswith(']'):
+            try:
+                import json
+                processed_value = json.loads(config_value)
+            except:
+                pass  # Keep as string if JSON parsing fails
+        
+        result = firestore_helper.update_specific_configuration_firestore(
+            config_category, config_name, processed_value
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error in update configuration endpoint: {e}")
+        return {
+            "success": False,
+            "message": str(e)
+        }
 
