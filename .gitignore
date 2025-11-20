@@ -16,3 +16,7 @@ firebase-admin-sdk/
 
 *.log
 *.mp3
+
+# builds
+dist/
+build/
