@@ -138,8 +138,8 @@ async def read_detect_process_output():
         logger.error(f"Error reading detect process stdout: {e}", exc_info=True)
     finally:
         logger.info("Stopped monitoring detect.py output")
-        model_service.update_device_status(status="inactive")
-        logger.info("Device status updated to inactive")
+        model_service.update_device_status(status="offline")
+        logger.info("Device status updated to offline")
 
 
 async def read_detect_process_stderr():
@@ -211,8 +211,8 @@ async def startup_event():
                 result = model_service.register_device(device_details)
                 logger.info(f"Device registration result: {result}")
             else:
-                model_service.update_device_status(status="active")
-                logger.info("Device status updated to active")
+                model_service.update_device_status(status="starting")
+                logger.info("Device status updated to starting")
                 
     except Exception as e:
         logger.error(f"Failed to check device registration: {e}", exc_info=True)
@@ -237,12 +237,15 @@ async def startup_event():
         monitor_task = asyncio.create_task(read_detect_process_output())
         stderr_task = asyncio.create_task(read_detect_process_stderr())
         logger.info("Started output monitoring tasks")
+
+        model_service.update_device_status(status="online")
+        logger.info("Device status updated to online")
         
     except Exception as e:
         logger.error(f"Failed to start detect.py: {e}", exc_info=True)
         if device_mac:
-            model_service.update_device_status(status="inactive")
-            logger.info("Device status updated to inactive")
+            model_service.update_device_status(status="offline")
+            logger.info("Device status updated to offline")
 
 
 @app.on_event("shutdown")
@@ -279,8 +282,8 @@ async def shutdown_event():
     # Update device status to inactive
     if device_mac:
         try:
-            model_service.update_device_status(status="inactive")
-            logger.info("Device status updated to inactive")
+            model_service.update_device_status(status="offline")
+            logger.info("Device status updated to offline")
         except Exception as e:
             logger.error(f"Failed to update device status: {e}")
 
@@ -492,6 +495,8 @@ async def restart_detection_process():
                 detect_process.terminate()
                 detect_process.wait(timeout=5)
                 logger.info("Stopped detect.py process")
+                model_service.update_device_status(status="offline")
+                logger.info("Device status updated to offline")
             except Exception as e:
                 logger.error(f"Error stopping detect.py: {e}")
                 detect_process.kill()
@@ -506,12 +511,18 @@ async def restart_detection_process():
             universal_newlines=True,
             bufsize=1
         )
+        model_service.update_device_status(status="restarting")
+        logger.info("Device status updated to restarting")
+
         logger.info(f"Restarted detect.py with PID: {detect_process.pid}")
         
         # Start monitoring tasks
         monitor_task = asyncio.create_task(read_detect_process_output())
         stderr_task = asyncio.create_task(read_detect_process_stderr())
         logger.info("Restarted output monitoring tasks")
+
+        model_service.update_device_status(status="online")
+        logger.info("Device status updated to online")
         
         return {
             "success": True,
