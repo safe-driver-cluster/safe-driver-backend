@@ -45,10 +45,24 @@
         pip install face_recognition
 
 ### save the working environment (run only when new libraries installed)
-        pip freeze > requirements.txt
+        pip freeze > requirements_n.txt
+        pip freeze > requirements.txt ##[DO NOT RUN THIS]
 
 ## -----------------------------------
 ## RUN SAFE DRIVER BACKEND APPLICATION
 ## -----------------------------------
 
+# Run the application
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+## 🧪 How to Use
+
+# Save configurations:
+curl -X POST http://localhost:8000/config/save
+
+# Retrieve configurations:
+curl -X GET http://localhost:8000/config/get
+
+# Update a specific config:
+curl -X PUT "http://localhost:8000/config/update?config_category=drowsiness_detection_thresholds&config_name=EYE_CLOSED_THRESH&config_value=0.65"
+
