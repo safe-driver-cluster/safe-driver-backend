@@ -193,7 +193,7 @@ async def startup_event():
     global detect_process, monitor_task, stderr_task, device_mac
 
     logger.info("=" * 80)
-    logger.info("SafeDriver Backend Starting")
+    logger.info("SafeDriver Backend Starting...")
     logger.info("=" * 80)
 
     # Get device MAC address
@@ -291,7 +291,19 @@ def root():
     return {
         "message": "SafeDriver API is running",
         "device_mac": device_mac,
-        "process_running": detect_process.poll() is None if detect_process else False
+        "process_running": detect_process.poll() is None if detect_process else False,
+        "config_loaded": config_load_result['success'],
+        "config_count": config_load_result['updated_count']
+    }
+
+
+@app.get("/config/status")
+def get_configuration_status():
+    """Get configuration loading status from startup"""
+    return {
+        "success": True,
+        "message": "Configuration status retrieved",
+        "data": config_load_result
     }
 
 
@@ -404,6 +416,8 @@ def get_model_configurations():
     try:
         result = firestore_helper.get_model_configurations_from_firestore()
         if result:
+            # save to local config as well
+            utils.update_local_config_from_firestore(result)
             return {
                 "success": True,
                 "message": "Configurations retrieved successfully",
@@ -426,7 +440,7 @@ def get_model_configurations():
 
 @app.put("/config/update")
 def update_specific_configuration(
-    config_category: str,
+    # config_category: str,
     config_name: str,
     config_value: str
 ):
@@ -447,8 +461,11 @@ def update_specific_configuration(
             except:
                 pass  # Keep as string if JSON parsing fails
         
+        # result = firestore_helper.update_specific_configuration_firestore(
+        #     config_category, config_name, processed_value
+        # )
         result = firestore_helper.update_specific_configuration_firestore(
-            config_category, config_name, processed_value
+            "config_category", config_name, processed_value
         )
         return result
     except Exception as e:
@@ -457,4 +474,124 @@ def update_specific_configuration(
             "success": False,
             "message": str(e)
         }
+
+
+@app.post("/process/restart")
+async def restart_detection_process():
+    """Restart the detection process to apply configuration changes"""
+    global detect_process, monitor_task, stderr_task, device_mac
+    
+    try:
+        logger.info("Restarting detection process to apply configuration changes...")
+        
+        # Stop current process
+        if monitor_task:
+            monitor_task.cancel()
+            try:
+                await monitor_task
+            except asyncio.CancelledError:
+                logger.info("Stdout monitoring task cancelled")
+        
+        if stderr_task:
+            stderr_task.cancel()
+            try:
+                await stderr_task
+            except asyncio.CancelledError:
+                logger.info("Stderr monitoring task cancelled")
+        
+        if detect_process:
+            try:
+                detect_process.terminate()
+                detect_process.wait(timeout=5)
+                logger.info("Stopped detect.py process")
+            except Exception as e:
+                logger.error(f"Error stopping detect.py: {e}")
+                detect_process.kill()
+        
+        # Start new process
+        venv_python = sys.executable
+        detect_process = subprocess.Popen(
+            [venv_python, "-c", "from model.detect import main; main()"],
+            cwd=os.path.dirname(os.path.abspath(__file__)),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            bufsize=1
+        )
+        logger.info(f"Restarted detect.py with PID: {detect_process.pid}")
+        
+        # Start monitoring tasks
+        monitor_task = asyncio.create_task(read_detect_process_output())
+        stderr_task = asyncio.create_task(read_detect_process_stderr())
+        logger.info("Restarted output monitoring tasks")
+        
+        return {
+            "success": True,
+            "message": "Detection process restarted successfully",
+            "new_pid": detect_process.pid
+        }
+        
+    except Exception as e:
+        logger.error(f"Error restarting detection process: {e}", exc_info=True)
+        return {
+            "success": False,
+            "message": f"Failed to restart process: {str(e)}"
+        }
+
+
+@app.put("/config/update-and-restart")
+async def update_configuration_and_restart(
+    config_name: str,
+    config_value: str
+):
+    """Update configuration and restart detection process if needed"""
+    try:
+        
+        # First update the configuration
+        processed_value = config_value
+        
+        # Type conversion
+        if config_value.lower() in ['true', 'false']:
+            processed_value = config_value.lower() == 'true'
+        elif config_value.replace('.', '', 1).replace('-', '', 1).isdigit():
+            processed_value = float(config_value) if '.' in config_value else int(config_value)
+        elif config_value.startswith('[') and config_value.endswith(']'):
+            try:
+                import json
+                processed_value = json.loads(config_value)
+            except:
+                pass
+        
+        # Update in Firestore
+        result = firestore_helper.update_specific_configuration_firestore(
+            "config_category", config_name, processed_value
+        )
+        
+        if not result['success']:
+            return result
+        
+        # Update local configuration
+        import config.config as config
+        setattr(config, config_name, processed_value)
+        logger.info(f"Updated local configuration {config_name} = {processed_value}")
+        
+        logger.info(f"Configuration {config_name} requires process restart")
+        restart_result = await restart_detection_process()
+        
+        return {
+            "success": True,
+            "message": f"Configuration updated and process restarted",
+            "config_update": result,
+            "process_restart": restart_result,
+            "restart_required": True
+        }
+            
+    except Exception as e:
+        logger.error(f"Error in update-and-restart endpoint: {e}")
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+
 
