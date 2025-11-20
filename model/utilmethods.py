@@ -6,6 +6,8 @@ import threading
 import os
 from playsound import playsound
 from gtts import gTTS
+from database.firestore_helper import firestore_helper
+import utils.utils as utils
 
 def now():
     """Return current UTC timestamp in ISO format"""
@@ -64,7 +66,6 @@ def log_config(logger):
     logger.info(f"PERCLOS Window: {config.PERCLOS_WIN_SEC}s")
     logger.info(f"Yawn Threshold: {config.YAWN_THRESH}")
     logger.info(f"Display Modes - FPS: {config.SHOW_FPS}, Metrics: {config.SHOW_METRICS}, Warnings: {config.SHOW_WARNINGS}")
-    logger.info("=" * 80)
 
 def perform_voice_alerts(message):
     """Perform voice alerts using system TTS"""
@@ -77,9 +78,12 @@ def perform_voice_alerts(message):
             try:
                 tts = gTTS(text=text_inner, lang='en')
                 filename = message+"alert.mp3"
-                tts.save(filename)
-                playsound(filename)
-                os.remove(filename)
+                if os.path.exists(filename):
+                    playsound(filename)
+                else:
+                    tts.save(filename)
+                    playsound(filename)
+                # os.remove(filename)
             except Exception as e:
                 print(f"[TTS Error] {e}")
 
@@ -89,3 +93,16 @@ def perform_voice_alerts(message):
         t.start()
     except Exception as e:
         print(f"Error performing voice alert: {e}")
+
+def get_model_configurations(logger):
+    """Get model configurations from Firestore"""
+    try:
+        result = firestore_helper.get_model_configurations_from_firestore()
+        if result:
+            # save to local config as well
+            utils.update_local_config_from_firestore(result)
+            logger.info("Configurations retrieved successfully...")
+        else:
+            logger.info("No configurations found!")
+    except Exception as e:
+        logger.error(f"Error in get configurations endpoint: {e}")
