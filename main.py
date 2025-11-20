@@ -292,18 +292,6 @@ def root():
         "message": "SafeDriver API is running",
         "device_mac": device_mac,
         "process_running": detect_process.poll() is None if detect_process else False,
-        "config_loaded": config_load_result['success'],
-        "config_count": config_load_result['updated_count']
-    }
-
-
-@app.get("/config/status")
-def get_configuration_status():
-    """Get configuration loading status from startup"""
-    return {
-        "success": True,
-        "message": "Configuration status retrieved",
-        "data": config_load_result
     }
 
 
