@@ -69,6 +69,9 @@ def log_config(logger):
 def perform_voice_alerts(message):
     """Perform voice alerts using system TTS"""
     try:
+        if(not config.ENABLE_VOICE_ALERTS):
+            return
+
         # For Windows
         def _play_sound(text_inner):
             try:
@@ -80,8 +83,6 @@ def perform_voice_alerts(message):
             except Exception as e:
                 print(f"[TTS Error] {e}")
 
-        if(not config.ENABLE_VOICE_ALERTS):
-            return
         # Run TTS in a separate thread
         t = threading.Thread(target=_play_sound, args=(message,))
         t.daemon = True  # ensures thread exits when main program exits
