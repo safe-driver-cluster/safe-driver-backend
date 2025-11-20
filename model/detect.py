@@ -17,6 +17,9 @@ from mediapipe.framework.formats import landmark_pb2
 import model.utilmethods as utils
 import config.config as config
 
+import firebase_admin
+from firebase_admin import credentials, db
+
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -37,8 +40,36 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ============================================================================
-# END LOGGING CONFIGURATION
+# FIREBASE INITIALIZATION
 # ============================================================================
+
+logger.info("=" * 80)
+logger.info("SafeDriver Monitoring System Detector Starting...")
+logger.info("=" * 80)
+
+logger.info("Initializing Firebase Admin SDK in detect.py...")
+try:
+    # Check if Firebase app is already initialized
+    firebase_admin.get_app()
+    logger.info("Firebase Admin SDK already initialized in detect.py")
+except ValueError:
+    # Initialize Firebase if not already done
+    cred = credentials.Certificate("firebase-admin-sdk/safe-driver-system-firebase-adminsdk-fbsvc-76241499ba.json")
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
+    })
+    logger.info("Firebase Admin SDK initialized successfully in detect.py")
+
+# Import firestore_helper after Firebase is initialized
+from database.firestore_helper import firestore_helper
+logger.info("Imported firestore_helper module successfully in detect.py")
+
+# ============================================================================
+# GLOBAL VARIABLES AND CONSTANTS
+# ============================================================================
+
+# load configurations
+utils.get_model_configurations(logger)
 
 # Log configuration on startup
 utils.log_config(logger)
@@ -525,7 +556,7 @@ def run(model: str, num_faces: int,
     """Continuously run inference on images acquired from the camera."""
     
     logger.info("=" * 80)
-    logger.info("Starting SafeDriver Monitoring System")
+    logger.info("Starting SafeDriver Monitoring System...")
     logger.info("=" * 80)
     logger.info(f"Model path: {model}")
     logger.info(f"Camera ID: {camera_id}")
