@@ -569,7 +569,7 @@ def run(model: str, num_faces: int,
 
     # Initialize camera
     logger.info(f"Initializing camera {camera_id}...")
-    cap = cv2.VideoCapture(camera_id)
+    cap = cv2.VideoCapture(camera_id, cv2.CAP_V4L2)
     
     # Check 0-10 camera IDs if the specified one fails
     if not cap.isOpened():
