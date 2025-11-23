@@ -571,9 +571,19 @@ def run(model: str, num_faces: int,
     logger.info(f"Initializing camera {camera_id}...")
     cap = cv2.VideoCapture(camera_id)
     
+    # Check 0-10 camera IDs if the specified one fails
     if not cap.isOpened():
-        logger.error(f"Failed to open camera {camera_id}")
-        sys.exit(config.CAMERA_ERROR_MSG)
+        logger.warning(f"Camera ID {camera_id} failed to open. Trying alternative camera IDs...")
+        for alt_id in range(0, 10):
+            if alt_id == camera_id:
+                continue
+            cap = cv2.VideoCapture(alt_id)
+            if cap.isOpened():
+                logger.info(f"Successfully opened camera ID {alt_id} as an alternative.")
+                break
+        else:
+            logger.error(f"Failed to open any camera. Exiting...")
+            sys.exit(config.CAMERA_ERROR_MSG)
     
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
