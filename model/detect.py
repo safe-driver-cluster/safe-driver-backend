@@ -931,7 +931,7 @@ def main():
         required=False,
         default=0.5)
     parser.add_argument(
-        '--cameraId', help='Id of camera.', required=False, default=0)
+        '--cameraId', help='Id of camera.', required=False, default=1)
     parser.add_argument(
         '--frameWidth',
         help='Width of frame to capture from camera.',
