@@ -56,7 +56,7 @@ try:
     logger.info("Firebase Admin SDK already initialized")
 except ValueError:
     # Initialize Firebase if not already done
-    cred = credentials.Certificate("firebase-admin-sdk/safe-driver-system-firebase-adminsdk-fbsvc-76241499ba.json")
+    cred = credentials.Certificate("/home/rensith/Desktop/safe-driver-backend/firebase-admin-sdk/safe-driver-system-firebase-adminsdk-fbsvc-d70e858425.json")
     firebase_admin.initialize_app(cred, {
         'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
     })
