@@ -938,12 +938,12 @@ def main():
         '--frameWidth',
         help='Width of frame to capture from camera.',
         required=False,
-        default=720)
+        default=160)
     parser.add_argument(
         '--frameHeight',
         help='Height of frame to capture from camera.',
         required=False,
-        default=960)
+        default=120)
     
     args = parser.parse_args()
 
