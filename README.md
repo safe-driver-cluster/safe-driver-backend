@@ -53,6 +53,8 @@
         ##[DO NOT RUN THIS COMMAND]
         pip freeze > requirements.txt
 
+## rename the firebase-admin-sdk -> serviceAccountKey.json
+
 ## ------------------------------------
 ## RUN SAFE DRIVER BACKEND APPLICATION
 ## ------------------------------------
