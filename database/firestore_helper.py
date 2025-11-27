@@ -154,6 +154,39 @@ class FirestoreHelper:
                 'success': False,
                 'message': f'Failed to update {config_name}: {str(e)}'
             }
+        
+
+    def save_alert_history_to_firestore(self, mac: str, behavior_data: dict) -> Dict:
+        """
+        Save an alert history record to Firestore under 'alert_histories' collection.
+        
+        Args:
+            alert_data (dict): Alert data to be saved
+            
+        Returns:
+            dict: Operation result with success status and message
+        """
+        try:
+            # Save to Firestore: alerts collection / {mac} document / date collection (2025-11-27) / auto-generated document
+            self._ensure_db_initialized()
+            date_str = datetime.utcnow().strftime('%Y-%m-%d')
+
+            doc_ref = self.db.collection('alerts').document(mac).collection(date_str).document()
+            alert_data = {
+            'tag': behavior_data.get('tag'),
+            'type': behavior_data.get('type'),
+            'message': behavior_data.get('message'),
+            'time': behavior_data.get('time', utils.now()),
+            'number_plate':"NB-9999",
+        }
+            doc_ref.set(alert_data)
+            
+        except Exception as e:
+            logger.error(f"Error saving alert history to Firestore: {e}")
+            return {
+                'success': False,
+                'message': f'Failed to save alert history: {str(e)}'
+            }
 
 # Create a singleton instance
 firestore_helper = FirestoreHelper()

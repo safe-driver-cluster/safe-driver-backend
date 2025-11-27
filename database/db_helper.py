@@ -1,5 +1,6 @@
 import logging
 from firebase_admin import db
+from database.firestore_helper import firestore_helper
 import utils.utils as utils
 from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
 import config.config as config
@@ -297,7 +298,8 @@ def save_behavior_to_firebase(mac: str, behavior_data: dict):
         ref.child('latest').set(alert_data)
         
         # If significant event, save to history
-        ref.child('history').push(alert_data)
+        # ref.child('history').push(alert_data)
+        firestore_helper.save_alert_history_to_firestore(mac, behavior_data)
         
     except Exception as e:
         logger.error(f"Failed to save behavior data to Firebase for MAC {mac}: {e}", exc_info=True)
