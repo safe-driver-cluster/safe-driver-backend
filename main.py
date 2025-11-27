@@ -592,5 +592,67 @@ async def update_configuration_and_restart(
             "message": str(e)
         }
 
+# Update Assigned Driver Endpoint
+@app.put("/device/update-driver")
+async def update_assigned_driver(driver_id: str):
+    """Update the assigned driver for the device"""
+    global device_mac
+    
+    if not device_mac:
+        return {
+            "success": False,
+            "message": "Device MAC not available"
+        }
+    
+    try:
+        return db_helper.update_assigned_driver(driver_id, device_mac)
+        
+    except Exception as e:
+        logger.error(f"Error updating assigned driver for MAC {device_mac}: {e}")
+        return {
+            'success': False,
+            'message': str(e)
+        }
 
 
+# Update Driver FingerprintId to firebase firestore/drivers/{driver_id}/fingerprint_id
+@app.put("/driver/update-fingerprint")
+async def register_driver_fingerprint(driver_id: str, fingerprint_id: str):
+    """Update the fingerprint ID for a driver in Firestore"""
+    try:
+        firestore_helper.register_driver_fingerprint(driver_id, fingerprint_id)
+        return {
+            'success': True,
+            'driver_id': driver_id,
+            'fingerprint_id': fingerprint_id,
+            'message': 'Fingerprint ID updated successfully'
+        }
+        
+    except Exception as e:
+        logger.error(f"Error updating fingerprint ID for driver {driver_id}: {e}")
+        return {
+            'success': False,
+            'message': str(e)
+        }
+
+# update vehicle_reg_no in realtime database/devices/{device_mac}/vehicle_reg_no
+@app.put("/device/update-vehicle-reg")
+async def update_vehicle_registration_number(vehicle_reg_no: str):
+    """Update the vehicle registration number for the device"""
+    global device_mac
+    
+    if not device_mac:
+        return {
+            "success": False,
+            "message": "Device MAC not available"
+        }
+    
+    try:
+        return db_helper.update_vehicle_reg_no(device_mac, vehicle_reg_no)
+        
+    except Exception as e:
+        logger.error(f"Error updating vehicle registration number for MAC {device_mac}: {e}")
+        return {
+            'success': False,
+            'message': str(e)
+        }
