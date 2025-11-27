@@ -1,6 +1,5 @@
 import logging
 from firebase_admin import db
-from dist.main._internal.database import db_helper
 import utils.utils as utils
 from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
 import config.config as config
