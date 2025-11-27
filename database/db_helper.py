@@ -1,5 +1,6 @@
 import logging
 from firebase_admin import db
+from dist.main._internal.database import db_helper
 import utils.utils as utils
 from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
 import config.config as config
@@ -284,6 +285,8 @@ def save_behavior_to_firebase(mac: str, behavior_data: dict):
     try:
         # Import here to avoid circular import
         from database.firestore_helper import firestore_helper
+
+        number_plate = get_vehicle_reg_no(mac)
         
         ref = db.reference(f'alerts/{mac}')
         
@@ -293,7 +296,7 @@ def save_behavior_to_firebase(mac: str, behavior_data: dict):
             'type': behavior_data.get('type'),
             'message': behavior_data.get('message'),
             'time': behavior_data.get('time', utils.now()),
-            'number_plate':"NB-9999",
+            'number_plate': number_plate,
         }
         
         # Save to latest
