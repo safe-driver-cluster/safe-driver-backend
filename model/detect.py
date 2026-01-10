@@ -3,6 +3,8 @@ import sys
 import time
 import logging
 import json
+import os
+from dotenv import load_dotenv
 
 import numpy as np
 from collections import deque
@@ -23,6 +25,17 @@ from firebase_admin import credentials, db
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
+
+# ============================================================================
+# ENVIRONMENT VARIABLES
+# ============================================================================
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Get environment variables
+ADMIN_SDK_PATH = os.getenv('ADMIN_SDK_PATH', '/home/rensith/Desktop/safe-driver-backend/firebase-admin-sdk/serviceAccountKey.json')
+CAMERA_ID = int(os.getenv('CAMERA_ID', '1'))
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -54,7 +67,8 @@ try:
     logger.info("Firebase Admin SDK already initialized in detect.py")
 except ValueError:
     # Initialize Firebase if not already done
-    cred = credentials.Certificate("/home/rensith/Desktop/safe-driver-backend/firebase-admin-sdk/serviceAccountKey.json") # safe-driver-system-b3da24192be1
+    logger.info(f"Using Firebase Admin SDK path: {ADMIN_SDK_PATH}")
+    cred = credentials.Certificate(ADMIN_SDK_PATH) # safe-driver-system-b3da24192be1
     firebase_admin.initialize_app(cred, {
         'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
     })
@@ -933,7 +947,7 @@ def main():
         required=False,
         default=0.5)
     parser.add_argument(
-        '--cameraId', help='Id of camera.', required=False, default=1)
+        '--cameraId', help='Id of camera.', required=False, default=CAMERA_ID)
     parser.add_argument(
         '--frameWidth',
         help='Width of frame to capture from camera.',
