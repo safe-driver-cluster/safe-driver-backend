@@ -83,3 +83,19 @@ curl -X PUT "http://localhost:8000/process/restart"
 
 # Check application running status
 curl -X GET http://localhost:8000/process/status"
+
+
+rensith - curl -X PUT "http://localhost:8000/device/update-driver?driver_id=DRV001"
+pulindu - curl -X PUT "http://localhost:8000/device/update-driver?driver_id=DRV002"
+
+rensith - curl -X PUT "http://localhost:8000/device/update-vehicle-reg?vehicle_reg_no=NB-6576"
+pulindu - curl -X PUT "http://localhost:8000/device/update-vehicle-reg?vehicle_reg_no=NB-4564"
+
+### CONNECT TO RASPBERRY-PI
+
+ssh -4 rensith@raspberrypi.local
+rensith2001
+
+python3.10 -m venv venv
+
+source ./venv/bin/activate
