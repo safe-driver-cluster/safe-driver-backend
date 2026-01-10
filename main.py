@@ -48,6 +48,7 @@ logger.info("=" * 80)
 # Suppress TensorFlow messages
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+ADMIN_SDK_PATH = os.getenv('ADMIN_SDK_PATH', '/home/safedriver/Desktop/safe-driver-backend/firebase-admin-sdk/serviceAccountKey.json')
 
 logger.info("Initializing Firebase Admin SDK")
 try:
@@ -56,7 +57,7 @@ try:
     logger.info("Firebase Admin SDK already initialized")
 except ValueError:
     # Initialize Firebase if not already done
-    cred = credentials.Certificate("/home/rensith/Desktop/safe-driver-backend/firebase-admin-sdk/serviceAccountKey.json") # safe-driver-system-b3da24192be1
+    cred = credentials.Certificate(ADMIN_SDK_PATH) # safe-driver-system-b3da24192be1
     firebase_admin.initialize_app(cred, {
         'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
     })
