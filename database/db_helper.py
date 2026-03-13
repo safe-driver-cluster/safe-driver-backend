@@ -344,7 +344,7 @@ def update_assigned_driver(driver_id: str, device_mac: str) -> dict:
         }
         
     except Exception as e:
-        logger.error(f"Error updating assigned driver for MAC {mac}: {e}")
+        logger.error(f"Error updating assigned driver for MAC {device_mac}: {e}")
         return {
             'success': False,
             'message': str(e)
@@ -403,7 +403,7 @@ def get_vehicle_reg_no(device_mac: str) -> str:
         
         vehicle_reg_no = ref.get()
         
-        if vehicle_reg_no is None:
+        if vehicle_reg_no is None or vehicle_reg_no == '':
             logger.warning(f"Vehicle registration number for device with MAC {device_mac} not found")
             return ''
         
@@ -413,3 +413,51 @@ def get_vehicle_reg_no(device_mac: str) -> str:
     except Exception as e:
         logger.error(f"Error retrieving vehicle registration number for MAC {device_mac}: {e}")
         return ''
+    
+# get vehicle number plate from firestore collection 'vehicles' where deviceId matches to device_mac
+def get_vehicle_number_plate_from_firestore(device_mac: str) -> str:
+    """
+    Get the vehicle number plate for a device from Firestore.
+    
+    Args:
+        device_mac (str): MAC address of the device"""
+    try:
+        # Import here to avoid circular import
+        from database.firestore_helper import firestore_helper
+
+        vehicle_doc = firestore_helper.get_vehicle_by_device_id(device_mac)
+        
+        if vehicle_doc is None:
+            logger.warning(f"Vehicle data for device with MAC {device_mac} not found in Firestore")
+            return ''
+        
+        # number_plate is document id in 'vehicles' collection
+        number_plate = vehicle_doc.id
+        logger.debug(f"Device {device_mac} vehicle number plate retrieved from Firestore: {number_plate}")
+        return number_plate
+        
+    except Exception as e:
+        logger.error(f"Error retrieving vehicle number plate for MAC {device_mac} from Firestore: {e}")
+        return ''
+    
+# check vehicle registration number exists in realtime database/devices/{device_mac}/vehicle_reg_no
+def check_vehicle_registration_by_mac(device_mac: str) -> bool:
+    """
+    Check if a vehicle registration number exists for a device.
+    
+    Args:
+        device_mac (str): MAC address of the device"""
+    try:
+        
+        vehicle_reg_no = get_vehicle_reg_no(device_mac)
+        
+        if vehicle_reg_no is None or vehicle_reg_no == '':
+            logger.warning(f"Vehicle registration number for device with MAC {device_mac} not found or empty")
+            return False
+        
+        logger.debug(f"Device {device_mac} has vehicle registration number: {vehicle_reg_no}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error checking vehicle registration number for MAC {device_mac}: {e}")
+        return False

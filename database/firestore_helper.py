@@ -7,6 +7,7 @@ import utils.utils as utils
 import config.config as config
 import cv2
 import inspect
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 logger = logging.getLogger(__name__)
 
@@ -227,7 +228,9 @@ class FirestoreHelper:
         try:
             self._ensure_db_initialized()
             drivers_ref = self.db.collection('drivers')
-            query = drivers_ref.where('fingerprint_id', '==', fingerprint_data)
+            query = drivers_ref.where(
+                filter=FieldFilter('fingerprint_id', '==', fingerprint_data)
+            )
 
             # check if query has multiple results
 
@@ -243,6 +246,33 @@ class FirestoreHelper:
             
         except Exception as e:
             logger.error(f"Error retrieving driver by fingerprint: {e}")
+            return None
+        
+    # get vehicle by deviceId from 'vehicles' collection
+    def get_vehicle_by_device_id(self, device_id: str) -> Optional[Dict]:
+        """
+        Retrieve vehicle information by device ID from Firestore.
+        
+        Args:
+            device_id (str): Device ID to search for
+        """
+        try:
+            self._ensure_db_initialized()
+            vehicles_ref = self.db.collection('vehicles')
+            query = vehicles_ref.where(
+                filter=FieldFilter('deviceId', '==', device_id)
+            )
+            results = query.stream()
+            
+            for doc in results:
+                logger.info(f"Vehicle found for device ID {device_id}: {doc.id}")
+                return doc
+            
+            logger.info(f"No vehicle found for device ID {device_id}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error retrieving vehicle by device ID: {e}")
             return None
 
 # Create a singleton instance

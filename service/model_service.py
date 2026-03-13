@@ -152,3 +152,39 @@ def save_behavior_event(event_data: dict) -> bool:
     else:
         logger.error(f"Failed to save behavior event for device {mac_address}: {result.get('message')}")
         return False
+
+# Update device vehicle_reg_no 
+def update_vehicle_registration(vehicle_reg_no: str) -> bool:
+    global mac_address
+    """
+    Update the vehicle registration number for a device.
+    
+    Args:
+        mac (str): MAC address of the device
+        vehicle_reg_no (str): Vehicle registration number to set
+    Returns:
+        bool: True if update successful, False otherwise
+    """
+    mac_address = get_mac_address_alternative()
+    logger.info(f"MAC before updating vehicle registration: {mac_address}")
+    result = db_helper.update_vehicle_reg_no(mac_address, vehicle_reg_no)
+
+    if result.get('success'):
+        logger.info(f"Vehicle registration number updated for device {mac_address}")
+        return True
+    else:
+        logger.error(f"Failed to update vehicle registration for device {mac_address}: {result.get('message')}")
+        return False
+
+# check vehicle_registration
+def check_vehicle_registration(mac: str) -> bool:
+    """
+    Check if a vehicle registration number is already registered.
+    
+    Args:
+        mac (str): MAC address of the device
+
+    Returns:
+        bool: True if the vehicle is registered, False otherwise
+    """
+    return db_helper.check_vehicle_registration_by_mac(mac)

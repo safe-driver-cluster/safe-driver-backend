@@ -213,6 +213,24 @@ async def startup_event():
             else:
                 model_service.update_device_status(status="starting")
                 logger.info("Device status updated to starting")
+
+            # Check if vehicle_reg_no is set for the device
+            device_reg_no_check = model_service.check_vehicle_registration(device_mac)
+            if not device_reg_no_check:
+                logger.warning(f"Vehicle registration number not set for device {device_mac}")
+
+                # get vehicle number plate from firestore using device_mac
+                vehicle_number_plate = db_helper.get_vehicle_number_plate_from_firestore(device_mac)
+                if vehicle_number_plate:
+                    logger.info(f"Retrieved vehicle registration number from Firestore: {vehicle_number_plate}")
+                    # Update in realtime database as well
+                    update_result = db_helper.update_vehicle_reg_no(device_mac, vehicle_number_plate)
+                    logger.info(f"Updated vehicle registration number in Realtime Database: {update_result}")
+                else:
+                    logger.warning(f"Vehicle registration number not found in Firestore for device {device_mac}")
+            else:
+                logger.info(f"Vehicle registration number already set for device {device_mac}")
+                logger.info(f"Vehicle registration number for device {device_mac}: {db_helper.get_vehicle_reg_no(device_mac)}")
                 
     except Exception as e:
         logger.error(f"Failed to check device registration: {e}", exc_info=True)
