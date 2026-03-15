@@ -81,3 +81,11 @@ curl -X PUT "http://localhost:8000/process/restart"
 
 # Check application running status
 curl -X GET http://localhost:8000/process/status"
+
+
+## ----------------------------------------
+## LINUX COMMANDS
+## ----------------------------------------
+
+# Activate venv
+source venv/bin/activate
