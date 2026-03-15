@@ -35,7 +35,7 @@ load_dotenv()
 
 # Get environment variables
 ADMIN_SDK_PATH = os.getenv('ADMIN_SDK_PATH', '/home/safedriver/Desktop/safe-driver-backend/firebase-admin-sdk/serviceAccountKey.json')
-CAMERA_ID = int(os.getenv('CAMERA_ID', '1'))
+CAMERA_ID = int(os.getenv('CAMERA_ID', '0'))
 
 # ============================================================================
 # LOGGING CONFIGURATION
