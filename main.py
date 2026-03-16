@@ -214,6 +214,24 @@ async def startup_event():
             else:
                 model_service.update_device_status(status="starting")
                 logger.info("Device status updated to starting")
+
+            # Check if vehicle_reg_no is set for the device
+            device_reg_no_check = model_service.check_vehicle_registration(device_mac)
+            if not device_reg_no_check:
+                logger.warning(f"Vehicle registration number not set for device {device_mac}")
+
+                # get vehicle number plate from firestore using device_mac
+                vehicle_number_plate = db_helper.get_vehicle_number_plate_from_firestore(device_mac)
+                if vehicle_number_plate:
+                    logger.info(f"Retrieved vehicle registration number from Firestore: {vehicle_number_plate}")
+                    # Update in realtime database as well
+                    update_result = db_helper.update_vehicle_reg_no(device_mac, vehicle_number_plate)
+                    logger.info(f"Updated vehicle registration number in Realtime Database: {update_result}")
+                else:
+                    logger.warning(f"Vehicle registration number not found in Firestore for device {device_mac}")
+            else:
+                logger.info(f"Vehicle registration number already set for device {device_mac}")
+                logger.info(f"Vehicle registration number for device {device_mac}: {db_helper.get_vehicle_reg_no(device_mac)}")
                 
     except Exception as e:
         logger.error(f"Failed to check device registration: {e}", exc_info=True)
@@ -593,5 +611,67 @@ async def update_configuration_and_restart(
             "message": str(e)
         }
 
+# Update Assigned Driver Endpoint
+@app.put("/device/update-driver")
+async def update_assigned_driver(driver_id: str):
+    """Update the assigned driver for the device"""
+    global device_mac
+    
+    if not device_mac:
+        return {
+            "success": False,
+            "message": "Device MAC not available"
+        }
+    
+    try:
+        return db_helper.update_assigned_driver(driver_id, device_mac)
+        
+    except Exception as e:
+        logger.error(f"Error updating assigned driver for MAC {device_mac}: {e}")
+        return {
+            'success': False,
+            'message': str(e)
+        }
 
 
+# Update Driver FingerprintId to firebase firestore/drivers/{driver_id}/fingerprint_id
+@app.put("/driver/update-fingerprint")
+async def register_driver_fingerprint(driver_id: str, fingerprint_id: str):
+    """Update the fingerprint ID for a driver in Firestore"""
+    try:
+        firestore_helper.register_driver_fingerprint(driver_id, fingerprint_id)
+        return {
+            'success': True,
+            'driver_id': driver_id,
+            'fingerprint_id': fingerprint_id,
+            'message': 'Fingerprint ID updated successfully'
+        }
+        
+    except Exception as e:
+        logger.error(f"Error updating fingerprint ID for driver {driver_id}: {e}")
+        return {
+            'success': False,
+            'message': str(e)
+        }
+
+# update vehicle_reg_no in realtime database/devices/{device_mac}/vehicle_reg_no
+@app.put("/device/update-vehicle-reg")
+async def update_vehicle_registration_number(vehicle_reg_no: str):
+    """Update the vehicle registration number for the device"""
+    global device_mac
+    
+    if not device_mac:
+        return {
+            "success": False,
+            "message": "Device MAC not available"
+        }
+    
+    try:
+        return db_helper.update_vehicle_reg_no(device_mac, vehicle_reg_no)
+        
+    except Exception as e:
+        logger.error(f"Error updating vehicle registration number for MAC {device_mac}: {e}")
+        return {
+            'success': False,
+            'message': str(e)
+        }

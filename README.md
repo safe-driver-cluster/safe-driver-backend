@@ -53,6 +53,8 @@
         ##[DO NOT RUN THIS COMMAND]
         pip freeze > requirements.txt
 
+## rename the firebase-admin-sdk -> serviceAccountKey.json
+
 ## ------------------------------------
 ## RUN SAFE DRIVER BACKEND APPLICATION
 ## ------------------------------------
@@ -89,3 +91,12 @@ curl -X GET http://localhost:8000/process/status"
 
 # Activate venv
 source venv/bin/activate
+
+### CONNECT TO RASPBERRY-PI
+
+ssh -4 rensith@raspberrypi.local
+rensith2001
+
+python3.10 -m venv venv
+
+source ./venv/bin/activate

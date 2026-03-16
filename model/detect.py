@@ -992,30 +992,32 @@ def run(model: str, num_faces: int,
                         legend_y = config.BLENDSHAPE_Y_START - SCROLL_OFFSET
                         bar_max_width = config.LABEL_PADDING_WIDTH - 40
                         
-                        num_blendshapes = len(face_blendshapes[0])
-                        total_height = num_blendshapes * (config.BLENDSHAPE_BAR_HEIGHT + config.BLENDSHAPE_GAP_BETWEEN_BARS)
-                        MAX_SCROLL = max(0, total_height - current_frame.shape[0] + 60)
-                        
-                        for category in face_blendshapes[0]:
-                            if legend_y + config.BLENDSHAPE_BAR_HEIGHT > 0 and legend_y < current_frame.shape[0]:
-                                text = config.BLENDSHAPE_TEXT_FORMAT.format(category.category_name, round(category.score, 2))
-                                (text_width, _), _ = cv2.getTextSize(text, config.BLENDSHAPE_FONT,
-                                                                    config.BLENDSHAPE_FONT_SIZE,
-                                                                    config.BLENDSHAPE_FONT_THICKNESS)
+                        # Fix: Check if face_blendshapes exists and is not empty
+                        if face_blendshapes and len(face_blendshapes) > 0:
+                            num_blendshapes = len(face_blendshapes[0])
+                            total_height = num_blendshapes * (config.BLENDSHAPE_BAR_HEIGHT + config.BLENDSHAPE_GAP_BETWEEN_BARS)
+                            MAX_SCROLL = max(0, total_height - current_frame.shape[0] + 60)
+                            
+                            for category in face_blendshapes[0]:
+                                if legend_y + config.BLENDSHAPE_BAR_HEIGHT > 0 and legend_y < current_frame.shape[0]:
+                                    text = config.BLENDSHAPE_TEXT_FORMAT.format(category.category_name, round(category.score, 2))
+                                    (text_width, _), _ = cv2.getTextSize(text, config.BLENDSHAPE_FONT,
+                                                                        config.BLENDSHAPE_FONT_SIZE,
+                                                                        config.BLENDSHAPE_FONT_THICKNESS)
 
-                                cv2.putText(current_frame, text,
-                                            (legend_x, legend_y + (config.BLENDSHAPE_BAR_HEIGHT // 2) + 5),
-                                            config.BLENDSHAPE_FONT, config.BLENDSHAPE_FONT_SIZE,
-                                            config.BLENDSHAPE_TEXT_COLOR, config.BLENDSHAPE_FONT_THICKNESS, cv2.LINE_AA)
+                                    cv2.putText(current_frame, text,
+                                                (legend_x, legend_y + (config.BLENDSHAPE_BAR_HEIGHT // 2) + 5),
+                                                config.BLENDSHAPE_FONT, config.BLENDSHAPE_FONT_SIZE,
+                                                config.BLENDSHAPE_TEXT_COLOR, config.BLENDSHAPE_FONT_THICKNESS, cv2.LINE_AA)
 
-                                bar_width = int(bar_max_width * category.score)
-                                cv2.rectangle(current_frame,
-                                            (legend_x + text_width + config.BLENDSHAPE_TEXT_GAP, legend_y),
-                                            (legend_x + text_width + config.BLENDSHAPE_TEXT_GAP + bar_width,
-                                             legend_y + config.BLENDSHAPE_BAR_HEIGHT),
-                                            config.BLENDSHAPE_BAR_COLOR, -1)
+                                    bar_width = int(bar_max_width * category.score)
+                                    cv2.rectangle(current_frame,
+                                                (legend_x + text_width + config.BLENDSHAPE_TEXT_GAP, legend_y),
+                                                (legend_x + text_width + config.BLENDSHAPE_TEXT_GAP + bar_width,
+                                                legend_y + config.BLENDSHAPE_BAR_HEIGHT),
+                                                config.BLENDSHAPE_BAR_COLOR, -1)
 
-                            legend_y += (config.BLENDSHAPE_BAR_HEIGHT + config.BLENDSHAPE_GAP_BETWEEN_BARS)
+                                legend_y += (config.BLENDSHAPE_BAR_HEIGHT + config.BLENDSHAPE_GAP_BETWEEN_BARS)
             else:
                 behavior_data = detect_driver_behavior(
                     None, 

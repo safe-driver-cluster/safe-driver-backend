@@ -2,10 +2,12 @@ import logging
 from firebase_admin import firestore
 from datetime import datetime
 from typing import Dict, List, Optional, Any
+from database import db_helper
 import utils.utils as utils
 import config.config as config
 import cv2
 import inspect
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +156,124 @@ class FirestoreHelper:
                 'success': False,
                 'message': f'Failed to update {config_name}: {str(e)}'
             }
+        
+
+    def save_alert_history_to_firestore(self, mac: str, behavior_data: dict) -> Dict:
+        """
+        Save an alert history record to Firestore under 'alert_histories' collection.
+        
+        Args:
+            alert_data (dict): Alert data to be saved
+            
+        Returns:
+            dict: Operation result with success status and message
+        """
+        try:
+
+            number_plate = db_helper.get_vehicle_reg_no(mac)
+
+            # Save to Firestore: alerts collection / {mac} document / date collection (2025-11-27) / auto-generated document
+            self._ensure_db_initialized()
+            date_str = utils.now().split('T')[0]
+
+            doc_ref = self.db.collection('alerts').document(mac).collection(date_str).document()
+            alert_data = {
+                'tag': behavior_data.get('tag'),
+                'type': behavior_data.get('type'),
+                'message': behavior_data.get('message'),
+                'time': behavior_data.get('time', utils.now()),
+                'number_plate':number_plate,
+            }
+            doc_ref.set(alert_data)
+            
+        except Exception as e:
+            logger.error(f"Error saving alert history to Firestore: {e}")
+            return {
+                'success': False,
+                'message': f'Failed to save alert history: {str(e)}'
+            }
+
+    def register_driver_fingerprint(self, driver_id: str, fingerprint_data: any) -> Dict:
+        """
+        Register a driver's fingerprint data in Firestore.
+        
+        Args:
+            driver_id (str): Unique identifier for the driver
+            """
+        try:
+            # firestore/drivers/document{driver_id}/fingerprint_id
+            self._ensure_db_initialized()
+            doc_ref = self.db.collection('drivers').document(driver_id)
+            doc_ref.set({
+                'fingerprint_id': fingerprint_data,
+                'fp_registered_at': firestore.SERVER_TIMESTAMP
+            }, merge=True)
+
+            
+        except Exception as e:
+            logger.error(f"Error registering fingerprint for driver {driver_id}: {e}")
+            return {
+                'success': False,
+                'message': f'Failed to register fingerprint: {str(e)}'
+            }
+        
+    # get driver_id by fingerprint
+    def get_driver_by_fingerprint(self, fingerprint_data: any) -> Optional[str]:
+        """
+        Retrieve driver ID by fingerprint data from Firestore.
+        
+        Args:
+            fingerprint_data (any): Fingerprint data to search for
+            """
+        try:
+            self._ensure_db_initialized()
+            drivers_ref = self.db.collection('drivers')
+            query = drivers_ref.where(
+                filter=FieldFilter('fingerprint_id', '==', fingerprint_data)
+            )
+
+            # check if query has multiple results
+
+
+            results = query.stream()
+            
+            for doc in results:
+                logger.info(f"Driver found for given fingerprint: {doc.id}")
+                return doc.id  # Return the driver_id
+            
+            logger.info("No driver found for the given fingerprint")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error retrieving driver by fingerprint: {e}")
+            return None
+        
+    # get vehicle by deviceId from 'vehicles' collection
+    def get_vehicle_by_device_id(self, device_id: str) -> Optional[Dict]:
+        """
+        Retrieve vehicle information by device ID from Firestore.
+        
+        Args:
+            device_id (str): Device ID to search for
+        """
+        try:
+            self._ensure_db_initialized()
+            vehicles_ref = self.db.collection('vehicles')
+            query = vehicles_ref.where(
+                filter=FieldFilter('deviceId', '==', device_id)
+            )
+            results = query.stream()
+            
+            for doc in results:
+                logger.info(f"Vehicle found for device ID {device_id}: {doc.id}")
+                return doc
+            
+            logger.info(f"No vehicle found for device ID {device_id}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error retrieving vehicle by device ID: {e}")
+            return None
 
 # Create a singleton instance
 firestore_helper = FirestoreHelper()
