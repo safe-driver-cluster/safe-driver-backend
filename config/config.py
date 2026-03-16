@@ -31,13 +31,24 @@ HEAD_YAW_THRESH_RIGHT = 35  # Degrees - threshold for right turn
 HEAD_TURN_DISTRACTION_SEC = 3.0  # Seconds - how long head must be turned to trigger alert
 SHOW_HEAD_POSE_DETAILS = False  # Display head pose angles on screen
 
-# Alert Level Thresholds
-DROWSY_EVENT_COUNT_THRESH = 3
-YAWN_EVENT_COUNT_THRESH = 3
-MICROSLEEP_EVENT_COUNT_THRESH = 3
-FREQUENT_CLOSURES_THRESH = 3
+# Cloud Alert Level Thresholds
+DROWSY_EVENT_COUNT_THRESH = 5
+YAWN_EVENT_COUNT_THRESH = 5
+MICROSLEEP_EVENT_COUNT_THRESH = 5
+FREQUENT_CLOSURES_THRESH = 5
 HEAD_TURN_COUNT_THRESH = 5
-FACE_MISSING_COUNT_THRESH = 3
+FACE_MISSING_COUNT_THRESH = 5
+
+# Reset counters after this many seconds of no events (to prevent stale data from triggering alerts)
+EVENT_COUNT_RESET_SEC = 300.0
+
+# Voice Alert Thresholds
+VOICE_ALERT_COOLDOWN_SEC = 10.0  # Minimum seconds between voice alerts of the same type
+VOICE_ALERT_CONSECUTIVE_EVENT_THRESH = 2  # Number of consecutive events to trigger voice alert
+BUZZER_ALERT_COOLDOWN_SEC = 5.0  # Minimum seconds between buzzer alerts of the same type)
+BUZZER_ALERT_CONSECUTIVE_EVENT_THRESH = 2  # Number of consecutive events to trigger buzzer alert
+MAXIMUM_BUZZER_ALERTS_PER_TYPE = 3  # Maximum number of buzzer alerts per type to prevent spamming (first 3 alerts will be buzzered)
+MAXIMUM_VOICE_ALERTS_PER_TYPE = 2  # Maximum number of voice alerts per type to prevent spamming (next 2 alerts will be voiced after buzzer limit is reached)
 
 # UI Layout Parameters
 WINDOW_NAME = 'SafeDriver Monitoring System'

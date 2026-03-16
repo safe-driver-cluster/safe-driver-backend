@@ -2,7 +2,6 @@ import argparse
 import sys
 import time
 import logging
-import json
 
 import numpy as np
 from collections import deque
@@ -16,6 +15,7 @@ from mediapipe.framework.formats import landmark_pb2
 
 import model.utilmethods as utils
 import config.config as config
+from model.alerts import AlertManager
 
 import firebase_admin
 from firebase_admin import credentials, db
@@ -95,15 +95,43 @@ NO_FACE_COUNTED = False  # Track if no-face event was counted
 YAWN_COUNT = 0
 DROWSY_COUNT = 0
 MICROSLEEP_COUNT = 0
+HEAD_TURN_COUNT = 0
+FACE_MISSING_COUNT = 0
+FREQUENT_CLOSURES_COUNT = 0
+
 YAWN_COUNTED = False
 MICROSLEEP_COUNTED = False
 DROWSY_COUNTED = False
 FREQUENT_CLOSURES_COUNTED = False
 HEAD_TURN_COUNTED = False  # Track head turn events
+FACE_MISSING_COUNTED = False  # Track face missing events
+
+LAST_COUNTER_EVENT_TIME = {
+    "yawn": None,
+    "drowsy": None,
+    "microsleep": None,
+    "head_turn": None,
+    "face_missing": None,
+    "frequent_closures": None,
+}
 
 # Scroll variables
 SCROLL_OFFSET = 0
 MAX_SCROLL = 0
+
+ALERT_MANAGER = AlertManager(
+    logger=logger,
+    now_provider=utils.now,
+    output_stream=sys.stdout,
+    threshold_defaults={
+        config.BEHAVIOR_DROWSY: False,
+        config.BEHAVIOR_YAWN: False,
+        config.BEHAVIOR_MICROSLEEP: False,
+        config.BEHAVIOR_FREQUENT_CLOSURES: False,
+        config.BEHAVIOR_HEAD_TURN: False,
+        config.BEHAVIOR_DISTRACTION: False,
+    },
+)
 
 
 def _bs_score(blendshapes, name: str) -> float:
@@ -114,24 +142,59 @@ def _bs_score(blendshapes, name: str) -> float:
     return 0.0
 
 
-def send_behavior_to_parent(tag="BEHAVIOR_EVENT", type="behavior", message="", time=None, behavior_data={}):
-    """Send behavior data to parent process via stdout"""
-    try:
-        # Create a structured message
-        message_dict = {
-            "tag": tag,
-            "type": type,
-            "message": message,
-            "time": time or utils.now(),
-            "data": behavior_data
-        }
-        # Write JSON to stdout with a newline delimiter
-        sys.stdout.write(f"BEHAVIOR_DATA:{json.dumps(message_dict)}\n")
-        sys.stdout.flush()
+def _reset_counter(counter_key: str) -> None:
+    """Reset event counter and alert state for a specific event type."""
+    global YAWN_COUNT, DROWSY_COUNT, MICROSLEEP_COUNT, HEAD_TURN_COUNT, FACE_MISSING_COUNT, FREQUENT_CLOSURES_COUNT
 
-    except Exception as e:
-        # Log errors to stderr instead of stdout
-        logger.error(f"Failed to send behavior data to parent: {e}")
+    if counter_key == "yawn":
+        YAWN_COUNT = 0
+    elif counter_key == "drowsy":
+        DROWSY_COUNT = 0
+    elif counter_key == "microsleep":
+        MICROSLEEP_COUNT = 0
+    elif counter_key == "head_turn":
+        HEAD_TURN_COUNT = 0
+    elif counter_key == "face_missing":
+        FACE_MISSING_COUNT = 0
+    elif counter_key == "frequent_closures":
+        FREQUENT_CLOSURES_COUNT = 0
+
+    LAST_COUNTER_EVENT_TIME[counter_key] = None
+    ALERT_MANAGER.reset_event_state(counter_key)
+
+
+def _increment_event_counter(counter_key: str) -> int:
+    """Increment counter with stale-reset behavior based on EVENT_COUNT_RESET_SEC."""
+    global YAWN_COUNT, DROWSY_COUNT, MICROSLEEP_COUNT, HEAD_TURN_COUNT, FACE_MISSING_COUNT, FREQUENT_CLOSURES_COUNT
+
+    now_ts = time.time()
+    last_ts = LAST_COUNTER_EVENT_TIME.get(counter_key)
+    if last_ts is not None and (now_ts - last_ts) >= config.EVENT_COUNT_RESET_SEC:
+        _reset_counter(counter_key)
+
+    if counter_key == "yawn":
+        YAWN_COUNT += 1
+        new_value = YAWN_COUNT
+    elif counter_key == "drowsy":
+        DROWSY_COUNT += 1
+        new_value = DROWSY_COUNT
+    elif counter_key == "microsleep":
+        MICROSLEEP_COUNT += 1
+        new_value = MICROSLEEP_COUNT
+    elif counter_key == "head_turn":
+        HEAD_TURN_COUNT += 1
+        new_value = HEAD_TURN_COUNT
+    elif counter_key == "face_missing":
+        FACE_MISSING_COUNT += 1
+        new_value = FACE_MISSING_COUNT
+    elif counter_key == "frequent_closures":
+        FREQUENT_CLOSURES_COUNT += 1
+        new_value = FREQUENT_CLOSURES_COUNT
+    else:
+        raise ValueError(f"Unknown counter key: {counter_key}")
+
+    LAST_COUNTER_EVENT_TIME[counter_key] = now_ts
+    return new_value
 
 
 def calculate_head_pose(face_landmarks, image_width, image_height):
@@ -206,6 +269,7 @@ def calculate_head_pose(face_landmarks, image_width, image_height):
 def detect_head_turn_distraction(face_landmarks, image_width, image_height):
     """Detect if driver is looking away based on head pose."""
     global HEAD_TURNED_START, HEAD_TURN_COUNTED, LAST_HEAD_POSE_STATE, NO_FACE_START, NO_FACE_COUNTED
+    global HEAD_TURN_COUNT, FACE_MISSING_COUNT
     
     if not face_landmarks:
         # No face detected - track as distraction
@@ -225,22 +289,31 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
             # Send alert if face missing for too long
             if duration >= config.HEAD_TURN_DISTRACTION_SEC and not NO_FACE_COUNTED:
                 NO_FACE_COUNTED = True
+                face_missing_count = _increment_event_counter("face_missing")
                 logger.warning(f"NO FACE DETECTED! Duration: {duration:.2f}s")
-                send_behavior_to_parent(
+                ALERT_MANAGER.check_and_send_threshold_alert(
                     tag="DISTRACTION_EVENT",
-                    type=config.BEHAVIOR_HEAD_TURN,
+                    event_type=config.BEHAVIOR_DISTRACTION,
                     message=config.CONSOLE_FACE_LOSS.format(duration),
-                    time=utils.now(),
                     behavior_data={
                         "direction": "AWAY",
                         "duration": duration,
                         "yaw": None,
                         "pitch": None,
                         "roll": None,
-                        "face_lost": True
-                    }
+                        "face_lost": True,
+                        "source": "face_missing",
+                    },
+                    policy_key="face_missing",
+                    cycle_id=int(now * 1000),
+                    current_count=face_missing_count,
+                    threshold=config.FACE_MISSING_COUNT_THRESH,
+                    send_cloud=True,
+                    trigger_voice=True,
+                    voice_message=config.VOICE_ALERT_DISTRACTION,
+                    trigger_buzzer=True,
+                    buzzer_message=config.WARNING_DISTRACTION,
                 )
-                utils.perform_voice_alerts(config.VOICE_ALERT_DISTRACTION)
         
         return {
             'is_turned': True,
@@ -297,21 +370,29 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
             # Send alert if head turned for too long
             if duration >= config.HEAD_TURN_DISTRACTION_SEC and not HEAD_TURN_COUNTED:
                 HEAD_TURN_COUNTED = True
+                head_turn_count = _increment_event_counter("head_turn")
                 logger.warning(f"HEAD TURN DISTRACTION! Direction: {direction}, Duration: {duration:.2f}s, Yaw: {yaw:.1f}°")
-                send_behavior_to_parent(
+                ALERT_MANAGER.check_and_send_threshold_alert(
                     tag="DISTRACTION_EVENT",
-                    type=config.BEHAVIOR_HEAD_TURN,
+                    event_type=config.BEHAVIOR_HEAD_TURN,
                     message=config.CONSOLE_HEAD_TURN.format(direction, duration),
-                    time=utils.now(),
                     behavior_data={
                         "direction": direction,
                         "duration": duration,
                         "yaw": yaw,
                         "pitch": head_pose['pitch'],
                         "roll": head_pose['roll']
-                    }
+                    },
+                    policy_key="head_turn",
+                    cycle_id=int(now * 1000),
+                    current_count=head_turn_count,
+                    threshold=config.HEAD_TURN_COUNT_THRESH,
+                    send_cloud=True,
+                    trigger_voice=True,
+                    voice_message=config.VOICE_ALERT_HEAD_TURN,
+                    trigger_buzzer=True,
+                    buzzer_message=config.WARNING_HEAD_TURN,
                 )
-                utils.perform_voice_alerts(config.VOICE_ALERT_HEAD_TURN)
     else:
         HEAD_TURNED_START = None
         HEAD_TURN_COUNTED = False
@@ -331,6 +412,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
     """Detect driver drowsiness behaviors based on facial blendshapes."""
     if face_blendshapes:
         now = time.time()
+        alert_cycle_id = int(now * 1000)
         bs = face_blendshapes[0]
 
         # --- Eye & mouth signals from blendshapes ---
@@ -351,20 +433,25 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
         perclos = (sum(v for _, v in PERCLOS_WIN) / len(PERCLOS_WIN)) if PERCLOS_WIN else 0.0
         if perclos >= config.PERCLOS_DROWSY:
             logger.warning(f"PERCLOS THRESHOLD REACHED! PERCLOS: {perclos:.2f} over last {config.PERCLOS_WIN_SEC}s")
-            send_behavior_to_parent(
+            ALERT_MANAGER.check_and_send_threshold_alert(
                 tag="DROWSY_EVENT",
-                type=config.BEHAVIOR_PERCLOS_REACHED,
+                event_type=config.BEHAVIOR_PERCLOS_REACHED,
                 message=config.CONSOLE_PERCLOS_REACHED.format(perclos),
-                time=utils.now(),
                 behavior_data={
                     "perclos": perclos,
                     "time_window": config.PERCLOS_WIN_SEC
-                }
+                },
+                policy_key="drowsy",
+                cycle_id=alert_cycle_id,
+                send_cloud=False,
+                trigger_voice=True,
+                voice_message=config.VOICE_ALERT_PERCLOS,
+                trigger_buzzer=True,
+                buzzer_message=config.WARNING_PERCLOS,
             )
-            utils.perform_voice_alerts(config.VOICE_ALERT_PERCLOS)
 
         # --- Eye closure frequency tracking ---
-        global EYE_CLOSURE_EVENTS, EYE_PARTIAL_CLOSURE_START, FREQUENT_CLOSURES_COUNTED
+        global EYE_CLOSURE_EVENTS, EYE_PARTIAL_CLOSURE_START, FREQUENT_CLOSURES_COUNTED, FREQUENT_CLOSURES_COUNT
         
         if eye_closed_score > config.EYE_PARTIAL_THRESH:
             if EYE_PARTIAL_CLOSURE_START is None:
@@ -388,18 +475,26 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
         
         if frequent_closures and not FREQUENT_CLOSURES_COUNTED:
             FREQUENT_CLOSURES_COUNTED = True
+            frequent_closures_count = _increment_event_counter("frequent_closures")
             logger.warning(f"FREQUENT EYE CLOSURES DETECTED! {len(EYE_CLOSURE_EVENTS)} closures in {config.EYE_CLOSURE_FREQ_WIN}s")
-            send_behavior_to_parent(
+            ALERT_MANAGER.check_and_send_threshold_alert(
                 tag="DROWSY_EVENT",
-                type=config.BEHAVIOR_FREQUENT_CLOSURES,
+                event_type=config.BEHAVIOR_FREQUENT_CLOSURES,
                 message=config.CONSOLE_FREQUENT_CLOSURES,
-                time=utils.now(),
                 behavior_data={
                     "closure_count": len(EYE_CLOSURE_EVENTS),
                     "time_window": config.EYE_CLOSURE_FREQ_WIN
-                }
+                },
+                policy_key="frequent_closures",
+                cycle_id=alert_cycle_id,
+                current_count=frequent_closures_count,
+                threshold=config.FREQUENT_CLOSURES_THRESH,
+                send_cloud=True,
+                trigger_voice=True,
+                voice_message=config.VOICE_ALERT_DROWSY,
+                trigger_buzzer=True,
+                buzzer_message=config.WARNING_FREQUENT_CLOSURES,
             )
-            utils.perform_voice_alerts(config.VOICE_ALERT_DROWSY)
         elif not frequent_closures:
             FREQUENT_CLOSURES_COUNTED = False
 
@@ -424,21 +519,28 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
         microsleep = (EYE_CLOSED_START is not None) and ((now - EYE_CLOSED_START) >= config.MICROSLEEP_SEC)
         
         if microsleep and not MICROSLEEP_COUNTED:
-            MICROSLEEP_COUNT += 1
+            microsleep_count = _increment_event_counter("microsleep")
             MICROSLEEP_COUNTED = True
             duration = now - EYE_CLOSED_START
-            logger.warning(f"MICROSLEEP DETECTED! Duration: {duration:.2f}s, Total count: {MICROSLEEP_COUNT}")
-            send_behavior_to_parent(
+            logger.warning(f"MICROSLEEP DETECTED! Duration: {duration:.2f}s, Total count: {microsleep_count}")
+            ALERT_MANAGER.check_and_send_threshold_alert(
                 tag="DROWSY_EVENT",
-                type=config.BEHAVIOR_MICROSLEEP,
-                message=config.CONSOLE_MICROSLEEP.format(MICROSLEEP_COUNT),
-                time=utils.now(),
+                event_type=config.BEHAVIOR_MICROSLEEP,
+                message=config.CONSOLE_MICROSLEEP.format(microsleep_count),
                 behavior_data={
                     "duration": duration,
-                    "total_count": MICROSLEEP_COUNT
-                }
+                    "total_count": microsleep_count
+                },
+                policy_key="microsleep",
+                cycle_id=alert_cycle_id,
+                current_count=microsleep_count,
+                threshold=config.MICROSLEEP_EVENT_COUNT_THRESH,
+                send_cloud=True,
+                trigger_voice=True,
+                voice_message=config.VOICE_ALERT_MICROSLEEP,
+                trigger_buzzer=True,
+                buzzer_message=config.WARNING_MICROSLEEP,
             )
-            utils.perform_voice_alerts(config.VOICE_ALERT_MICROSLEEP)
 
         # --- Yawn detection ---
         global YAWN_START, YAWN_COUNT, YAWN_COUNTED
@@ -450,21 +552,28 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
             elif (now - YAWN_START) >= config.YAWN_MIN_SEC:
                 yawning = True
                 if not YAWN_COUNTED:
-                    YAWN_COUNT += 1
+                    yawn_count = _increment_event_counter("yawn")
                     YAWN_COUNTED = True
                     duration = now - YAWN_START
-                    logger.warning(f"YAWN DETECTED! Duration: {duration:.2f}s, Total count: {YAWN_COUNT}")
-                    send_behavior_to_parent(
+                    logger.warning(f"YAWN DETECTED! Duration: {duration:.2f}s, Total count: {yawn_count}")
+                    ALERT_MANAGER.check_and_send_threshold_alert(
                         tag="DROWSY_EVENT",
-                        type=config.BEHAVIOR_YAWN,
-                        message=config.CONSOLE_YAWN.format(YAWN_COUNT),
-                        time=utils.now(),
+                        event_type=config.BEHAVIOR_YAWN,
+                        message=config.CONSOLE_YAWN.format(yawn_count),
                         behavior_data={
                             "duration": duration,
-                            "total_count": YAWN_COUNT
-                        }
+                            "total_count": yawn_count
+                        },
+                        policy_key="yawn",
+                        cycle_id=alert_cycle_id,
+                        current_count=yawn_count,
+                        threshold=config.YAWN_EVENT_COUNT_THRESH,
+                        send_cloud=True,
+                        trigger_voice=True,
+                        voice_message=config.VOICE_ALERT_YAWNING,
+                        trigger_buzzer=True,
+                        buzzer_message=config.WARNING_YAWNING,
                     )
-                    utils.perform_voice_alerts(config.VOICE_ALERT_YAWNING)
         else:
             YAWN_START = None
             YAWN_COUNTED = False
@@ -474,9 +583,27 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
         drowsy = microsleep or (perclos >= config.PERCLOS_DROWSY) or yawning or frequent_closures
         
         if drowsy and not DROWSY_COUNTED:
-            DROWSY_COUNT += 1
+            drowsy_count = _increment_event_counter("drowsy")
             DROWSY_COUNTED = True
-            logger.warning(f"DROWSINESS DETECTED! Total count: {DROWSY_COUNT}, PERCLOS: {perclos:.2f}")
+            logger.warning(f"DROWSINESS DETECTED! Total count: {drowsy_count}, PERCLOS: {perclos:.2f}")
+            ALERT_MANAGER.check_and_send_threshold_alert(
+                tag="DROWSY_EVENT",
+                event_type=config.BEHAVIOR_DROWSY,
+                message=config.CONSOLE_DROWSY.format(drowsy_count),
+                behavior_data={
+                    "perclos": perclos,
+                    "total_count": drowsy_count,
+                },
+                policy_key="drowsy",
+                cycle_id=alert_cycle_id,
+                current_count=drowsy_count,
+                threshold=config.DROWSY_EVENT_COUNT_THRESH,
+                send_cloud=True,
+                trigger_voice=True,
+                voice_message=config.VOICE_ALERT_DROWSY,
+                trigger_buzzer=True,
+                buzzer_message=config.WARNING_DROWSY,
+            )
         elif not drowsy:
             DROWSY_COUNTED = False
 
@@ -525,13 +652,18 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
             }
         else:
             logger.warning("DISTRACTION DETECTED! Missing focus on the road.")
-            send_behavior_to_parent(
+            ALERT_MANAGER.check_and_send_threshold_alert(
                 tag="DISTRACTION_EVENT",
-                type=config.BEHAVIOR_DISTRACTION,
+                event_type=config.BEHAVIOR_DISTRACTION,
                 message=config.CONSOLE_DISTRACTION,
-                time=utils.now()
+                policy_key="head_turn",
+                cycle_id=int(time.time() * 1000),
+                send_cloud=False,
+                trigger_voice=True,
+                voice_message=config.VOICE_ALERT_DISTRACTION,
+                trigger_buzzer=True,
+                buzzer_message=config.WARNING_DISTRACTION,
             )
-            utils.perform_voice_alerts(config.VOICE_ALERT_DISTRACTION)
             return {
                 'drowsy': False,
                 'yawning': False,
