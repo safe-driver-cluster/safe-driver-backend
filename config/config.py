@@ -3,25 +3,41 @@ import cv2
 # System Configuration
 VERSION_NO = "1.0.0"
 
+# Language Settings
+# 'en' for English
+# 'si' for Sinhala (සිංහල)
+# 'ta' for Tamil (தமிழ்)
+LANGUAGE = 'en'
+
 # Drowsiness Detection Thresholds
 EYE_CLOSED_THRESH = 0.60
 EYE_PARTIAL_THRESH = 0.40
 MICROSLEEP_SEC = 1.5
 PERCLOS_WIN_SEC = 60.0
 PERCLOS_DROWSY = 0.70
-YAWN_THRESH = 0.80
-YAWN_MIN_SEC = 1.0
 EYE_CLOSURE_FREQ_WIN = 15.0
 EYE_CLOSURE_FREQ_THRESH = 4
 MIN_CLOSURE_DURATION = 0.4
 BLINK_MAX_DURATION = 0.4
 CLOSURE_DEBOUNCE_TIME = 0.5
 
+#Yawning Detection Thresholds
+YAWN_THRESH = 0.80
+YAWN_MIN_SEC = 1.0
+
 # Head Pose Detection Thresholds
 HEAD_YAW_THRESH_LEFT = 35  # Degrees - threshold for left turn
 HEAD_YAW_THRESH_RIGHT = 35  # Degrees - threshold for right turn
 HEAD_TURN_DISTRACTION_SEC = 3.0  # Seconds - how long head must be turned to trigger alert
 SHOW_HEAD_POSE_DETAILS = False  # Display head pose angles on screen
+
+# Alert Level Thresholds
+DROWSY_EVENT_COUNT_THRESH = 3
+YAWN_EVENT_COUNT_THRESH = 3
+MICROSLEEP_EVENT_COUNT_THRESH = 3
+FREQUENT_CLOSURES_THRESH = 3
+HEAD_TURN_COUNT_THRESH = 5
+FACE_MISSING_COUNT_THRESH = 3
 
 # UI Layout Parameters
 WINDOW_NAME = 'SafeDriver Monitoring System'
@@ -39,7 +55,7 @@ SHOW_METRICS = True
 SHOW_WARNINGS = True
 
 # Voice Alert Control
-ENABLE_VOICE_ALERTS = False
+ENABLE_VOICE_ALERTS = True
 
 # FPS Display
 FPS_FONT = cv2.FONT_HERSHEY_DUPLEX
