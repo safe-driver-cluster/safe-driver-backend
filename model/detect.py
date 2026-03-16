@@ -4,6 +4,8 @@ import time
 import logging
 import json
 import os
+import shutil
+import subprocess
 from dotenv import load_dotenv
 
 import numpy as np
@@ -36,6 +38,7 @@ load_dotenv()
 # Get environment variables
 ADMIN_SDK_PATH = os.getenv('ADMIN_SDK_PATH', '/home/safedriver/Desktop/safe-driver-backend/firebase-admin-sdk/serviceAccountKey.json')
 CAMERA_ID = int(os.getenv('CAMERA_ID', '0'))
+CAMERA_BACKEND = os.getenv('CAMERA_BACKEND', 'auto').lower()
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -118,6 +121,160 @@ HEAD_TURN_COUNTED = False  # Track head turn events
 # Scroll variables
 SCROLL_OFFSET = 0
 MAX_SCROLL = 0
+
+
+class RpiCamVidCapture:
+    """OpenCV-like capture using rpicam-vid MJPEG stream on stdout."""
+
+    def __init__(self, camera_id: int, width: int, height: int, fps: int = 30):
+        self.camera_id = camera_id
+        self.width = int(width)
+        self.height = int(height)
+        self.fps = int(fps)
+        self.proc = None
+        self.buffer = b""
+
+    def open(self):
+        if shutil.which("rpicam-vid") is None:
+            return False
+
+        cmd = [
+            "rpicam-vid",
+            "--camera", str(self.camera_id),
+            "--timeout", "0",
+            "--nopreview",
+            "--width", str(self.width),
+            "--height", str(self.height),
+            "--framerate", str(self.fps),
+            "--codec", "mjpeg",
+            "-o", "-",
+        ]
+
+        try:
+            self.proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                bufsize=0,
+            )
+            time.sleep(0.4)
+            return self.isOpened()
+        except Exception as e:
+            logger.error(f"Failed to start rpicam-vid process: {e}")
+            self.proc = None
+            return False
+
+    def isOpened(self):
+        return self.proc is not None and self.proc.poll() is None and self.proc.stdout is not None
+
+    def read(self):
+        if not self.isOpened():
+            return False, None
+
+        start = time.time()
+        while time.time() - start < 1.5:
+            chunk = self.proc.stdout.read(4096)
+            if not chunk:
+                continue
+            self.buffer += chunk
+
+            soi = self.buffer.find(b"\xff\xd8")
+            eoi = self.buffer.find(b"\xff\xd9", soi + 2 if soi != -1 else 0)
+
+            if soi != -1 and eoi != -1:
+                jpg = self.buffer[soi:eoi + 2]
+                self.buffer = self.buffer[eoi + 2:]
+                frame = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
+                if frame is not None:
+                    return True, frame
+
+        return False, None
+
+    def release(self):
+        if self.proc is None:
+            return
+        try:
+            self.proc.terminate()
+            self.proc.wait(timeout=1.0)
+        except Exception:
+            self.proc.kill()
+        finally:
+            self.proc = None
+            self.buffer = b""
+
+    def set(self, *_args, **_kwargs):
+        return True
+
+    def get(self, prop):
+        if prop == cv2.CAP_PROP_FRAME_WIDTH:
+            return float(self.width)
+        if prop == cv2.CAP_PROP_FRAME_HEIGHT:
+            return float(self.height)
+        if prop == cv2.CAP_PROP_FPS:
+            return float(self.fps)
+        return 0.0
+
+
+def _configure_capture(cap, width: int, height: int):
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+    # MJPG is widely supported; GREY frequently fails on Pi camera stacks.
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+    cap.set(cv2.CAP_PROP_FPS, 30)
+
+
+def _try_open_opencv_capture(camera_id: int, width: int, height: int):
+    targets = [
+        (camera_id, cv2.CAP_V4L2, f"opencv-v4l2:{camera_id}"),
+        (camera_id, cv2.CAP_ANY, f"opencv-any:{camera_id}"),
+        (f"/dev/video{camera_id}", cv2.CAP_V4L2, f"opencv-v4l2:/dev/video{camera_id}"),
+        (f"/dev/video{camera_id}", cv2.CAP_ANY, f"opencv-any:/dev/video{camera_id}"),
+    ]
+
+    if hasattr(cv2, "CAP_GSTREAMER"):
+        gst = (
+            f"libcamerasrc camera-name=/base/soc/i2c0mux/i2c@1/imx219@10 ! "
+            f"video/x-raw,width={int(width)},height={int(height)},framerate=30/1 ! "
+            "videoconvert ! appsink drop=true"
+        )
+        targets.append((gst, cv2.CAP_GSTREAMER, "opencv-gstreamer:libcamerasrc"))
+
+    for src, backend, name in targets:
+        try:
+            cap = cv2.VideoCapture(src, backend)
+        except Exception:
+            continue
+
+        if not cap or not cap.isOpened():
+            if cap:
+                cap.release()
+            continue
+
+        _configure_capture(cap, width, height)
+        ok, _ = cap.read()
+        if ok:
+            return cap, name
+
+        cap.release()
+
+    return None, None
+
+
+def create_camera_capture(camera_id: int, width: int, height: int):
+    preferred_ids = [camera_id] + [idx for idx in range(0, 10) if idx != camera_id]
+
+    for cid in preferred_ids:
+        if CAMERA_BACKEND in ("auto", "opencv"):
+            cap, backend_name = _try_open_opencv_capture(cid, width, height)
+            if cap is not None:
+                return cap, cid, backend_name
+
+        if CAMERA_BACKEND in ("auto", "rpicam"):
+            rpi_cap = RpiCamVidCapture(cid, width=width, height=height, fps=30)
+            if rpi_cap.open():
+                return rpi_cap, cid, f"rpicam-vid:{cid}"
+
+    return None, None, None
 
 
 def _bs_score(blendshapes, name: str) -> float:
@@ -581,28 +738,17 @@ def run(model: str, num_faces: int,
     logger.info(f"Tracking confidence: {min_tracking_confidence}")
     logger.info("=" * 80)
 
-    # Initialize camera
-    logger.info(f"Initializing camera {camera_id}...")
-    cap = cv2.VideoCapture(camera_id, cv2.CAP_V4L2)
-    
-    # Check 0-10 camera IDs if the specified one fails
-    if not cap.isOpened():
-        logger.warning(f"Camera ID {camera_id} failed to open. Trying alternative camera IDs...")
-        for alt_id in range(0, 10):
-            if alt_id == camera_id:
-                continue
-            cap = cv2.VideoCapture(alt_id)
-            if cap.isOpened():
-                logger.info(f"Successfully opened camera ID {alt_id} as an alternative.")
-                break
-        else:
-            logger.error(f"Failed to open any camera. Exiting...")
-            sys.exit(config.CAMERA_ERROR_MSG)
-    
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"GREY"))
-    cap.set(cv2.CAP_PROP_FPS, 60)
+    # Initialize camera with Pi-safe fallback strategy.
+    logger.info(f"Initializing camera {camera_id} (backend={CAMERA_BACKEND})...")
+    cap, selected_camera_id, backend_name = create_camera_capture(camera_id, width, height)
+
+    if cap is None:
+        logger.error("Failed to open any camera using OpenCV or rpicam-vid fallback. Exiting...")
+        sys.exit(config.CAMERA_ERROR_MSG)
+
+    logger.info(f"Camera opened with backend: {backend_name}")
+    if selected_camera_id != camera_id:
+        logger.info(f"Requested camera {camera_id} unavailable. Using camera {selected_camera_id}.")
     
     actual_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     actual_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
