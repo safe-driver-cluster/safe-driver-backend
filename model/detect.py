@@ -1076,40 +1076,46 @@ def main():
         '--numFaces',
         help='Max number of faces that can be detected by the landmarker.',
         required=False,
+        type=int,
         default=1)
     parser.add_argument(
         '--minFaceDetectionConfidence',
         help='The minimum confidence score for face detection to be considered successful.',
         required=False,
+        type=float,
         default=0.5)
     parser.add_argument(
         '--minFacePresenceConfidence',
         help='The minimum confidence score of face presence score in the face landmark detection.',
         required=False,
+        type=float,
         default=0.5)
     parser.add_argument(
         '--minTrackingConfidence',
         help='The minimum confidence score for the face tracking to be considered successful.',
         required=False,
+        type=float,
         default=0.5)
     parser.add_argument(
-        '--cameraId', help='Id of camera.', required=False, default=CAMERA_ID)
+        '--cameraId', help='Id of camera.', required=False, type=int, default=CAMERA_ID)
     parser.add_argument(
         '--frameWidth',
         help='Width of frame to capture from camera.',
         required=False,
-        default=160)
+        type=int,
+        default=640)
     parser.add_argument(
         '--frameHeight',
         help='Height of frame to capture from camera.',
         required=False,
-        default=120)
+        type=int,
+        default=480)
     
     args = parser.parse_args()
 
-    run(args.model, int(args.numFaces), args.minFaceDetectionConfidence,
+    run(args.model, args.numFaces, args.minFaceDetectionConfidence,
         args.minFacePresenceConfidence, args.minTrackingConfidence,
-        int(args.cameraId), args.frameWidth, args.frameHeight)
+        args.cameraId, args.frameWidth, args.frameHeight)
 
 
 if __name__ == '__main__':
