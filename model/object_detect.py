@@ -5,6 +5,7 @@ import cv2
 detect_model = YOLO("model/yolov8n.pt")          # object detection
 class_model = YOLO("model/smoking_model.pt")     # smoking classification
 cigarette_model = YOLO("model/cigarette_model.pt") # cigarette detection
+glasses_model = YOLO("model/glasses_model.pt")     # glasses detection
 
 cap = cv2.VideoCapture(0)
 
@@ -24,7 +25,7 @@ while True:
             label = detect_model.names[cls]
             conf = float(box.conf[0])
 
-            if label in ["cell phone", "bottle"]:
+            if label in ["cell phone", "bottle", "person"]:
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
 
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0,255,0), 2)
@@ -73,7 +74,7 @@ while True:
             label = cigarette_model.names[int(box.cls[0])]
             conf = float(box.conf[0])
 
-            if label == "cigarette":
+            if label == "cigarette" and conf >= 0.25:
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
 
                 cv2.rectangle(frame, (x1,y1), (x2,y2), (0,0,255), 2)
@@ -84,6 +85,27 @@ while True:
 
                 print("🚬 Cigarette detected!")
 
+    # -------------------------------
+    # 4. GLASSES DETECTION
+    # -------------------------------
+
+    glass_results = glasses_model(frame, conf=0.3)
+
+    for r in glass_results:
+        for box in r.boxes:
+            label = glasses_model.names[int(box.cls[0])]
+            conf = float(box.conf[0])
+
+            if label == "glasses":
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+
+                cv2.rectangle(frame, (x1,y1), (x2,y2), (255,0,0), 2)
+                cv2.putText(frame, f"Glasses {conf:.2f}",
+                            (x1, y1-10),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5, (255,0,0), 2)
+
+                print("😎 Glasses detected!")
     # -------------------------------
     # SHOW FRAME
     # -------------------------------
