@@ -20,6 +20,8 @@ from model.alerts import AlertManager
 import firebase_admin
 from firebase_admin import credentials, db
 
+import model.frame_detector as frame_detect
+
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -728,7 +730,7 @@ def run(model: str, num_faces: int,
     cv2.setMouseCallback(config.WINDOW_NAME, mouse_callback)
     logger.info(f"Display window '{config.WINDOW_NAME}' created")
 
-    def save_result(result: vision.FaceLandmarkerResult,
+    def save_result(result: any,
                     unused_output_image: mp.Image, timestamp_ms: int):
         global FPS, COUNTER, START_TIME, DETECTION_RESULT
 
@@ -783,6 +785,16 @@ def run(model: str, num_faces: int,
                 continue
             
             detection_failures = 0
+
+            # ======================= OBJECT DETECTION PHASE ==========================
+            # object_detector = frame_detect.DetectorProcess(cv2= cv2)
+            # frame_count = 0
+            # # Send every 2nd frame (optional optimization)
+            # if frame_count % 2 == 0:
+            #     object_detector.submit_frame(image)
+
+            # frame_count += 1
+            # =========================================================================
 
             image = cv2.flip(image, 1)
             rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
