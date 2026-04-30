@@ -26,13 +26,13 @@ def detector_worker(frame_queue):
     cigarette_model = YOLO("model/cigarette_model.pt")
     glasses_model = YOLO("model/glasses_model.pt")
 
-    print("✅ Detection process started")
+    logger.info("Detection process started")
 
     while True:
         frame = frame_queue.get()
 
         if frame is None:
-            print("🛑 Detection process stopping...")
+            logger.info("Detection process stopping...")
             break
 
         try:
@@ -56,7 +56,7 @@ def detector_worker(frame_queue):
                                     cv2.FONT_HERSHEY_SIMPLEX,
                                     0.5, (0,255,0), 2)
 
-                        print(f"{label} detected: {conf:.2f}")
+                        logger.info(f"{label} detected: {conf:.2f}")
 
             # -------------------------------
             # 2. SMOKING CLASSIFICATION
@@ -105,7 +105,7 @@ def detector_worker(frame_queue):
                                     cv2.FONT_HERSHEY_SIMPLEX,
                                     0.5, (0,0,255), 2)
 
-                        print("🚬 Cigarette detected!")
+                        logger.info("Cigarette detected!")
 
             # -------------------------------
             # 4. GLASSES DETECTION
@@ -127,14 +127,14 @@ def detector_worker(frame_queue):
                                     cv2.FONT_HERSHEY_SIMPLEX,
                                     0.5, (255,0,0), 2)
 
-                        print("😎 Glasses detected!")
+                        logger.info("Glasses detected!")
             # -------------------------------
             # SHOW FRAME
             # -------------------------------
             cv2.imshow("Safe Driver System", frame)
 
         except Exception as e:
-            print("❌ Detection error:", e)
+            logger.info("Detection error:", e)
 
 
 class DetectorProcess:
