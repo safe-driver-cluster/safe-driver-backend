@@ -1,7 +1,24 @@
 import multiprocessing as mp
 import cv2
+import logging
+import sys
 
-def detector_worker(frame_queue, cv2):
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+
+# Configure logging - Log to stderr and file
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('safe_driver_debug.log'),
+        logging.StreamHandler(sys.stderr)  # Log to stderr
+    ]
+)
+logger = logging.getLogger(__name__)
+
+def detector_worker(frame_queue):
     from ultralytics import YOLO
 
     # Load models INSIDE process
@@ -121,12 +138,12 @@ def detector_worker(frame_queue, cv2):
 
 
 class DetectorProcess:
-    def __init__(self, cv2):
+    def __init__(self):
         self.frame_queue = mp.Queue(maxsize=1)
 
         self.process = mp.Process(
             target=detector_worker,
-            args=(self.frame_queue,cv2),
+            args=(self.frame_queue,),
             daemon=True
         )
         self.process.start()

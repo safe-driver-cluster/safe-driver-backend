@@ -768,6 +768,7 @@ def run(model: str, num_faces: int,
     logger.info("Starting video processing loop...")
     logger.info("Press ESC to exit")
     
+    object_detector = frame_detect.DetectorProcess()   #create once
     frame_count = 0
     detection_failures = 0
 
@@ -786,31 +787,36 @@ def run(model: str, num_faces: int,
             
             detection_failures = 0
 
-            # ======================= OBJECT DETECTION PHASE ==========================
-            # object_detector = frame_detect.DetectorProcess(cv2= cv2)
-            # frame_count = 0
-            # # Send every 2nd frame (optional optimization)
-            # if frame_count % 2 == 0:
-            #     object_detector.submit_frame(image)
-
-            # frame_count += 1
-            # =========================================================================
-
+            # ======================= PREPROCESS ==========================
             image = cv2.flip(image, 1)
+
+            # Small frame for YOLO (performance boost 🚀)
+            small_frame = cv2.resize(image, (416, 416))
+
+            # ======================= OBJECT DETECTION (ASYNC) ============
+            # Send only every 3rd frame to reduce load
+            if frame_count % 3 == 0:
+                object_detector.submit_frame(small_frame)
+
+            # ======================= MEDIAPIPE ===========================
             rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_image)
+
             detector.detect_async(mp_image, time.time_ns() // 1_000_000)
 
-            # Show FPS
+            # ======================= DISPLAY =============================
+            current_frame = image
+
             if config.SHOW_FPS:
                 fps_text = config.FPS_TEXT_FORMAT.format(FPS)
                 text_location = (config.LEFT_MARGIN, config.ROW_SIZE + config.FPS_Y_OFFSET)
-                current_frame = image
+
                 cv2.putText(current_frame, fps_text, text_location,
-                            config.FPS_FONT, config.FPS_FONT_SIZE, 
-                            config.FPS_COLOR, config.FPS_FONT_THICKNESS, cv2.LINE_AA)
-            else:
-                current_frame = image
+                            config.FPS_FONT,
+                            config.FPS_FONT_SIZE,
+                            config.FPS_COLOR,
+                            config.FPS_FONT_THICKNESS,
+                            cv2.LINE_AA)
 
             if DETECTION_RESULT:
                 # Draw landmarks
