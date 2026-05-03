@@ -189,6 +189,7 @@ class AlertManager:
         voice_message: Optional[str] = None,
         trigger_buzzer: bool = False,
         buzzer_message: Optional[str] = None,
+        timeframe_count: Optional[int] = None,
     ) -> None:
         """Common alert method with payload validation and channel routing."""
         if not self._validate_alert_request(tag, event_type, message, behavior_data, current_count, threshold):

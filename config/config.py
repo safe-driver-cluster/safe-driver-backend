@@ -41,6 +41,7 @@ FACE_MISSING_COUNT_THRESH = 5
 
 # Reset counters after this many seconds of no events (to prevent stale data from triggering alerts)
 EVENT_COUNT_RESET_SEC = 300.0
+EVENT_ARRAY_TIME_WINDOW_SEC = 600.0  # Time window to consider for counting events (e.g., count events in the last 10 minutes)
 
 # Voice Alert Thresholds
 VOICE_ALERT_COOLDOWN_SEC = 10.0  # Minimum seconds between voice alerts of the same type
@@ -156,6 +157,30 @@ VOICE_ALERT_DROWSY = 'Drowsiness detected! Please take a break.'
 VOICE_ALERT_DISTRACTION = 'Driver distraction detected! Please pay attention to the road.'
 VOICE_ALERT_HEAD_TURN = 'Head turn detected! Please keep your eyes on the road.'
 VOICE_ALERT_PERCLOS = 'High PERCLOS level detected! Please stay alert.'
+
+# Voice Alert Messages Level 2 (after buzzer limit is reached)
+VOICE_ALERT_MICROSLEEP_L2 = 'Multiple microsleep events detected! Please take a break.'
+VOICE_ALERT_YAWNING_L2 = 'Multiple yawning events detected! Please take a break.'
+VOICE_ALERT_DROWSY_L2 = 'Multiple drowsiness events detected! Please take a break.'
+VOICE_ALERT_DISTRACTION_L2 = 'Multiple distraction events detected! Please focus on driving.'
+VOICE_ALERT_HEAD_TURN_L2 = 'Multiple head turn events detected! Please keep your eyes on the road.'
+VOICE_ALERT_PERCLOS_L2 = 'PERCLOS level has been high multiple times! Please stay alert and consider taking a break.'
+
+# Voice Alert Messages Level 3 (after voice alert limit is reached)
+VOICE_ALERT_MICROSLEEP_L3 = 'Frequent microsleep events detected! It is strongly recommended to take a break and rest before continuing to drive.'
+VOICE_ALERT_YAWNING_L3 = 'Frequent yawning events detected! It is strongly recommended to take a break and rest before continuing to drive.'
+VOICE_ALERT_DROWSY_L3 = 'Frequent drowsiness events detected! It is strongly recommended to take a break and rest before continuing to drive.'
+VOICE_ALERT_DISTRACTION_L3 = 'Frequent distraction events detected! It is strongly recommended to focus on driving and minimize distractions.'
+VOICE_ALERT_HEAD_TURN_L3 = 'Frequent head turn events detected! It is strongly recommended to keep your eyes on the road and minimize distractions.'
+VOICE_ALERT_PERCLOS_L3 = 'PERCLOS level has been high frequently! It is strongly recommended to stay alert and consider taking regular breaks to rest.'
+
+# Voice Alert Messages Level 4 (warning to driver by mentioning have to inform authorities)
+VOICE_ALERT_MICROSLEEP_L4 = 'Frequent microsleep events detected! If you continue to drive in this condition, authorities may be notified for your safety and the safety of others on the road.'
+VOICE_ALERT_YAWNING_L4 = 'Frequent yawning events detected! If you continue to drive in this condition, authorities may be notified for your safety and the safety of others on the road.'
+VOICE_ALERT_DROWSY_L4 = 'Frequent drowsiness events detected! If you continue to drive in this condition, authorities may be notified for your safety and the safety of others on the road.'
+VOICE_ALERT_DISTRACTION_L4 = 'Frequent distraction events detected! If you continue to drive in this condition, authorities may be notified for your safety and the safety of others on the road.'
+VOICE_ALERT_HEAD_TURN_L4 = 'Frequent head turn events detected! If you continue to drive in this condition, authorities may be notified for your safety and the safety of others on the road.'
+VOICE_ALERT_PERCLOS_L4 = 'PERCLOS level has been high frequently! If you continue to drive in this condition, authorities may be notified for your safety and the safety of others on the road.'
 
 # Blendshapes Display
 BLENDSHAPE_FONT = cv2.FONT_HERSHEY_SIMPLEX

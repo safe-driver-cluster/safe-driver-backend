@@ -17,6 +17,18 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+# ============================================================================
+ENABLE_CV2_WINDOW = False  # Set to False to disable cv2.imshow (for headless environments)
+ENABLE_LOGGING = True  # Set to False to disable logging (for performance testing)
+
+ENABLE_PHONE_BOTTLE_PERSON_DETECTION = True
+ENABLE_CIGARETTE_DETECTION = True
+ENABLE_GLASSES_DETECTION = True
+
+DETECT_PHONE_BOTTLE_PERSON = 3
+DETECT_CIGARATE = 2
+DETECT_GLASSES = 7
+# ============================================================================
 
 def detector_worker(frame_queue):
     from ultralytics import YOLO
@@ -39,99 +51,80 @@ def detector_worker(frame_queue):
             # -------------------------------
             # 1. OBJECT DETECTION (phone, bottle)
             # -------------------------------
-            detect_results = detect_model(frame)
+            if ENABLE_PHONE_BOTTLE_PERSON_DETECTION:
+                detect_results = detect_model(frame)
 
-            for r in detect_results:
-                for box in r.boxes:
-                    cls = int(box.cls[0])
-                    label = detect_model.names[cls]
-                    conf = float(box.conf[0])
+                for r in detect_results:
+                    for box in r.boxes:
+                        cls = int(box.cls[0])
+                        label = detect_model.names[cls]
+                        conf = float(box.conf[0])
 
-                    if label in ["cell phone", "bottle", "person"]:
-                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        if label in ["cell phone", "bottle", "person"]:
+                            x1, y1, x2, y2 = map(int, box.xyxy[0])
 
-                        cv2.rectangle(frame, (x1, y1), (x2, y2), (0,255,0), 2)
-                        cv2.putText(frame, f"{label} {conf:.2f}",
-                                    (x1, y1-10),
-                                    cv2.FONT_HERSHEY_SIMPLEX,
-                                    0.5, (0,255,0), 2)
+                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0,255,0), 2)
+                            cv2.putText(frame, f"{label} {conf:.2f}",
+                                        (x1, y1-10),
+                                        cv2.FONT_HERSHEY_SIMPLEX,
+                                        0.5, (0,255,0), 2)
 
-                        logger.info(f"{label} detected: {conf:.2f}")
-
-            # -------------------------------
-            # 2. SMOKING CLASSIFICATION
-            # -------------------------------
-            # class_results = class_model(frame)
-
-            # for r in class_results:
-            #     probs = r.probs.data.tolist()
-            #     class_id = probs.index(max(probs))
-            #     confidence = max(probs)
-
-            #     label = class_model.names[class_id]
-
-            #     # Show classification result
-            #     text = f"{label} ({confidence:.2f})"
-            #     cv2.putText(frame, text, (20, 50),
-            #                 cv2.FONT_HERSHEY_SIMPLEX,
-            #                 1, (255,255,0), 2)
-
-            #     # Smoking alert
-            #     if label == "smoking" and confidence > 0.7:
-            #         cv2.putText(frame, "🚬 SMOKING DETECTED!",
-            #                     (20, 100),
-            #                     cv2.FONT_HERSHEY_SIMPLEX,
-            #                     1, (0,0,255), 3)
-
-            #         print("ALERT: Driver is smoking!")
+                            if ENABLE_LOGGING:
+                                logger.info(f"{label} detected: {conf:.2f}")
 
             # -------------------------------
-            # 3. CIGARETTE DETECTION
+            # 2. CIGARETTE DETECTION
             # -------------------------------
 
-            results = cigarette_model(frame, conf=0.3)
+            if ENABLE_CIGARETTE_DETECTION:
+                results = cigarette_model(frame, conf=0.3)
 
-            for r in results:
-                for box in r.boxes:
-                    label = cigarette_model.names[int(box.cls[0])]
-                    conf = float(box.conf[0])
+                for r in results:
+                    for box in r.boxes:
+                        label = cigarette_model.names[int(box.cls[0])]
+                        conf = float(box.conf[0])
 
-                    if label == "cigarette" and conf >= 0.25:
-                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        if label == "cigarette" and conf >= 0.25:
+                            x1, y1, x2, y2 = map(int, box.xyxy[0])
 
-                        cv2.rectangle(frame, (x1,y1), (x2,y2), (0,0,255), 2)
-                        cv2.putText(frame, f"Cigarette {conf:.2f}",
-                                    (x1, y1-10),
-                                    cv2.FONT_HERSHEY_SIMPLEX,
-                                    0.5, (0,0,255), 2)
+                            if ENABLE_CV2_WINDOW:
+                                cv2.rectangle(frame, (x1,y1), (x2,y2), (0,0,255), 2)
+                                cv2.putText(frame, f"Cigarette {conf:.2f}",
+                                            (x1, y1-10),
+                                            cv2.FONT_HERSHEY_SIMPLEX,
+                                            0.5, (0,0,255), 2)
 
-                        logger.info("Cigarette detected!")
+                            if ENABLE_LOGGING:
+                                logger.info("Cigarette detected!")
 
             # -------------------------------
-            # 4. GLASSES DETECTION
+            # 3. GLASSES DETECTION
             # -------------------------------
+            if ENABLE_GLASSES_DETECTION:
+                glass_results = glasses_model(frame, conf=0.3)
 
-            glass_results = glasses_model(frame, conf=0.3)
+                for r in glass_results:
+                    for box in r.boxes:
+                        label = glasses_model.names[int(box.cls[0])]
+                        conf = float(box.conf[0])
 
-            for r in glass_results:
-                for box in r.boxes:
-                    label = glasses_model.names[int(box.cls[0])]
-                    conf = float(box.conf[0])
+                        if label == "glasses":
+                            x1, y1, x2, y2 = map(int, box.xyxy[0])
 
-                    if label == "glasses":
-                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                            if ENABLE_CV2_WINDOW:
+                                cv2.rectangle(frame, (x1,y1), (x2,y2), (255,0,0), 2)
+                                cv2.putText(frame, f"Glasses {conf:.2f}",
+                                            (x1, y1-10),
+                                            cv2.FONT_HERSHEY_SIMPLEX,
+                                            0.5, (255,0,0), 2)
 
-                        cv2.rectangle(frame, (x1,y1), (x2,y2), (255,0,0), 2)
-                        cv2.putText(frame, f"Glasses {conf:.2f}",
-                                    (x1, y1-10),
-                                    cv2.FONT_HERSHEY_SIMPLEX,
-                                    0.5, (255,0,0), 2)
-
-                        logger.info("Glasses detected!")
+                            if ENABLE_LOGGING:
+                                logger.info("Glasses detected!")
             # -------------------------------
             # SHOW FRAME
             # -------------------------------
-            cv2.imshow("Safe Driver System", frame)
+            if ENABLE_CV2_WINDOW:
+                cv2.imshow("Safe Driver System", frame)
 
         except Exception as e:
             logger.info("Detection error:", e)

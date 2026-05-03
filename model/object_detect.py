@@ -5,6 +5,14 @@ import time
 prev_time = 0
 frame_count = 0
 
+ENABLE_PHONE_BOTTLE_PERSON_DETECTION = True
+ENABLE_CIGARETTE_DETECTION = True
+ENABLE_GLASSES_DETECTION = False
+
+DETECT_PHONE_BOTTLE_PERSON = 1
+DETECT_CIGARATE = 1
+DETECT_GLASSES = 7
+
 # Load models
 detect_model = YOLO("model/yolov8n.pt")          # object detection
 class_model = YOLO("model/smoking_model.pt")     # smoking classification
@@ -23,7 +31,7 @@ while True:
     # -------------------------------
     # 1. OBJECT DETECTION (phone, bottle)
     # -------------------------------
-    if frame_count % 3 == 0:
+    if ENABLE_PHONE_BOTTLE_PERSON_DETECTION and frame_count % DETECT_PHONE_BOTTLE_PERSON == 0:
         detect_results = detect_model(frame, conf=0.7)
 
         for r in detect_results:
@@ -44,36 +52,9 @@ while True:
                     print(f"{label} detected: {conf:.2f}")
 
     # -------------------------------
-    # 2. SMOKING CLASSIFICATION
+    # 2. CIGARETTE DETECTION
     # -------------------------------
-    # class_results = class_model(frame, conf=0.7)
-
-    # for r in class_results:
-    #     probs = r.probs.data.tolist()
-    #     class_id = probs.index(max(probs))
-    #     confidence = max(probs)
-
-    #     label = class_model.names[class_id]
-
-    #     # Show classification result
-    #     text = f"{label} ({confidence:.2f})"
-    #     cv2.putText(frame, text, (20, 50),
-    #                 cv2.FONT_HERSHEY_SIMPLEX,
-    #                 1, (255,255,0), 2)
-
-    #     # Smoking alert
-    #     if label == "smoking" and confidence > 0.7:
-    #         cv2.putText(frame, "🚬 SMOKING DETECTED!",
-    #                     (20, 100),
-    #                     cv2.FONT_HERSHEY_SIMPLEX,
-    #                     1, (0,0,255), 3)
-
-    #         print("ALERT: Driver is smoking!")
-
-    if frame_count % 2 == 0:
-        # -------------------------------
-        # 3. CIGARETTE DETECTION
-        # -------------------------------
+    if ENABLE_CIGARETTE_DETECTION and frame_count % DETECT_CIGARATE == 0:
 
         results = cigarette_model(frame, conf=0.7)
 
@@ -94,27 +75,9 @@ while True:
                     print("Cigarette detected!")
 
     # -------------------------------
-    # 4. GLASSES DETECTION
+    # 3. GLASSES DETECTION
     # -------------------------------
-
-    # glass_results = glasses_model(frame, conf=0.7)
-
-    # for r in glass_results:
-    #     for box in r.boxes:
-    #         label = glasses_model.names[int(box.cls[0])]
-    #         conf = float(box.conf[0])
-
-    #         if (label == "glasses" or label == "sunglasses") and conf >= 0.7:
-    #             x1, y1, x2, y2 = map(int, box.xyxy[0])
-
-    #             cv2.rectangle(frame, (x1,y1), (x2,y2), (255,0,0), 2)
-    #             cv2.putText(frame, f"Glasses {conf:.2f}",
-    #                         (x1, y1-10),
-    #                         cv2.FONT_HERSHEY_SIMPLEX,
-    #                         0.5, (255,0,0), 2)
-
-    #             print("Glasses detected!")
-    if frame_count % 7 == 0:
+    if ENABLE_GLASSES_DETECTION and frame_count % DETECT_GLASSES == 0:
         # -------------------------------
         # 4. GLASSES DETECTION (IMPROVED)
         # -------------------------------

@@ -101,6 +101,15 @@ HEAD_TURN_COUNT = 0
 FACE_MISSING_COUNT = 0
 FREQUENT_CLOSURES_COUNT = 0
 
+# Drowsiness Behavior Detection Times Array Within 10 Minutes (EVENT_ARRAY_TIME_WINDOW_SEC)
+DROWSY_EVENT_TIME_ARRAY_SEC = deque()  # Stores timestamps of drowsy events in seconds
+DISTRACTION_EVENT_TIME_ARRAY_SEC = deque()  # Stores timestamps of distraction events in seconds
+HEADTURN_EVENT_TIME_ARRAY_SEC = deque()  # Stores timestamps of head turn events in seconds
+PERCLOSE_EVENT_TIME_ARRAY_SEC = deque()  # Stores timestamps of PERCLOS events in seconds
+FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC = deque()  # Stores timestamps of frequent eye closures events in seconds
+YAWN_EVENT_TIME_ARRAY_SEC = deque()  # Stores timestamps of yawn events in seconds
+MICROSLEEP_EVENT_TIME_ARRAY_SEC = deque()  # Stores timestamps of microsleep events in seconds
+
 YAWN_COUNTED = False
 MICROSLEEP_COUNTED = False
 DROWSY_COUNTED = False
@@ -292,7 +301,17 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
             if duration >= config.HEAD_TURN_DISTRACTION_SEC and not NO_FACE_COUNTED:
                 NO_FACE_COUNTED = True
                 face_missing_count = _increment_event_counter("face_missing")
-                logger.warning(f"NO FACE DETECTED! Duration: {duration:.2f}s")
+
+                ######### Append to event time queue #########
+                global DISTRACTION_EVENT_TIME_ARRAY_SEC
+                DISTRACTION_EVENT_TIME_ARRAY_SEC.append(now)
+                timeframe_count = 0
+                if DISTRACTION_EVENT_TIME_ARRAY_SEC and (now - DISTRACTION_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+                    DISTRACTION_EVENT_TIME_ARRAY_SEC.popleft()
+                timeframe_count = len(DISTRACTION_EVENT_TIME_ARRAY_SEC)
+
+                logger.warning(f"NO FACE DETECTED! Duration: {duration:.2f}s Timeframe count: {timeframe_count} Face missing count: {face_missing_count}")
+
                 ALERT_MANAGER.check_and_send_threshold_alert(
                     tag="DISTRACTION_EVENT",
                     event_type=config.BEHAVIOR_DISTRACTION,
@@ -315,6 +334,7 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                     voice_message=config.VOICE_ALERT_DISTRACTION,
                     trigger_buzzer=True,
                     buzzer_message=config.WARNING_DISTRACTION,
+                    timeframe_count=timeframe_count,
                 )
         
         return {
@@ -373,7 +393,17 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
             if duration >= config.HEAD_TURN_DISTRACTION_SEC and not HEAD_TURN_COUNTED:
                 HEAD_TURN_COUNTED = True
                 head_turn_count = _increment_event_counter("head_turn")
-                logger.warning(f"HEAD TURN DISTRACTION! Direction: {direction}, Duration: {duration:.2f}s, Yaw: {yaw:.1f}°")
+
+                ######### Append to event time queue #########
+                global HEADTURN_EVENT_TIME_ARRAY_SEC
+                HEADTURN_EVENT_TIME_ARRAY_SEC.append(now)
+                timeframe_count = 0
+                if HEADTURN_EVENT_TIME_ARRAY_SEC and (now - HEADTURN_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+                    HEADTURN_EVENT_TIME_ARRAY_SEC.popleft()
+                timeframe_count = len(HEADTURN_EVENT_TIME_ARRAY_SEC)
+
+                logger.warning(f"HEAD TURN DISTRACTION! Direction: {direction}, Duration: {duration:.2f}s, Yaw: {yaw:.1f}° Timeframe count: {timeframe_count} Head turn count: {head_turn_count}")
+
                 ALERT_MANAGER.check_and_send_threshold_alert(
                     tag="DISTRACTION_EVENT",
                     event_type=config.BEHAVIOR_HEAD_TURN,
@@ -394,6 +424,7 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                     voice_message=config.VOICE_ALERT_HEAD_TURN,
                     trigger_buzzer=True,
                     buzzer_message=config.WARNING_HEAD_TURN,
+                    timeframe_count=timeframe_count,
                 )
     else:
         HEAD_TURNED_START = None
@@ -434,7 +465,17 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
             PERCLOS_WIN.popleft()
         perclos = (sum(v for _, v in PERCLOS_WIN) / len(PERCLOS_WIN)) if PERCLOS_WIN else 0.0
         if perclos >= config.PERCLOS_DROWSY:
-            logger.warning(f"PERCLOS THRESHOLD REACHED! PERCLOS: {perclos:.2f} over last {config.PERCLOS_WIN_SEC}s")
+
+            ######### Append to event time queue #########
+            global PERCLOS_EVENT_TIME_ARRAY_SEC
+            PERCLOS_EVENT_TIME_ARRAY_SEC.append(now)
+            timeframe_count = 0
+            if PERCLOS_EVENT_TIME_ARRAY_SEC and (now - PERCLOS_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+                PERCLOS_EVENT_TIME_ARRAY_SEC.popleft()
+            timeframe_count = len(PERCLOS_EVENT_TIME_ARRAY_SEC)
+            
+            logger.warning(f"PERCLOS THRESHOLD REACHED! PERCLOS: {perclos:.2f} over last {config.PERCLOS_WIN_SEC}s Timeframe count: {timeframe_count}")
+
             ALERT_MANAGER.check_and_send_threshold_alert(
                 tag="DROWSY_EVENT",
                 event_type=config.BEHAVIOR_PERCLOS_REACHED,
@@ -450,6 +491,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 voice_message=config.VOICE_ALERT_PERCLOS,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_PERCLOS,
+                timeframe_count=timeframe_count
             )
 
         # --- Eye closure frequency tracking ---
@@ -478,7 +520,17 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
         if frequent_closures and not FREQUENT_CLOSURES_COUNTED:
             FREQUENT_CLOSURES_COUNTED = True
             frequent_closures_count = _increment_event_counter("frequent_closures")
-            logger.warning(f"FREQUENT EYE CLOSURES DETECTED! {len(EYE_CLOSURE_EVENTS)} closures in {config.EYE_CLOSURE_FREQ_WIN}s")
+
+            ######### Append to event time queue #########
+            global FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC
+            FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC.append(now)
+            timeframe_count = 0
+            if FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC and (now - FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+                FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC.popleft()
+            timeframe_count = len(FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC)
+
+            logger.warning(f"FREQUENT EYE CLOSURES DETECTED! {len(EYE_CLOSURE_EVENTS)} closures in {config.EYE_CLOSURE_FREQ_WIN}s Timeframe count: {timeframe_count} Frequent closures count: {frequent_closures_count}")
+
             ALERT_MANAGER.check_and_send_threshold_alert(
                 tag="DROWSY_EVENT",
                 event_type=config.BEHAVIOR_FREQUENT_CLOSURES,
@@ -496,7 +548,10 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 voice_message=config.VOICE_ALERT_DROWSY,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_FREQUENT_CLOSURES,
+                timeframe_count=timeframe_count
+
             )
+
         elif not frequent_closures:
             FREQUENT_CLOSURES_COUNTED = False
 
@@ -524,7 +579,17 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
             microsleep_count = _increment_event_counter("microsleep")
             MICROSLEEP_COUNTED = True
             duration = now - EYE_CLOSED_START
-            logger.warning(f"MICROSLEEP DETECTED! Duration: {duration:.2f}s, Total count: {microsleep_count}")
+
+            ######### Append to event time queue #########
+            global MICROSLEEP_EVENT_TIME_ARRAY_SEC
+            MICROSLEEP_EVENT_TIME_ARRAY_SEC.append(now)
+            timeframe_count = 0
+            if MICROSLEEP_EVENT_TIME_ARRAY_SEC and (now - MICROSLEEP_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+                MICROSLEEP_EVENT_TIME_ARRAY_SEC.popleft()
+            timeframe_count = len(MICROSLEEP_EVENT_TIME_ARRAY_SEC)
+
+            logger.warning(f"MICROSLEEP DETECTED! Duration: {duration:.2f}s, Total count: {microsleep_count} Timeframe count: {timeframe_count}")
+
             ALERT_MANAGER.check_and_send_threshold_alert(
                 tag="DROWSY_EVENT",
                 event_type=config.BEHAVIOR_MICROSLEEP,
@@ -542,6 +607,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 voice_message=config.VOICE_ALERT_MICROSLEEP,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_MICROSLEEP,
+                timeframe_count=timeframe_count
             )
 
         # --- Yawn detection ---
@@ -557,7 +623,17 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                     yawn_count = _increment_event_counter("yawn")
                     YAWN_COUNTED = True
                     duration = now - YAWN_START
-                    logger.warning(f"YAWN DETECTED! Duration: {duration:.2f}s, Total count: {yawn_count}")
+
+                    ######### Append to event time queue #########
+                    global YAWN_EVENT_TIME_ARRAY_SEC
+                    YAWN_EVENT_TIME_ARRAY_SEC.append(now)
+                    timeframe_count = 0
+                    if YAWN_EVENT_TIME_ARRAY_SEC and (now - YAWN_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+                        YAWN_EVENT_TIME_ARRAY_SEC.popleft()
+                    timeframe_count = len(YAWN_EVENT_TIME_ARRAY_SEC)
+
+                    logger.warning(f"YAWN DETECTED! Duration: {duration:.2f}s, Total count: {yawn_count} Timeframe count: {timeframe_count}")
+
                     ALERT_MANAGER.check_and_send_threshold_alert(
                         tag="DROWSY_EVENT",
                         event_type=config.BEHAVIOR_YAWN,
@@ -575,6 +651,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                         voice_message=config.VOICE_ALERT_YAWNING,
                         trigger_buzzer=True,
                         buzzer_message=config.WARNING_YAWNING,
+                        timeframe_count=timeframe_count
                     )
         else:
             YAWN_START = None
@@ -587,7 +664,17 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
         if drowsy and not DROWSY_COUNTED:
             drowsy_count = _increment_event_counter("drowsy")
             DROWSY_COUNTED = True
-            logger.warning(f"DROWSINESS DETECTED! Total count: {drowsy_count}, PERCLOS: {perclos:.2f}")
+
+            ######### Append to event time queue #########
+            global DROWSY_EVENT_TIME_ARRAY_SEC
+            DROWSY_EVENT_TIME_ARRAY_SEC.append(now)
+            timeframe_count = 0
+            if DROWSY_EVENT_TIME_ARRAY_SEC and (now - DROWSY_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+                DROWSY_EVENT_TIME_ARRAY_SEC.popleft()
+            timeframe_count = len(DROWSY_EVENT_TIME_ARRAY_SEC)
+
+            logger.warning(f"DROWSINESS DETECTED! Total count: {drowsy_count}, PERCLOS: {perclos:.2f} Timeframe count: {timeframe_count}")
+
             ALERT_MANAGER.check_and_send_threshold_alert(
                 tag="DROWSY_EVENT",
                 event_type=config.BEHAVIOR_DROWSY,
@@ -605,6 +692,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 voice_message=config.VOICE_ALERT_DROWSY,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_DROWSY,
+                timeframe_count=timeframe_count
             )
         elif not drowsy:
             DROWSY_COUNTED = False
@@ -653,7 +741,17 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 'face_lost': True
             }
         else:
-            logger.warning("DISTRACTION DETECTED! Missing focus on the road.")
+
+            ######### Append to event time queue #########
+            global DISTRACTION_EVENT_TIME_ARRAY_SEC
+            DISTRACTION_EVENT_TIME_ARRAY_SEC.append(time.time())
+            timeframe_count = 0
+            if DISTRACTION_EVENT_TIME_ARRAY_SEC and (time.time() - DISTRACTION_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+                DISTRACTION_EVENT_TIME_ARRAY_SEC.popleft()
+            timeframe_count = len(DISTRACTION_EVENT_TIME_ARRAY_SEC)
+
+            logger.warning("DISTRACTION DETECTED! Missing focus on the road. Timeframe count: {timeframe_count}")
+
             ALERT_MANAGER.check_and_send_threshold_alert(
                 tag="DISTRACTION_EVENT",
                 event_type=config.BEHAVIOR_DISTRACTION,
@@ -665,6 +763,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 voice_message=config.VOICE_ALERT_DISTRACTION,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_DISTRACTION,
+                timeframe_count=timeframe_count
             )
             return {
                 'drowsy': False,
@@ -795,8 +894,8 @@ def run(model: str, num_faces: int,
 
             # ======================= OBJECT DETECTION (ASYNC) ============
             # Send only every 3rd frame to reduce load
-            if frame_count % 3 == 0:
-                object_detector.submit_frame(small_frame)
+            # if frame_count % 3 == 0:
+            #     object_detector.submit_frame(small_frame)
 
             # ======================= MEDIAPIPE ===========================
             rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
