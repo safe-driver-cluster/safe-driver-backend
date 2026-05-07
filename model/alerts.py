@@ -254,9 +254,9 @@ class AlertManager:
 
             if buzzer_used >= config.MAXIMUM_BUZZER_ALERTS_PER_TYPE and allow_voice and voice_cooldown_ok and voice_used < config.MAXIMUM_VOICE_ALERTS_PER_TYPE:
                 # voice_text = voice_message or message
-                voice_text = self.get_voice_msg_by_level(event_type, level=voice_used + 1)
+                voice_text, voice_label = self.get_voice_msg_by_level(event_type, level=voice_used + 1)
                 if isinstance(voice_text, str) and voice_text.strip():
-                    utils.perform_voice_alerts(voice_text)
+                    utils.perform_voice_alerts(voice_text, voice_label)
                     self.voice_alert_count_by_type[policy_key] = voice_used + 1
                     self.last_voice_alert_time_by_type[policy_key] = now_ts
                     self._voice_cycle_state["emitted"] = True
@@ -299,82 +299,82 @@ class AlertManager:
 
         if event_type == config.BEHAVIOR_DROWSY:
             if level == 1:
-                return config.VOICE_ALERT_DROWSY
+                return config.VOICE_ALERT_DROWSY, "VOICE_ALERT_DROWSY"
             if level == 2:
-                return config.VOICE_ALERT_DROWSY_L2
+                return config.VOICE_ALERT_DROWSY_L2, "VOICE_ALERT_DROWSY_L2"
             if level == 3:
-                return config.VOICE_ALERT_DROWSY_L3
-            
+                return config.VOICE_ALERT_DROWSY_L3, "VOICE_ALERT_DROWSY_L3"
+
         if event_type == config.BEHAVIOR_DISTRACTION:
             if level == 1:
-                return config.VOICE_ALERT_DISTRACTION
+                return config.VOICE_ALERT_DISTRACTION, "VOICE_ALERT_DISTRACTION"
             if level == 2:
-                return config.VOICE_ALERT_DISTRACTION_L2
+                return config.VOICE_ALERT_DISTRACTION_L2, "VOICE_ALERT_DISTRACTION_L2"
             if level == 3:
-                return config.VOICE_ALERT_DISTRACTION_L3
-            
+                return config.VOICE_ALERT_DISTRACTION_L3, "VOICE_ALERT_DISTRACTION_L3"
+
         if event_type == config.BEHAVIOR_HEAD_TURN:
             if level == 1:
-                return config.VOICE_ALERT_HEAD_TURN
+                return config.VOICE_ALERT_HEAD_TURN, "VOICE_ALERT_HEAD_TURN"
             if level == 2:
-                return config.VOICE_ALERT_HEAD_TURN_L2
+                return config.VOICE_ALERT_HEAD_TURN_L2, "VOICE_ALERT_HEAD_TURN_L2"
             if level == 3:
-                return config.VOICE_ALERT_HEAD_TURN_L3
-            
+                return config.VOICE_ALERT_HEAD_TURN_L3, "VOICE_ALERT_HEAD_TURN_L3"
+
         if event_type == config.BEHAVIOR_PERCLOS_REACHED:
             if level == 1:
-                return config.VOICE_ALERT_PERCLOS
+                return config.VOICE_ALERT_PERCLOS, "VOICE_ALERT_PERCLOS"
             if level == 2:
-                return config.VOICE_ALERT_PERCLOS_L2
+                return config.VOICE_ALERT_PERCLOS_L2, "VOICE_ALERT_PERCLOS_L2"
             if level == 3:
-                return config.VOICE_ALERT_PERCLOS_L3
-            
+                return config.VOICE_ALERT_PERCLOS_L3, "VOICE_ALERT_PERCLOS_L3"
+
         if event_type == config.BEHAVIOR_YAWN:
             if level == 1:
-                return config.VOICE_ALERT_YAWNING
+                return config.VOICE_ALERT_YAWNING, "VOICE_ALERT_YAWNING"
             if level == 2:
-                return config.VOICE_ALERT_YAWNING_L2
+                return config.VOICE_ALERT_YAWNING_L2, "VOICE_ALERT_YAWNING_L2"
             if level == 3:
-                return config.VOICE_ALERT_YAWNING_L3
+                return config.VOICE_ALERT_YAWNING_L3, "VOICE_ALERT_YAWNING_L3"
             
         if event_type == config.BEHAVIOR_MICROSLEEP:
             if level == 1:
-                return config.VOICE_ALERT_MICROSLEEP
+                return config.VOICE_ALERT_MICROSLEEP, "VOICE_ALERT_MICROSLEEP"
             if level == 2:
-                return config.VOICE_ALERT_MICROSLEEP_L2
+                return config.VOICE_ALERT_MICROSLEEP_L2, "VOICE_ALERT_MICROSLEEP_L2"
             if level == 3:
-                return config.VOICE_ALERT_MICROSLEEP_L3
-            
+                return config.VOICE_ALERT_MICROSLEEP_L3, "VOICE_ALERT_MICROSLEEP_L3"
+
         if event_type == config.BEHAVIOR_FREQUENT_CLOSURES:
             if level == 1:
-                return config.VOICE_ALERT_FREQUENT_CLOSURES
+                return config.VOICE_ALERT_FREQUENT_CLOSURES, "VOICE_ALERT_FREQUENT_CLOSURES"
             if level == 2:
-                return config.VOICE_ALERT_FREQUENT_CLOSURES_L2
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_L2, "VOICE_ALERT_FREQUENT_CLOSURES_L2"
             if level == 3:
-                return config.VOICE_ALERT_FREQUENT_CLOSURES_L3
-            
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_L3, "VOICE_ALERT_FREQUENT_CLOSURES_L3"
+
         if event_type == config.BEHAVIOR_MOBILE_USE:
             if level == 1:
-                return config.VOICE_ALERT_PHONE
+                return config.VOICE_ALERT_PHONE, "VOICE_ALERT_PHONE"
             if level == 2:
-                return config.VOICE_ALERT_PHONE_L2
+                return config.VOICE_ALERT_PHONE_L2, "VOICE_ALERT_PHONE_L2"
             if level == 3:
-                return config.VOICE_ALERT_PHONE_L3
+                return config.VOICE_ALERT_PHONE_L3, "VOICE_ALERT_PHONE_L3"
             
         if event_type == config.BEHAVIOR_SMOKING:
             if level == 1:
-                return config.VOICE_ALERT_SMOKING
+                return config.VOICE_ALERT_SMOKING, "VOICE_ALERT_SMOKING"
             if level == 2:
-                return config.VOICE_ALERT_SMOKING_L2
+                return config.VOICE_ALERT_SMOKING_L2, "VOICE_ALERT_SMOKING_L2"
             if level == 3:
-                return config.VOICE_ALERT_SMOKING_L3
-            
+                return config.VOICE_ALERT_SMOKING_L3, "VOICE_ALERT_SMOKING_L3"
+
         if event_type == config.BEHAVIOR_DRINKING:
             if level == 1:
-                return config.VOICE_ALERT_DRINKING
+                return config.VOICE_ALERT_DRINKING, "VOICE_ALERT_DRINKING"
             if level == 2:
-                return config.VOICE_ALERT_DRINKING_L2
+                return config.VOICE_ALERT_DRINKING_L2, "VOICE_ALERT_DRINKING_L2"
             if level == 3:
-                return config.VOICE_ALERT_DRINKING_L3
-            
-        return config.VOICE_ALERT_DEFAULT
+                return config.VOICE_ALERT_DRINKING_L3, "VOICE_ALERT_DRINKING_L3"
+
+        return config.VOICE_ALERT_DEFAULT, "VOICE_ALERT_DEFAULT"

@@ -56,9 +56,9 @@ MAXIMUM_VOICE_ALERTS_PER_TYPE = 3  # Maximum number of voice alerts per type to 
 # -------------------------------------------------------------------------------------
 ENABLE_PHONE_BOTTLE_PERSON_DETECTION = True
 ENABLE_CIGARETTE_DETECTION = True
-ENABLE_GLASSES_DETECTION = True
+ENABLE_GLASSES_DETECTION = False
 
-ENABLE_CV2_WINDOW = True  # Set to False to disable cv2.imshow (for headless environments)
+ENABLE_CV2_WINDOW = False  # Set to False to disable cv2.imshow (for headless environments)
 ENABLE_LOGGING = True  # Set to False to disable logging (for performance testing)
 
 DETECT_PHONE_BOTTLE_PERSON_FRAME = 3
@@ -162,6 +162,7 @@ WARNING_DISTRACTION = 'Driver Distraction Detected!'
 WARNING_MOBILE_USE = 'Mobile Phone Use Detected!'
 WARNING_SMOKING = 'Smoking Detected!'
 WARNING_HEAD_TURN = "Head Turn Detected!"
+WARNING_DRINKING = "Drinking Detected!"
 
 # Console Messages
 CONSOLE_MICROSLEEP = 'Microsleep detected (Total: {})'
@@ -174,6 +175,7 @@ CONSOLE_MOBILE_USE = 'Mobile phone use detected'
 CONSOLE_SMOKING = 'Smoking detected'
 CONSOLE_HEAD_TURN = "Head turned {} for {:.2f}s"
 CONSOLE_FACE_LOSS = "Driver face not visible for {:.2f}s - Complete turn away detected"
+CONSOLE_DRINKING = "Drinking detected"
 
 # Behavior Data Message Types
 BEHAVIOR_FREQUENT_CLOSURES = 'frequent_closures'

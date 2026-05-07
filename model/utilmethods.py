@@ -9,6 +9,9 @@ from gtts import gTTS
 from database.firestore_helper import firestore_helper
 import utils.utils as utils
 
+import pygame
+pygame.mixer.init()
+
 def now():
     """Return current UTC timestamp in ISO format"""
     sri_lanka_tz = pytz.timezone('Asia/Colombo')
@@ -67,30 +70,69 @@ def log_config(logger):
     logger.info(f"Yawn Threshold: {config.YAWN_THRESH}")
     logger.info(f"Display Modes - FPS: {config.SHOW_FPS}, Metrics: {config.SHOW_METRICS}, Warnings: {config.SHOW_WARNINGS}")
 
-def perform_voice_alerts(message):
-    """Perform voice alerts using system TTS"""
+# def perform_voice_alerts(message):
+#     """Perform voice alerts using system TTS"""
+#     try:
+#         if(not config.ENABLE_VOICE_ALERTS):
+#             return
+
+#         # For Windows
+#         def _play_sound(text_inner):
+#             try:
+#                 tts = gTTS(text=text_inner, lang='en')
+#                 filename = message+"alert.mp3"
+#                 if os.path.exists(filename):
+#                     playsound(filename)
+#                 else:
+#                     tts.save(filename)
+#                     playsound(filename)
+#                 # os.remove(filename)
+#             except Exception as e:
+#                 print(f"[TTS Error] {e}")
+
+#         # Run TTS in a separate thread
+#         t = threading.Thread(target=_play_sound, args=(message,))
+#         t.daemon = True  # ensures thread exits when main program exits
+#         t.start()
+#     except Exception as e:
+#         print(f"Error performing voice alert: {e}")
+
+def perform_voice_alerts(message, label="VOICE_ALERT"):
     try:
-        if(not config.ENABLE_VOICE_ALERTS):
+        if not config.ENABLE_VOICE_ALERTS:
             return
 
-        # For Windows
         def _play_sound(text_inner):
+            filename = None
             try:
+                # unique file name
+                filename = f"{label}.mp3"
+
+                # generate TTS
                 tts = gTTS(text=text_inner, lang='en')
-                filename = message+"alert.mp3"
-                if os.path.exists(filename):
-                    playsound(filename)
-                else:
-                    tts.save(filename)
-                    playsound(filename)
-                # os.remove(filename)
+                tts.save(filename)
+
+                # play audio
+                pygame.mixer.music.load(filename)
+                pygame.mixer.music.play()
+
+                while pygame.mixer.music.get_busy():
+                    pygame.time.Clock().tick(10)
+
             except Exception as e:
                 print(f"[TTS Error] {e}")
 
-        # Run TTS in a separate thread
+            finally:
+                try:
+                    if filename and os.path.exists(filename):
+                        os.remove(filename)
+                except:
+                    pass
+
         t = threading.Thread(target=_play_sound, args=(message,))
-        t.daemon = True  # ensures thread exits when main program exits
+        t.daemon = True
         t.start()
+
     except Exception as e:
         print(f"Error performing voice alert: {e}")
 

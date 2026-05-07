@@ -894,8 +894,8 @@ def run(model: str, num_faces: int,
 
             # ======================= OBJECT DETECTION (ASYNC) ============
             # Send only every 3rd frame to reduce load
-            # if frame_count % 3 == 0:
-            #     object_detector.submit_frame(small_frame)
+            if frame_count % 3 == 0:
+                object_detector.submit_frame(small_frame)
 
             # ======================= MEDIAPIPE ===========================
             rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
