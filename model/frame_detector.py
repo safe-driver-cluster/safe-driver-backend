@@ -2,6 +2,10 @@ import multiprocessing as mp
 import cv2
 import logging
 import sys
+import time
+import config.config as config
+from model.alerts import AlertManager
+import model.utilmethods as utils
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -18,16 +22,32 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 # ============================================================================
-ENABLE_CV2_WINDOW = False  # Set to False to disable cv2.imshow (for headless environments)
-ENABLE_LOGGING = True  # Set to False to disable logging (for performance testing)
 
-ENABLE_PHONE_BOTTLE_PERSON_DETECTION = True
-ENABLE_CIGARETTE_DETECTION = True
-ENABLE_GLASSES_DETECTION = True
+DETECT_PHONE = False
+DETECT_BOTTLE = False
+DETECT_CIGARETTE = False
+DETECT_GLASSES = False
 
-DETECT_PHONE_BOTTLE_PERSON = 3
-DETECT_CIGARATE = 2
-DETECT_GLASSES = 7
+DETECT_PHONE_COUNT = 0
+DETECT_BOTTLE_COUNT = 0
+DETECT_CIGARETTE_COUNT = 0
+DETECT_GLASSES_COUNT = 0
+
+TIME_START = utils.now()
+
+# ============================================================================
+# ALERT MANAGER
+# ============================================================================
+ALERT_MANAGER = AlertManager(
+    logger=logger,
+    now_provider=utils.now,
+    output_stream=sys.stdout,
+    threshold_defaults={
+        config.BEHAVIOR_MOBILE_USE: False,
+        config.BEHAVIOR_SMOKING: False,
+        config.BEHAVIOR_DRINKING: False,
+    },
+)
 # ============================================================================
 
 def detector_worker(frame_queue):
@@ -38,7 +58,7 @@ def detector_worker(frame_queue):
     cigarette_model = YOLO("model/cigarette_model.pt")
     glasses_model = YOLO("model/glasses_model.pt")
 
-    logger.info("Detection process started")
+    logger.info("Detection process started.")
 
     while True:
         frame = frame_queue.get()
@@ -48,10 +68,10 @@ def detector_worker(frame_queue):
             break
 
         try:
-            # -------------------------------
+            # -------------------------------------------------------------------------------------
             # 1. OBJECT DETECTION (phone, bottle)
-            # -------------------------------
-            if ENABLE_PHONE_BOTTLE_PERSON_DETECTION:
+            # -------------------------------------------------------------------------------------
+            if config.ENABLE_PHONE_BOTTLE_PERSON_DETECTION:
                 detect_results = detect_model(frame)
 
                 for r in detect_results:
@@ -69,14 +89,19 @@ def detector_worker(frame_queue):
                                         cv2.FONT_HERSHEY_SIMPLEX,
                                         0.5, (0,255,0), 2)
 
-                            if ENABLE_LOGGING:
+                            if config.ENABLE_LOGGING:
                                 logger.info(f"{label} detected: {conf:.2f}")
+                            
+                            if label == "cell phone":
+                                DETECT_PHONE_COUNT += 1
+                            elif label == "bottle":
+                                DETECT_BOTTLE_COUNT += 1
 
-            # -------------------------------
+            # -------------------------------------------------------------------------------------
             # 2. CIGARETTE DETECTION
-            # -------------------------------
+            # -------------------------------------------------------------------------------------
 
-            if ENABLE_CIGARETTE_DETECTION:
+            if config.ENABLE_CIGARETTE_DETECTION:
                 results = cigarette_model(frame, conf=0.3)
 
                 for r in results:
@@ -87,20 +112,22 @@ def detector_worker(frame_queue):
                         if label == "cigarette" and conf >= 0.25:
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
 
-                            if ENABLE_CV2_WINDOW:
+                            if config.ENABLE_CV2_WINDOW:
                                 cv2.rectangle(frame, (x1,y1), (x2,y2), (0,0,255), 2)
                                 cv2.putText(frame, f"Cigarette {conf:.2f}",
                                             (x1, y1-10),
                                             cv2.FONT_HERSHEY_SIMPLEX,
                                             0.5, (0,0,255), 2)
 
-                            if ENABLE_LOGGING:
+                            if config.ENABLE_LOGGING:
                                 logger.info("Cigarette detected!")
 
-            # -------------------------------
+                            DETECT_CIGARETTE_COUNT += 1
+
+            # -------------------------------------------------------------------------------------
             # 3. GLASSES DETECTION
-            # -------------------------------
-            if ENABLE_GLASSES_DETECTION:
+            # -------------------------------------------------------------------------------------
+            if config.ENABLE_GLASSES_DETECTION:
                 glass_results = glasses_model(frame, conf=0.3)
 
                 for r in glass_results:
@@ -111,19 +138,21 @@ def detector_worker(frame_queue):
                         if label == "glasses":
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
 
-                            if ENABLE_CV2_WINDOW:
+                            if config.ENABLE_CV2_WINDOW:
                                 cv2.rectangle(frame, (x1,y1), (x2,y2), (255,0,0), 2)
                                 cv2.putText(frame, f"Glasses {conf:.2f}",
                                             (x1, y1-10),
                                             cv2.FONT_HERSHEY_SIMPLEX,
                                             0.5, (255,0,0), 2)
 
-                            if ENABLE_LOGGING:
+                            if config.ENABLE_LOGGING:
                                 logger.info("Glasses detected!")
-            # -------------------------------
+
+                            DETECT_GLASSES_COUNT += 1
+            # -------------------------------------------------------------------------------------
             # SHOW FRAME
-            # -------------------------------
-            if ENABLE_CV2_WINDOW:
+            # -------------------------------------------------------------------------------------
+            if config.ENABLE_CV2_WINDOW:
                 cv2.imshow("Safe Driver System", frame)
 
         except Exception as e:
