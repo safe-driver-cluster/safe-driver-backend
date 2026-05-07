@@ -302,11 +302,11 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                 NO_FACE_COUNTED = True
                 face_missing_count = _increment_event_counter("face_missing")
 
-                ######### Append to event time queue #########
+                ######### Maintain event time queue #########
                 global DISTRACTION_EVENT_TIME_ARRAY_SEC
                 DISTRACTION_EVENT_TIME_ARRAY_SEC.append(now)
                 timeframe_count = 0
-                if DISTRACTION_EVENT_TIME_ARRAY_SEC and (now - DISTRACTION_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+                while (DISTRACTION_EVENT_TIME_ARRAY_SEC and (now - DISTRACTION_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC):
                     DISTRACTION_EVENT_TIME_ARRAY_SEC.popleft()
                 timeframe_count = len(DISTRACTION_EVENT_TIME_ARRAY_SEC)
 
@@ -394,11 +394,11 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                 HEAD_TURN_COUNTED = True
                 head_turn_count = _increment_event_counter("head_turn")
 
-                ######### Append to event time queue #########
+                ######### Maintain event time queue #########
                 global HEADTURN_EVENT_TIME_ARRAY_SEC
                 HEADTURN_EVENT_TIME_ARRAY_SEC.append(now)
                 timeframe_count = 0
-                if HEADTURN_EVENT_TIME_ARRAY_SEC and (now - HEADTURN_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+                while (HEADTURN_EVENT_TIME_ARRAY_SEC and (now - HEADTURN_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC):
                     HEADTURN_EVENT_TIME_ARRAY_SEC.popleft()
                 timeframe_count = len(HEADTURN_EVENT_TIME_ARRAY_SEC)
 
@@ -466,13 +466,13 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
         perclos = (sum(v for _, v in PERCLOS_WIN) / len(PERCLOS_WIN)) if PERCLOS_WIN else 0.0
         if perclos >= config.PERCLOS_DROWSY:
 
-            ######### Append to event time queue #########
-            global PERCLOS_EVENT_TIME_ARRAY_SEC
-            PERCLOS_EVENT_TIME_ARRAY_SEC.append(now)
+            ######### Maintain event time queue #########
+            global PERCLOSE_EVENT_TIME_ARRAY_SEC
+            PERCLOSE_EVENT_TIME_ARRAY_SEC.append(now)
             timeframe_count = 0
-            if PERCLOS_EVENT_TIME_ARRAY_SEC and (now - PERCLOS_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
-                PERCLOS_EVENT_TIME_ARRAY_SEC.popleft()
-            timeframe_count = len(PERCLOS_EVENT_TIME_ARRAY_SEC)
+            while (PERCLOSE_EVENT_TIME_ARRAY_SEC and (now - PERCLOSE_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC):
+                PERCLOSE_EVENT_TIME_ARRAY_SEC.popleft()
+            timeframe_count = len(PERCLOSE_EVENT_TIME_ARRAY_SEC)
             
             logger.warning(f"PERCLOS THRESHOLD REACHED! PERCLOS: {perclos:.2f} over last {config.PERCLOS_WIN_SEC}s Timeframe count: {timeframe_count}")
 
@@ -521,11 +521,11 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
             FREQUENT_CLOSURES_COUNTED = True
             frequent_closures_count = _increment_event_counter("frequent_closures")
 
-            ######### Append to event time queue #########
+            ######### Maintain event time queue #########
             global FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC
             FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC.append(now)
             timeframe_count = 0
-            if FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC and (now - FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+            while (FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC and (now - FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC):
                 FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC.popleft()
             timeframe_count = len(FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC)
 
@@ -580,11 +580,11 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
             MICROSLEEP_COUNTED = True
             duration = now - EYE_CLOSED_START
 
-            ######### Append to event time queue #########
+            ######### Maintain event time queue #########
             global MICROSLEEP_EVENT_TIME_ARRAY_SEC
             MICROSLEEP_EVENT_TIME_ARRAY_SEC.append(now)
             timeframe_count = 0
-            if MICROSLEEP_EVENT_TIME_ARRAY_SEC and (now - MICROSLEEP_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+            while (MICROSLEEP_EVENT_TIME_ARRAY_SEC and (now - MICROSLEEP_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC):
                 MICROSLEEP_EVENT_TIME_ARRAY_SEC.popleft()
             timeframe_count = len(MICROSLEEP_EVENT_TIME_ARRAY_SEC)
 
@@ -624,11 +624,11 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                     YAWN_COUNTED = True
                     duration = now - YAWN_START
 
-                    ######### Append to event time queue #########
+                    ######### Maintain event time queue #########
                     global YAWN_EVENT_TIME_ARRAY_SEC
                     YAWN_EVENT_TIME_ARRAY_SEC.append(now)
                     timeframe_count = 0
-                    if YAWN_EVENT_TIME_ARRAY_SEC and (now - YAWN_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+                    while (YAWN_EVENT_TIME_ARRAY_SEC and (now - YAWN_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC):
                         YAWN_EVENT_TIME_ARRAY_SEC.popleft()
                     timeframe_count = len(YAWN_EVENT_TIME_ARRAY_SEC)
 
@@ -665,11 +665,11 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
             drowsy_count = _increment_event_counter("drowsy")
             DROWSY_COUNTED = True
 
-            ######### Append to event time queue #########
+            ######### Maintain event time queue #########
             global DROWSY_EVENT_TIME_ARRAY_SEC
             DROWSY_EVENT_TIME_ARRAY_SEC.append(now)
             timeframe_count = 0
-            if DROWSY_EVENT_TIME_ARRAY_SEC and (now - DROWSY_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+            while (DROWSY_EVENT_TIME_ARRAY_SEC and (now - DROWSY_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC):
                 DROWSY_EVENT_TIME_ARRAY_SEC.popleft()
             timeframe_count = len(DROWSY_EVENT_TIME_ARRAY_SEC)
 
@@ -742,11 +742,11 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
             }
         else:
 
-            ######### Append to event time queue #########
+            ######### Maintain event time queue #########
             global DISTRACTION_EVENT_TIME_ARRAY_SEC
             DISTRACTION_EVENT_TIME_ARRAY_SEC.append(time.time())
             timeframe_count = 0
-            if DISTRACTION_EVENT_TIME_ARRAY_SEC and (time.time() - DISTRACTION_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC:
+            while (DISTRACTION_EVENT_TIME_ARRAY_SEC and (time.time() - DISTRACTION_EVENT_TIME_ARRAY_SEC[0]) > config.EVENT_ARRAY_TIME_WINDOW_SEC):
                 DISTRACTION_EVENT_TIME_ARRAY_SEC.popleft()
             timeframe_count = len(DISTRACTION_EVENT_TIME_ARRAY_SEC)
 
