@@ -253,7 +253,8 @@ class AlertManager:
             voice_cooldown_ok = last_voice is None or (now_ts - last_voice) >= config.VOICE_ALERT_COOLDOWN_SEC
 
             if buzzer_used >= config.MAXIMUM_BUZZER_ALERTS_PER_TYPE and allow_voice and voice_cooldown_ok and voice_used < config.MAXIMUM_VOICE_ALERTS_PER_TYPE:
-                voice_text = voice_message or message
+                # voice_text = voice_message or message
+                voice_text = self.get_voice_msg_by_level(event_type, level=voice_used + 1)
                 if isinstance(voice_text, str) and voice_text.strip():
                     utils.perform_voice_alerts(voice_text)
                     self.voice_alert_count_by_type[policy_key] = voice_used + 1
@@ -280,3 +281,100 @@ class AlertManager:
                 self.buzzer_alert_count_by_type[policy_key] = buzzer_used + 1
                 self.last_buzzer_alert_time_by_type[policy_key] = now_ts
                 self._buzzer_cycle_state["emitted"] = True
+    
+    def get_voice_msg_by_level(self, event_type: str, level: int) -> str:
+        """Return appropriate voice message based on event type and severity level."""
+
+        # Behavior Data Message Types
+        # BEHAVIOR_FREQUENT_CLOSURES = 'frequent_closures'
+        # BEHAVIOR_MICROSLEEP = 'microsleep'
+        # BEHAVIOR_YAWN = 'yawn'
+        # BEHAVIOR_DROWSY = 'drowsy'
+        # BEHAVIOR_PERCLOS_REACHED = 'perclos_threshold_reached'
+        # BEHAVIOR_DISTRACTION = 'distraction'
+        # BEHAVIOR_HEAD_TURN = "head_turn"
+        # BEHAVIOR_MOBILE_USE = 'mobile_use'
+        # BEHAVIOR_SMOKING = 'smoking'
+        # BEHAVIOR_DRINKING = 'drinking'
+
+        if event_type == config.BEHAVIOR_DROWSY:
+            if level == 1:
+                return config.VOICE_ALERT_DROWSY
+            if level == 2:
+                return config.VOICE_ALERT_DROWSY_L2
+            if level == 3:
+                return config.VOICE_ALERT_DROWSY_L3
+            
+        if event_type == config.BEHAVIOR_DISTRACTION:
+            if level == 1:
+                return config.VOICE_ALERT_DISTRACTION
+            if level == 2:
+                return config.VOICE_ALERT_DISTRACTION_L2
+            if level == 3:
+                return config.VOICE_ALERT_DISTRACTION_L3
+            
+        if event_type == config.BEHAVIOR_HEAD_TURN:
+            if level == 1:
+                return config.VOICE_ALERT_HEAD_TURN
+            if level == 2:
+                return config.VOICE_ALERT_HEAD_TURN_L2
+            if level == 3:
+                return config.VOICE_ALERT_HEAD_TURN_L3
+            
+        if event_type == config.BEHAVIOR_PERCLOS_REACHED:
+            if level == 1:
+                return config.VOICE_ALERT_PERCLOS
+            if level == 2:
+                return config.VOICE_ALERT_PERCLOS_L2
+            if level == 3:
+                return config.VOICE_ALERT_PERCLOS_L3
+            
+        if event_type == config.BEHAVIOR_YAWN:
+            if level == 1:
+                return config.VOICE_ALERT_YAWNING
+            if level == 2:
+                return config.VOICE_ALERT_YAWNING_L2
+            if level == 3:
+                return config.VOICE_ALERT_YAWNING_L3
+            
+        if event_type == config.BEHAVIOR_MICROSLEEP:
+            if level == 1:
+                return config.VOICE_ALERT_MICROSLEEP
+            if level == 2:
+                return config.VOICE_ALERT_MICROSLEEP_L2
+            if level == 3:
+                return config.VOICE_ALERT_MICROSLEEP_L3
+            
+        if event_type == config.BEHAVIOR_FREQUENT_CLOSURES:
+            if level == 1:
+                return config.VOICE_ALERT_FREQUENT_CLOSURES
+            if level == 2:
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_L2
+            if level == 3:
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_L3
+            
+        if event_type == config.BEHAVIOR_MOBILE_USE:
+            if level == 1:
+                return config.VOICE_ALERT_PHONE
+            if level == 2:
+                return config.VOICE_ALERT_PHONE_L2
+            if level == 3:
+                return config.VOICE_ALERT_PHONE_L3
+            
+        if event_type == config.BEHAVIOR_SMOKING:
+            if level == 1:
+                return config.VOICE_ALERT_SMOKING
+            if level == 2:
+                return config.VOICE_ALERT_SMOKING_L2
+            if level == 3:
+                return config.VOICE_ALERT_SMOKING_L3
+            
+        if event_type == config.BEHAVIOR_DRINKING:
+            if level == 1:
+                return config.VOICE_ALERT_DRINKING
+            if level == 2:
+                return config.VOICE_ALERT_DRINKING_L2
+            if level == 3:
+                return config.VOICE_ALERT_DRINKING_L3
+            
+        return config.VOICE_ALERT_DEFAULT
