@@ -237,7 +237,8 @@ async def startup_event():
         logger.error(f"Failed to check device registration: {e}", exc_info=True)
 
     # Path to the same Python executable used by the current venv
-    venv_python = sys.executable  
+    # venv_python = sys.executable 
+    venv_python = "/home/safedriver/Desktop/safe-driver-backend/venv/bin/python" 
     logger.info(f"Using Python executable: {venv_python}")
 
     try:
@@ -634,21 +635,72 @@ async def update_assigned_driver(driver_id: str):
         }
 
 
-# Update Driver FingerprintId to firebase firestore/drivers/{driver_id}/fingerprint_id
+# Update Driver fingerprint mapping in firestore/drivers/{driver_id}
 @app.put("/driver/update-fingerprint")
-async def register_driver_fingerprint(driver_id: str, fingerprint_id: str):
-    """Update the fingerprint ID for a driver in Firestore"""
+async def register_driver_fingerprint(
+    driver_id: str,
+    fingerprint_id: str | None = None,
+    scanner_id: str | None = None,
+    template_position: int | None = None,
+):
+    """Update fingerprint mapping for a driver in Firestore."""
     try:
-        firestore_helper.register_driver_fingerprint(driver_id, fingerprint_id)
+        result = firestore_helper.register_driver_fingerprint(
+            driver_id=driver_id,
+            fingerprint_data=fingerprint_id,
+            scanner_id=scanner_id,
+            template_position=template_position,
+        )
+
+        if not result.get('success'):
+            return result
+
         return {
             'success': True,
             'driver_id': driver_id,
             'fingerprint_id': fingerprint_id,
-            'message': 'Fingerprint ID updated successfully'
+            'template_id': result.get('template_id'),
+            'scanner_id': scanner_id,
+            'template_position': template_position,
+            'message': 'Fingerprint mapping updated successfully'
         }
         
     except Exception as e:
         logger.error(f"Error updating fingerprint ID for driver {driver_id}: {e}")
+        return {
+            'success': False,
+            'message': str(e)
+        }
+
+
+@app.get("/driver/by-fingerprint")
+async def get_driver_by_fingerprint(
+    fingerprint_id: str | None = None,
+    scanner_id: str | None = None,
+    template_position: int | None = None,
+    template_id: str | None = None,
+):
+    """Resolve a driver using legacy fingerprint ID or scanner template mapping."""
+    try:
+        driver_id = firestore_helper.get_driver_by_fingerprint(
+            fingerprint_data=fingerprint_id,
+            scanner_id=scanner_id,
+            template_position=template_position,
+            template_id=template_id,
+        )
+
+        if driver_id is None:
+            return {
+                'success': False,
+                'message': 'Driver not found for provided fingerprint data'
+            }
+
+        return {
+            'success': True,
+            'driver_id': driver_id,
+        }
+    except Exception as e:
+        logger.error(f"Error resolving driver by fingerprint: {e}")
         return {
             'success': False,
             'message': str(e)

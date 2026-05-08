@@ -1,4 +1,5 @@
 import logging
+import hashlib
 from firebase_admin import firestore
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -28,6 +29,12 @@ class FirestoreHelper:
             except Exception as e:
                 logger.error(f"Failed to initialize Firestore client: {e}")
                 raise
+
+    @staticmethod
+    def build_fingerprint_template_id(scanner_id: str, template_position: int) -> str:
+        """Build a deterministic 32-char ID for a scanner template slot."""
+        normalized = f"{scanner_id.strip().lower()}:{int(template_position)}"
+        return hashlib.md5(normalized.encode('utf-8')).hexdigest()
         
     def save_model_configurations_to_firestore(self) -> Dict:
         """
@@ -193,21 +200,63 @@ class FirestoreHelper:
                 'message': f'Failed to save alert history: {str(e)}'
             }
 
-    def register_driver_fingerprint(self, driver_id: str, fingerprint_data: any) -> Dict:
+    def register_driver_fingerprint(
+        self,
+        driver_id: str,
+        fingerprint_data: Any = None,
+        scanner_id: Optional[str] = None,
+        template_position: Optional[int] = None,
+    ) -> Dict:
         """
         Register a driver's fingerprint data in Firestore.
         
         Args:
             driver_id (str): Unique identifier for the driver
-            """
+            fingerprint_data (Any): Legacy single fingerprint identifier (optional)
+            scanner_id (str): Unique scanner/device identifier (optional)
+            template_position (int): Template position inside scanner DB (optional)
+        """
         try:
-            # firestore/drivers/document{driver_id}/fingerprint_id
             self._ensure_db_initialized()
-            doc_ref = self.db.collection('drivers').document(driver_id)
-            doc_ref.set({
-                'fingerprint_id': fingerprint_data,
+
+            payload = {
                 'fp_registered_at': firestore.SERVER_TIMESTAMP
-            }, merge=True)
+            }
+
+            if fingerprint_data is not None:
+                payload['fingerprint_id'] = fingerprint_data
+
+            template_id = None
+            if scanner_id is not None and template_position is not None:
+                template_position = int(template_position)
+                template_id = self.build_fingerprint_template_id(scanner_id, template_position)
+                payload.update({
+                    'fingerprint_template_id': template_id,
+                    'fingerprint_scanner_id': scanner_id,
+                    'fingerprint_template_position': template_position,
+                })
+
+            doc_ref = self.db.collection('drivers').document(driver_id)
+            doc_ref.set(payload, merge=True)
+
+            if template_id is not None:
+                # Fast reverse lookup: template -> driver.
+                template_ref = self.db.collection('fingerprint_templates').document(template_id)
+                template_ref.set({
+                    'driver_id': driver_id,
+                    'scanner_id': scanner_id,
+                    'template_position': template_position,
+                    'updated_at': firestore.SERVER_TIMESTAMP,
+                }, merge=True)
+
+            return {
+                'success': True,
+                'driver_id': driver_id,
+                'fingerprint_id': fingerprint_data,
+                'template_id': template_id,
+                'scanner_id': scanner_id,
+                'template_position': template_position,
+            }
 
             
         except Exception as e:
@@ -218,15 +267,37 @@ class FirestoreHelper:
             }
         
     # get driver_id by fingerprint
-    def get_driver_by_fingerprint(self, fingerprint_data: any) -> Optional[str]:
+    def get_driver_by_fingerprint(
+        self,
+        fingerprint_data: Any = None,
+        scanner_id: Optional[str] = None,
+        template_position: Optional[int] = None,
+        template_id: Optional[str] = None,
+    ) -> Optional[str]:
         """
         Retrieve driver ID by fingerprint data from Firestore.
         
         Args:
-            fingerprint_data (any): Fingerprint data to search for
-            """
+            fingerprint_data (Any): Legacy fingerprint identifier (optional)
+            scanner_id (str): Scanner/device identifier (optional)
+            template_position (int): Template position in scanner (optional)
+            template_id (str): Precomputed template identifier (optional)
+        """
         try:
             self._ensure_db_initialized()
+
+            if template_id is None and scanner_id is not None and template_position is not None:
+                template_id = self.build_fingerprint_template_id(scanner_id, int(template_position))
+
+            if template_id is not None:
+                template_doc = self.db.collection('fingerprint_templates').document(template_id).get()
+                if template_doc.exists:
+                    data = template_doc.to_dict() or {}
+                    driver_id = data.get('driver_id')
+                    if driver_id:
+                        logger.info(f"Driver found for template ID: {driver_id}")
+                        return driver_id
+
             drivers_ref = self.db.collection('drivers')
             query = drivers_ref.where(
                 filter=FieldFilter('fingerprint_id', '==', fingerprint_data)
@@ -247,6 +318,76 @@ class FirestoreHelper:
         except Exception as e:
             logger.error(f"Error retrieving driver by fingerprint: {e}")
             return None
+
+    def delete_driver_fingerprint(
+        self,
+        driver_id: Optional[str] = None,
+        scanner_id: Optional[str] = None,
+        template_position: Optional[int] = None,
+        template_id: Optional[str] = None,
+        delete_legacy_fingerprint_id: bool = True,
+    ) -> Dict:
+        """
+        Delete fingerprint mapping from Firestore.
+
+        Supports deleting by driver_id and/or scanner template mapping.
+        """
+        try:
+            self._ensure_db_initialized()
+
+            if driver_id is None and template_id is None and (scanner_id is None or template_position is None):
+                return {
+                    'success': False,
+                    'message': 'Provide driver_id or template_id or scanner_id+template_position'
+                }
+
+            resolved_template_id = template_id
+            if resolved_template_id is None and scanner_id is not None and template_position is not None:
+                resolved_template_id = self.build_fingerprint_template_id(scanner_id, int(template_position))
+
+            driver_doc_data = None
+            if driver_id is not None:
+                driver_ref = self.db.collection('drivers').document(driver_id)
+                driver_doc = driver_ref.get()
+                if not driver_doc.exists:
+                    return {
+                        'success': False,
+                        'message': f'Driver not found: {driver_id}'
+                    }
+
+                driver_doc_data = driver_doc.to_dict() or {}
+                if resolved_template_id is None:
+                    resolved_template_id = driver_doc_data.get('fingerprint_template_id')
+
+                delete_payload = {
+                    'fingerprint_template_id': firestore.DELETE_FIELD,
+                    'fingerprint_scanner_id': firestore.DELETE_FIELD,
+                    'fingerprint_template_position': firestore.DELETE_FIELD,
+                    'fp_registered_at': firestore.DELETE_FIELD,
+                    'fp_deleted_at': firestore.SERVER_TIMESTAMP,
+                }
+                if delete_legacy_fingerprint_id:
+                    delete_payload['fingerprint_id'] = firestore.DELETE_FIELD
+
+                driver_ref.update(delete_payload)
+
+            if resolved_template_id is not None:
+                template_ref = self.db.collection('fingerprint_templates').document(resolved_template_id)
+                template_ref.delete()
+
+            return {
+                'success': True,
+                'driver_id': driver_id,
+                'template_id': resolved_template_id,
+                'message': 'Fingerprint mapping deleted successfully'
+            }
+
+        except Exception as e:
+            logger.error(f"Error deleting fingerprint mapping: {e}")
+            return {
+                'success': False,
+                'message': f'Failed to delete fingerprint mapping: {str(e)}'
+            }
         
     # get vehicle by deviceId from 'vehicles' collection
     def get_vehicle_by_device_id(self, device_id: str) -> Optional[Dict]:
