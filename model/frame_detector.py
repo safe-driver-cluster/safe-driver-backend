@@ -126,7 +126,7 @@ def detector_worker(frame_queue):
             # 1. OBJECT DETECTION (phone, bottle)
             # -------------------------------------------------------------------------------------
             if config.ENABLE_PHONE_BOTTLE_PERSON_DETECTION and frame_count % config.DETECT_PHONE_BOTTLE_PERSON_FRAME == 0:
-                detect_results = detect_model(frame)
+                detect_results = detect_model(frame, conf=config.YOLO_MODEL_PHONE_BOTTLE_PERSON_CONFIDENCE_THRESHOLD)
 
                 for r in detect_results:
                     for box in r.boxes:
@@ -134,14 +134,15 @@ def detector_worker(frame_queue):
                         label = detect_model.names[cls]
                         conf = float(box.conf[0])
 
-                        if label in ["cell phone", "bottle"] and conf >= 0.7:
+                        if label in ["cell phone", "bottle"] and conf >= config.YOLO_MODEL_PHONE_BOTTLE_PERSON_CONFIDENCE_THRESHOLD:
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
 
-                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0,255,0), 2)
-                            cv2.putText(frame, f"{label} {conf:.2f}",
-                                        (x1, y1-10),
-                                        cv2.FONT_HERSHEY_SIMPLEX,
-                                        0.5, (0,255,0), 2)
+                            if config.ENABLE_CV2_WINDOW:
+                                cv2.rectangle(frame, (x1, y1), (x2, y2), (0,255,0), 2)
+                                cv2.putText(frame, f"{label} {conf:.2f}",
+                                            (x1, y1-10),
+                                            cv2.FONT_HERSHEY_SIMPLEX,
+                                            0.5, (0,255,0), 2)
 
                             
                             
@@ -207,14 +208,14 @@ def detector_worker(frame_queue):
             # -------------------------------------------------------------------------------------
 
             if config.ENABLE_CIGARETTE_DETECTION and frame_count % config.DETECT_CIGARETTE_FRAME == 0:
-                results = cigarette_model(frame, conf=0.3)
+                results = cigarette_model(frame, conf=config.YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD)
 
                 for r in results:
                     for box in r.boxes:
                         label = cigarette_model.names[int(box.cls[0])]
                         conf = float(box.conf[0])
 
-                        if label == "cigarette" and conf >= 0.7:
+                        if label == "cigarette" and conf >= config.YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD:
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
 
                             if config.ENABLE_CV2_WINDOW:
@@ -276,21 +277,22 @@ def detector_worker(frame_queue):
                 detected = False
 
                 # 👉 Try normal detection first (lower threshold for better recall)
-                glass_results = glasses_model(frame, conf=0.7)
+                glass_results = glasses_model(frame, conf=config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD)
 
                 for r in glass_results:
                     for box in r.boxes:
                         label = glasses_model.names[int(box.cls[0])]
                         conf = float(box.conf[0])
 
-                        if (label == "glasses" or label == "sunglasses") and conf >= 0.7:
+                        if (label == "glasses" or label == "sunglasses") and conf >= config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD:
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
 
-                            cv2.rectangle(frame, (x1,y1), (x2,y2), (255,0,0), 2)
-                            cv2.putText(frame, f"{label} {conf:.2f}",
-                                        (x1, y1-10),
-                                        cv2.FONT_HERSHEY_SIMPLEX,
-                                        0.5, (255,0,0), 2)
+                            if config.ENABLE_CV2_WINDOW:
+                                cv2.rectangle(frame, (x1,y1), (x2,y2), (255,0,0), 2)
+                                cv2.putText(frame, f"{label} {conf:.2f}",
+                                            (x1, y1-10),
+                                            cv2.FONT_HERSHEY_SIMPLEX,
+                                            0.5, (255,0,0), 2)
 
                             print("Glasses detected!")
                             detected = True
@@ -300,7 +302,7 @@ def detector_worker(frame_queue):
                     crop, (ox, oy) = center_crop(frame, zoom=1.8)
 
                     resized = cv2.resize(crop, (416, 416))
-                    zoom_results = glasses_model(resized, conf=0.7)
+                    zoom_results = glasses_model(resized, conf=config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD)
 
                     scale_x = crop.shape[1] / 416
                     scale_y = crop.shape[0] / 416
@@ -310,7 +312,7 @@ def detector_worker(frame_queue):
                             label = glasses_model.names[int(box.cls[0])]
                             conf = float(box.conf[0])
 
-                            if (label == "glasses" or label == "sunglasses") and conf >= 0.7:
+                            if (label == "glasses" or label == "sunglasses") and conf >= config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD:
                                 x1, y1, x2, y2 = map(int, box.xyxy[0])
 
                                 # map back to original frame
@@ -319,11 +321,12 @@ def detector_worker(frame_queue):
                                 y1 = int(y1 * scale_y) + oy
                                 y2 = int(y2 * scale_y) + oy
 
-                                cv2.rectangle(frame, (x1,y1), (x2,y2), (255,0,0), 2)
-                                cv2.putText(frame, f"{label} {conf:.2f}",
-                                            (x1, y1-10),
-                                            cv2.FONT_HERSHEY_SIMPLEX,
-                                            0.5, (255,0,0), 2)
+                                if config.ENABLE_CV2_WINDOW:
+                                    cv2.rectangle(frame, (x1,y1), (x2,y2), (255,0,0), 2)
+                                    cv2.putText(frame, f"{label} {conf:.2f}",
+                                                (x1, y1-10),
+                                                cv2.FONT_HERSHEY_SIMPLEX,
+                                                0.5, (255,0,0), 2)
 
                                 print("Glasses detected (zoom)!")
 

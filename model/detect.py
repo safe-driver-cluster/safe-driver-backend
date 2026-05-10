@@ -117,6 +117,9 @@ FREQUENT_CLOSURES_COUNTED = False
 HEAD_TURN_COUNTED = False  # Track head turn events
 FACE_MISSING_COUNTED = False  # Track face missing events
 
+eye_closed_score = 0.0
+mouth_lower_down = 0.0
+
 LAST_COUNTER_EVENT_TIME = {
     "yawn": None,
     "drowsy": None,
@@ -451,11 +454,13 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
         # --- Eye & mouth signals from blendshapes ---
         blink_l = _bs_score(bs, "eyeBlinkLeft")
         blink_r = _bs_score(bs, "eyeBlinkRight")
+        global eye_closed_score
         eye_closed_score = 0.5 * (blink_l + blink_r)
 
         # Use mouthLowerDownRight and mouthLowerDownLeft for yawn detection
         mouth_lower_down_r = _bs_score(bs, "mouthLowerDownRight")
         mouth_lower_down_l = _bs_score(bs, "mouthLowerDownLeft")
+        global mouth_lower_down
         mouth_lower_down = 0.5 * (mouth_lower_down_r + mouth_lower_down_l)
 
         # --- PERCLOS window maintenance ---
@@ -710,7 +715,9 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
             'microsleep_count': MICROSLEEP_COUNT,
             'head_pose': None,  # Will be added below
             'distracted': False,  # Will be updated below
-            'face_lost': False
+            'face_lost': False,
+            'eye_aspect_ratio': eye_closed_score,
+            'mouth_aspect_ratio': mouth_lower_down
         }
         
         # Add head pose detection
@@ -738,7 +745,9 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 'microsleep_count': MICROSLEEP_COUNT,
                 'head_pose': head_turn_data,
                 'distracted': True,
-                'face_lost': True
+                'face_lost': True,
+                'eye_aspect_ratio': eye_closed_score,
+                'mouth_aspect_ratio': mouth_lower_down
             }
         else:
 
@@ -778,7 +787,9 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 'microsleep_count': MICROSLEEP_COUNT,
                 'head_pose': None,
                 'distracted': True,
-                'face_lost': True
+                'face_lost': True,
+                'eye_aspect_ratio': eye_closed_score,
+                'mouth_aspect_ratio': mouth_lower_down
             }
 
 
@@ -1009,6 +1020,8 @@ def run(model: str, num_faces: int,
                             (config.LABEL_MICROSLEEPS.format(behavior_data['microsleep_count']), config.MICROSLEEPS_Y_OFFSET),
                             (config.LABEL_DROWSY_EVENTS.format(behavior_data['drowsy_count']), config.DROWSY_EVENTS_Y_OFFSET),
                             (config.LABEL_HEAD_POSE.format( behavior_data.get('head_pose', {}).get('direction', 'N/A')), config.HEAD_POSE_Y_OFFSET),
+                            ('EAR : {:.2f}'.format(behavior_data['eye_aspect_ratio']), 180),
+                            ('MAR : {:.2f}'.format(behavior_data['mouth_aspect_ratio']), 210)
                         ]
                         
                         for text, y_offset in metrics_data:

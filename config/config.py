@@ -14,7 +14,7 @@ EYE_CLOSED_THRESH = 0.60
 EYE_PARTIAL_THRESH = 0.40
 MICROSLEEP_SEC = 1.5
 PERCLOS_WIN_SEC = 60.0
-PERCLOS_DROWSY = 0.70
+PERCLOS_DROWSY = 0.20
 EYE_CLOSURE_FREQ_WIN = 15.0
 EYE_CLOSURE_FREQ_THRESH = 4
 MIN_CLOSURE_DURATION = 0.4
@@ -22,7 +22,7 @@ BLINK_MAX_DURATION = 0.4
 CLOSURE_DEBOUNCE_TIME = 0.5
 
 #Yawning Detection Thresholds
-YAWN_THRESH = 0.80
+YAWN_THRESH = 0.60
 YAWN_MIN_SEC = 1.0
 
 # Head Pose Detection Thresholds
@@ -54,6 +54,10 @@ MAXIMUM_VOICE_ALERTS_PER_TYPE = 3  # Maximum number of voice alerts per type to 
 # -------------------------------------------------------------------------------------
 # Object Detection Settings
 # -------------------------------------------------------------------------------------
+YOLO_MODEL_PHONE_BOTTLE_PERSON_CONFIDENCE_THRESHOLD = 0.50
+YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD = 0.80
+YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD = 0.70
+
 ENABLE_PHONE_BOTTLE_PERSON_DETECTION = True
 ENABLE_CIGARETTE_DETECTION = True
 ENABLE_GLASSES_DETECTION = False
@@ -61,12 +65,12 @@ ENABLE_GLASSES_DETECTION = False
 ENABLE_CV2_WINDOW = False  # Set to False to disable cv2.imshow (for headless environments)
 ENABLE_LOGGING = True  # Set to False to disable logging (for performance testing)
 
-DETECT_PHONE_BOTTLE_PERSON_FRAME = 3
-DETECT_CIGARETTE_FRAME = 2
+DETECT_PHONE_BOTTLE_PERSON_FRAME = 1
+DETECT_CIGARETTE_FRAME = 1
 DETECT_GLASSES_FRAME = 7
 
-THRESHOLD_PHONE_COUNT = 5
-THRESHOLD_BOTTLE_COUNT = 5
+THRESHOLD_PHONE_COUNT = 3
+THRESHOLD_BOTTLE_COUNT = 3
 THRESHOLD_CIGARETTE_COUNT = 3
 
 THRESHOLD_PHONE_ALERT_TO_CLOUD = 5
@@ -74,15 +78,15 @@ THRESHOLD_BOTTLE_ALERT_TO_CLOUD = 5
 THRESHOLD_CIGARETTE_ALERT_TO_CLOUD = 3
 
 VOICE_ALERT_PHONE = "Mobile phone use detected! Please focus on driving."
-VOICE_ALERT_DRINKING = "Bottle detected! Please avoid drinking while driving."
+VOICE_ALERT_DRINKING = "Drinking detected! Please be careful when drinking while driving."
 VOICE_ALERT_SMOKING = "Smoking detected! Please avoid smoking while driving."
 
 VOICE_ALERT_PHONE_L2 = "Multiple mobile phone use events detected! Please focus on driving and minimize distractions."
-VOICE_ALERT_DRINKING_L2 = "Multiple bottle use events detected! Please avoid drinking while driving."
+VOICE_ALERT_DRINKING_L2 = "Multiple drinking events detected! If you are drowsy, please consider taking a break before continuing to drive."
 VOICE_ALERT_SMOKING_L2 = "Multiple smoking events detected! Please avoid smoking while driving."
 
 VOICE_ALERT_PHONE_L3 = "Frequent mobile phone use detected! I have to inform authorities if you continue to drive in this condition."
-VOICE_ALERT_DRINKING_L3 = "Frequent bottle use detected! I have to inform authorities if you continue to drive in this condition."
+VOICE_ALERT_DRINKING_L3 = "Frequent drinking detected! I have to inform authorities if you continue to drive in this condition."
 VOICE_ALERT_SMOKING_L3 = "Frequent smoking detected! I have to inform authorities if you continue to drive in this condition."
 
 # --------------------------------------------------------------------------------------

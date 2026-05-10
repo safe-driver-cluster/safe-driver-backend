@@ -250,16 +250,21 @@ class AlertManager:
             buzzer_used = self.buzzer_alert_count_by_type.get(policy_key, 0)
             voice_used = self.voice_alert_count_by_type.get(policy_key, 0)
             last_voice = self.last_voice_alert_time_by_type.get(policy_key)
-            voice_cooldown_ok = last_voice is None or (now_ts - last_voice) >= config.VOICE_ALERT_COOLDOWN_SEC
+            voice_cooldown_ok = last_voice is None or (now_ts - last_voice) < config.VOICE_ALERT_COOLDOWN_SEC
 
             if buzzer_used >= config.MAXIMUM_BUZZER_ALERTS_PER_TYPE and allow_voice and voice_cooldown_ok and voice_used < config.MAXIMUM_VOICE_ALERTS_PER_TYPE:
                 # voice_text = voice_message or message
                 voice_text, voice_label = self.get_voice_msg_by_level(event_type, level=voice_used + 1)
                 if isinstance(voice_text, str) and voice_text.strip():
+                    # check if previous voice performing
+                    if self._voice_cycle_state["emitted"]:
+                        self.logger.info(f"Delaying voice alert for {policy_key} due to another alert in same cycle.")
+                        # We can choose to queue this alert or skip it. For now, we skip to avoid overlap.
+                        return
+                    self._voice_cycle_state["emitted"] = True
                     utils.perform_voice_alerts(voice_text, voice_label)
                     self.voice_alert_count_by_type[policy_key] = voice_used + 1
                     self.last_voice_alert_time_by_type[policy_key] = now_ts
-                    self._voice_cycle_state["emitted"] = True
                 else:
                     self.logger.warning(f"Voice alert skipped due to empty message for event type: {event_type}")
 

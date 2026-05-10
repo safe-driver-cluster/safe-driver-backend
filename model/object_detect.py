@@ -32,7 +32,7 @@ while True:
     # 1. OBJECT DETECTION (phone, bottle)
     # -------------------------------
     if ENABLE_PHONE_BOTTLE_PERSON_DETECTION and frame_count % DETECT_PHONE_BOTTLE_PERSON == 0:
-        detect_results = detect_model(frame, conf=0.7)
+        detect_results = detect_model(frame, conf=0.5)
 
         for r in detect_results:
             for box in r.boxes:
@@ -40,7 +40,7 @@ while True:
                 label = detect_model.names[cls]
                 conf = float(box.conf[0])
 
-                if label in ["cell phone", "bottle", "person"] and conf >= 0.7:
+                if label in ["cell phone", "bottle", "person"] and conf >= 0.5:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
 
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (0,255,0), 2)
