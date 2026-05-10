@@ -94,7 +94,7 @@ pulindu - curl -X PUT "http://localhost:8000/device/update-vehicle-reg?vehicle_r
 
 ### CONNECT TO RASPBERRY-PI
 
-ssh -4 rensith@raspberrypi.local
+ssh -4 safedriver@raspberrypi.local
 rensith2001
 
 python3.10 -m venv venv
