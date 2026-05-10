@@ -836,9 +836,10 @@ def run(model: str, num_faces: int,
             else:
                 SCROLL_OFFSET = min(MAX_SCROLL, SCROLL_OFFSET + config.SCROLL_STEP)
 
-    cv2.namedWindow(config.WINDOW_NAME)
-    cv2.setMouseCallback(config.WINDOW_NAME, mouse_callback)
-    logger.info(f"Display window '{config.WINDOW_NAME}' created")
+    if config.ENABLE_WINDOW:
+        cv2.namedWindow(config.WINDOW_NAME)
+        cv2.setMouseCallback(config.WINDOW_NAME, mouse_callback)
+        logger.info(f"Display window '{config.WINDOW_NAME}' created")
 
     def save_result(result: any,
                     unused_output_image: mp.Image, timestamp_ms: int):
@@ -1151,7 +1152,8 @@ def run(model: str, num_faces: int,
         
         detector.close()
         cap.release()
-        cv2.destroyAllWindows()
+        if config.ENABLE_WINDOW:
+            cv2.destroyAllWindows()
         
         logger.info("SafeDriver Monitoring System stopped successfully")
         logger.info("=" * 80)
