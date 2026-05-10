@@ -55,7 +55,7 @@ MAXIMUM_VOICE_ALERTS_PER_TYPE = 3  # Maximum number of voice alerts per type to 
 # Object Detection Settings
 # -------------------------------------------------------------------------------------
 YOLO_MODEL_PHONE_BOTTLE_PERSON_CONFIDENCE_THRESHOLD = 0.50
-YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD = 0.80
+YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD = 0.75
 YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD = 0.70
 
 ENABLE_PHONE_BOTTLE_PERSON_DETECTION = True
@@ -245,3 +245,4 @@ HEAD_POSE_COLOR = [0, 0, 255]  # Color for head pose text (BGR)
 
 # Camera Error Message
 CAMERA_ERROR_MSG = 'ERROR: Unable to read from webcam. Please verify your webcam settings.'
+ENABLE_WINDOW = False  # Set to False to disable cv2.imshow (for headless environments)

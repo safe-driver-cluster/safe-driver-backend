@@ -1009,9 +1009,10 @@ def run(model: str, num_faces: int,
             else:
                 SCROLL_OFFSET = min(MAX_SCROLL, SCROLL_OFFSET + config.SCROLL_STEP)
 
-    cv2.namedWindow(config.WINDOW_NAME)
-    cv2.setMouseCallback(config.WINDOW_NAME, mouse_callback)
-    logger.info(f"Display window '{config.WINDOW_NAME}' created")
+    if config.ENABLE_WINDOW:
+        cv2.namedWindow(config.WINDOW_NAME)
+        cv2.setMouseCallback(config.WINDOW_NAME, mouse_callback)
+        logger.info(f"Display window '{config.WINDOW_NAME}' created")
 
     def save_result(result: any,
                     unused_output_image: mp.Image, timestamp_ms: int):
@@ -1090,7 +1091,7 @@ def run(model: str, num_faces: int,
             # ======================= DISPLAY =============================
             current_frame = image
 
-            if config.SHOW_FPS:
+            if config.SHOW_FPS and config.ENABLE_WINDOW:
                 fps_text = config.FPS_TEXT_FORMAT.format(FPS)
                 text_location = (config.LEFT_MARGIN, config.ROW_SIZE + config.FPS_Y_OFFSET)
 
@@ -1103,7 +1104,7 @@ def run(model: str, num_faces: int,
 
             if DETECTION_RESULT:
                 # Draw landmarks
-                if config.SHOW_FACE_MESH:
+                if config.SHOW_FACE_MESH and config.ENABLE_WINDOW:
                     for face_landmarks in DETECTION_RESULT.face_landmarks:
                         face_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
                         face_landmarks_proto.landmark.extend([
@@ -1133,7 +1134,7 @@ def run(model: str, num_faces: int,
                             .get_default_face_mesh_iris_connections_style())
 
             # Expand right side for blendshapes
-            if config.SHOW_BLENDSHAPES:
+            if config.SHOW_BLENDSHAPES and config.ENABLE_WINDOW:
                 current_frame = cv2.copyMakeBorder(current_frame, 0, 0, 0,
                                                    config.LABEL_PADDING_WIDTH,
                                                    cv2.BORDER_CONSTANT, None,
@@ -1154,7 +1155,7 @@ def run(model: str, num_faces: int,
                     
                 if behavior_data:
                     # Draw metrics background
-                    if config.SHOW_METRICS:
+                    if config.SHOW_METRICS and config.ENABLE_WINDOW:
                         metrics_x = config.LEFT_MARGIN - config.METRICS_PADDING
                         metrics_y = config.ROW_SIZE + config.METRICS_Y_OFFSET
                         
@@ -1204,7 +1205,7 @@ def run(model: str, num_faces: int,
                                        config.METRICS_TEXT_COLOR, config.METRICS_FONT_THICKNESS, cv2.LINE_AA)
                         
                         # Display warnings
-                        if config.SHOW_WARNINGS:
+                        if config.SHOW_WARNINGS and config.ENABLE_WINDOW:
                             frame_width = current_frame.shape[1] - (config.LABEL_PADDING_WIDTH if config.SHOW_BLENDSHAPES else 0)
                             
                             warning_checks = [
@@ -1250,7 +1251,7 @@ def run(model: str, num_faces: int,
                                        config.HEAD_POSE_COLOR, config.METRICS_FONT_THICKNESS, cv2.LINE_AA)
 
                     # Draw blendshapes
-                    if config.SHOW_BLENDSHAPES:
+                    if config.SHOW_BLENDSHAPES and config.ENABLE_WINDOW:
                         legend_x = current_frame.shape[1] - config.LABEL_PADDING_WIDTH + config.BLENDSHAPE_X_OFFSET
                         legend_y = config.BLENDSHAPE_Y_START - SCROLL_OFFSET
                         bar_max_width = config.LABEL_PADDING_WIDTH - 40
@@ -1293,7 +1294,7 @@ def run(model: str, num_faces: int,
                 
                 if behavior_data:
                     # Display warnings
-                    if config.SHOW_WARNINGS:
+                    if config.SHOW_WARNINGS and config.ENABLE_WINDOW:
                         frame_width = current_frame.shape[1] - (config.LABEL_PADDING_WIDTH if config.SHOW_BLENDSHAPES else 0)
                         warning_text = "FACE NOT VISIBLE - TURN BACK" if behavior_data.get('face_lost', False) else config.WARNING_DISTRACTION
                         (text_width, _), _ = cv2.getTextSize(warning_text,
@@ -1306,7 +1307,8 @@ def run(model: str, num_faces: int,
                                     config.WARNING_FONT, config.WARNING_FONT_SIZE,
                                     config.WARNING_COLOR, config.WARNING_FONT_THICKNESS, cv2.LINE_AA)
 
-            cv2.imshow(config.WINDOW_NAME, current_frame)
+            if config.ENABLE_WINDOW:
+                cv2.imshow(config.WINDOW_NAME, current_frame)
 
             if cv2.waitKey(1) == 27:
                 logger.info("ESC key pressed - Exiting...")
@@ -1323,7 +1325,8 @@ def run(model: str, num_faces: int,
         
         detector.close()
         cap.release()
-        cv2.destroyAllWindows()
+        if config.ENABLE_WINDOW:
+            cv2.destroyAllWindows()
         
         logger.info("SafeDriver Monitoring System stopped successfully")
         logger.info("=" * 80)
