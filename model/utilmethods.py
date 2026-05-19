@@ -4,7 +4,7 @@ from datetime import datetime
 import config.config as config
 import threading
 import os
-from playsound import playsound
+# from playsound import playsound
 from gtts import gTTS
 from database.firestore_helper import firestore_helper
 import utils.utils as utils
