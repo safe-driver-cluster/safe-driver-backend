@@ -1052,7 +1052,9 @@ def run(model: str, num_faces: int,
     logger.info("Starting video processing loop...")
     logger.info("Press ESC to exit")
     
-    object_detector = frame_detect.DetectorProcess()   #create once
+    if config.ENABLE_OBJECT_DETECTION:
+        object_detector = frame_detect.DetectorProcess()   #create once
+
     frame_count = 0
     detection_failures = 0
 
@@ -1078,9 +1080,10 @@ def run(model: str, num_faces: int,
             small_frame = cv2.resize(image, (416, 416))
 
             # ======================= OBJECT DETECTION (ASYNC) ============
-            # Send only every 3rd frame to reduce load
-            if frame_count % 3 == 0:
-                object_detector.submit_frame(small_frame)
+            if config.ENABLE_OBJECT_DETECTION:
+                # Send only every 3rd frame to reduce load
+                if frame_count % 3 == 0:
+                    object_detector.submit_frame(small_frame)
 
             # ======================= MEDIAPIPE ===========================
             rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
