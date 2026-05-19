@@ -20,3 +20,4 @@ firebase-admin-sdk/
 # builds
 dist/
 build/
+venv_1/
