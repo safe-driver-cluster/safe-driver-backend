@@ -245,4 +245,4 @@ HEAD_POSE_COLOR = [0, 0, 255]  # Color for head pose text (BGR)
 
 # Camera Error Message
 CAMERA_ERROR_MSG = 'ERROR: Unable to read from webcam. Please verify your webcam settings.'
-ENABLE_WINDOW = False  # Set to False to disable cv2.imshow (for headless environments)
+ENABLE_WINDOW = True  # Set to False to disable cv2.imshow (for headless environments)
