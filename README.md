@@ -16,7 +16,10 @@
 
 ### create python environment
         python -m venv venv
-        .\venv\Scripts\Activate
+        .\venv\Scripts\Activate         - WINDOWS
+
+        python -m venv venv             - [use python 3.13.5 because there not exists dabian versions for all windows dependancies in python 3.10]
+        source ./venv/bin/activate      - RASPBARRY
 
 ## - Temporarily Change Execution Policy
         Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
