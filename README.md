@@ -31,7 +31,8 @@
         python.exe -m pip install --upgrade pip
 
 ### install (or update) the project libraries
-        pip install -r requirements.txt
+        pip install -r requirements.txt         (in windows)
+        pip install -r requirements_raspi.txt   (in raspi)
 
 ## DEVELOPER MODE INSTRUCTIONS [DO NOT RUN BELLOW]
 
@@ -52,6 +53,8 @@
 
         ##[DO NOT RUN THIS COMMAND]
         pip freeze > requirements.txt
+
+## rename the firebase-admin-sdk -> serviceAccountKey.json
 
 ## ------------------------------------
 ## RUN SAFE DRIVER BACKEND APPLICATION
@@ -81,3 +84,54 @@ curl -X PUT "http://localhost:8000/process/restart"
 
 # Check application running status
 curl -X GET http://localhost:8000/process/status"
+
+
+rensith - curl -X PUT "http://localhost:8000/device/update-driver?driver_id=DRV001"
+pulindu - curl -X PUT "http://localhost:8000/device/update-driver?driver_id=DRV002"
+
+rensith - curl -X PUT "http://localhost:8000/device/update-vehicle-reg?vehicle_reg_no=NB-6576"
+pulindu - curl -X PUT "http://localhost:8000/device/update-vehicle-reg?vehicle_reg_no=NB-4564"
+
+### CONNECT TO RASPBERRY-PI
+
+ssh -4 safedriver@raspberrypi.local
+rensith2001
+
+python3.10 -m venv venv
+
+source ./venv/bin/activate
+
+### RASPI CAMERA OPERATIONS
+
+### FINGERPRINT OPERATION
+
+🔌 1. Hardware Connection (VERY IMPORTANT)
+
+⚙️ 2. Enable Serial Port on Raspberry Pi
+Run: sudo raspi-config
+Go to: Interface Options → Serial Port
+Set: Enable serial port hardware → Yes
+
+🔧 3. Disable Serial Console (if needed)
+edit: sudo nano /boot/firmware/cmdline.txt
+✂️ Edit the line and REMOVE ONLY this part:
+console=serial0,115200
+Then reboot: sudo reboot
+
+📦 4. Install Required Python Library
+pip install pyfingerprint
+
+🧪 5. Test Connection
+````
+from pyfingerprint.pyfingerprint import PyFingerprint
+
+try:
+    f = PyFingerprint('/dev/serial0', 57600, 0xFFFFFFFF, 0x00000000)
+
+    if f.verifyPassword():
+        print('Sensor connected successfully!')
+    else:
+        print('Wrong password!')
+except Exception as e:
+    print('Error:', e)
+````

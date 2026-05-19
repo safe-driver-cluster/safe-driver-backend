@@ -1,0 +1,5 @@
+train: /content/gdrive/MyDrive/Dataset/cigaratte_detection/dataset/train/images
+val: /content/gdrive/MyDrive/Dataset/cigaratte_detection/dataset/val/images
+
+names:
+  0: cigarette
