@@ -54,6 +54,9 @@ MAXIMUM_VOICE_ALERTS_PER_TYPE = 3  # Maximum number of voice alerts per type to 
 # -------------------------------------------------------------------------------------
 # Object Detection Settings
 # -------------------------------------------------------------------------------------
+
+ENABLE_OBJECT_DETECTION = True  # Set to False to disable object detection (for performance testing)
+
 YOLO_MODEL_PHONE_BOTTLE_PERSON_CONFIDENCE_THRESHOLD = 0.50
 YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD = 0.75
 YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD = 0.70
