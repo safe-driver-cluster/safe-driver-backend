@@ -10,6 +10,8 @@ from database import db_helper
 from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
 import utils.utils as utils
 
+# from model.detect import main as detect_main
+
 import firebase_admin
 from firebase_admin import credentials, db
 
@@ -56,7 +58,7 @@ try:
     logger.info("Firebase Admin SDK already initialized")
 except ValueError:
     # Initialize Firebase if not already done
-    cred = credentials.Certificate("firebase-admin-sdk/serviceAccountKey.json")  # safe-driver-system-b3da24192be1
+    cred = credentials.Certificate(utils.resource_path("firebase-admin-sdk/serviceAccountKey.json"))  # safe-driver-system-b3da24192be1
     firebase_admin.initialize_app(cred, {
         'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
     })
@@ -154,6 +156,7 @@ async def read_detect_process_stderr():
     try:
         while True:
             if detect_process.poll() is not None:
+                logger.warning(f"detect.py process terminated with code {detect_process.returncode}")
                 break
             
             line = await asyncio.get_event_loop().run_in_executor(
@@ -235,8 +238,17 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Failed to check device registration: {e}", exc_info=True)
 
-    # Path to the same Python executable used by the current venv
-    venv_python = sys.executable  
+    venv_python = sys.executable
+
+    # if getattr(sys, 'frozen', False):
+    #     base_dir = os.path.dirname(sys.executable)
+    #     if sys.platform == "win32":
+    #         venv_python = os.path.join(base_dir, "python-3.10.9-embed-amd64", "python.exe")
+    #     else:
+    #         venv_python = os.path.join(base_dir, "python-3.10.9-embed-amd64", "python")
+    # else:
+    #     venv_python = sys.executable
+
     logger.info(f"Using Python executable: {venv_python}")
 
     try:

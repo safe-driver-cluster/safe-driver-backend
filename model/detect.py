@@ -14,6 +14,7 @@ from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
 
 import model.utilmethods as utils
+import utils.utils as util
 import config.config as config
 from model.alerts import AlertManager
 
@@ -56,7 +57,7 @@ try:
     logger.info("Firebase Admin SDK already initialized in detect.py")
 except ValueError:
     # Initialize Firebase if not already done
-    cred = credentials.Certificate("firebase-admin-sdk/serviceAccountKey.json") #safe-driver-system-b3da24192be1
+    cred = credentials.Certificate(util.resource_path("firebase-admin-sdk/serviceAccountKey.json")) #safe-driver-system-b3da24192be1
     firebase_admin.initialize_app(cred, {
         'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
     })
@@ -1169,7 +1170,7 @@ def main():
         '--model',
         help='Name of face landmarker model.',
         required=False,
-        default='model/face_landmarker.task')
+        default=util.resource_path('model/face_landmarker.task'))
     parser.add_argument(
         '--numFaces',
         help='Max number of faces that can be detected by the landmarker.',

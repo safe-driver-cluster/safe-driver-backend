@@ -9,6 +9,7 @@ from polars import duration
 import config.config as config
 from model.alerts import AlertManager
 import model.utilmethods as utils
+import utils.utils as util
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -102,9 +103,9 @@ def detector_worker(frame_queue):
     from ultralytics import YOLO
 
     # Load models INSIDE process
-    detect_model = YOLO("model/yolov8n.pt")
-    cigarette_model = YOLO("model/cigarette_model.pt")
-    glasses_model = YOLO("model/glasses_model.pt")
+    detect_model = YOLO(util.resource_path("model/yolov8n.pt"))  # safe-driver-system-b3da24192be1
+    cigarette_model = YOLO(util.resource_path("model/cigarette_model.pt"))
+    glasses_model = YOLO(util.resource_path("model/glasses_model.pt"))
 
     logger.info("Detection process started.")
 

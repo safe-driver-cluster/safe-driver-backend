@@ -2,6 +2,14 @@ import pytz
 from datetime import datetime
 import os
 import config.config as config
+import sys
+
+def resource_path(relative_path):
+    """Get the correct path whether running as script or compiled exe."""
+    if hasattr(sys, '_MEIPASS'):
+        # PyInstaller extracts files here at runtime
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 
 def now():
     """Return current timestamp in Sri Lanka time in ISO 8601 format"""

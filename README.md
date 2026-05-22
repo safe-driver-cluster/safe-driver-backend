@@ -135,3 +135,25 @@ try:
 except Exception as e:
     print('Error:', e)
 ````
+
+## -------------------------------
+## BUILD APPLICATION
+## -------------------------------
+
+Step 1 — Install PyInstaller in your venv
+pip install pyinstaller
+
+Step 2 — Create a launcher file [run.py]
+import uvicorn
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=False   # reload must be OFF for compiled builds
+    )
+
+Step 3 — Build the executable
+WINDOWS
+pyinstaller --onefile --name safedriverapp --add-data "config;config" --add-data "model;model" --add-data "service;service" --add-data "utils;utils" --add-data ".env;.env" --add-data "banner.txt;banner.txt" --add-data "database;database" --add-data "firebase-admin-sdk;firebase-admin-sdk" run.py

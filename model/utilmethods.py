@@ -113,7 +113,7 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
                 tts.save(filename)
 
                 # play audio
-                pygame.mixer.music.load(filename)
+                pygame.mixer.music.load(utils.resource_path(filename))
                 pygame.mixer.music.play()
 
                 while pygame.mixer.music.get_busy():
@@ -125,7 +125,7 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
             finally:
                 try:
                     if filename and os.path.exists(filename):
-                        os.remove(filename)
+                        os.remove(utils.resource_path(filename))
                 except:
                     pass
 
