@@ -127,7 +127,7 @@ def detector_worker(frame_queue):
             # 1. OBJECT DETECTION (phone, bottle)
             # -------------------------------------------------------------------------------------
             if config.ENABLE_PHONE_BOTTLE_PERSON_DETECTION and frame_count % config.DETECT_PHONE_BOTTLE_PERSON_FRAME == 0:
-                detect_results = detect_model(frame, conf=config.YOLO_MODEL_PHONE_BOTTLE_PERSON_CONFIDENCE_THRESHOLD)
+                detect_results = detect_model(frame, conf=config.YOLO_MODEL_PHONE_BOTTLE_PERSON_CONFIDENCE_THRESHOLD, verbose=False)
 
                 for r in detect_results:
                     for box in r.boxes:
@@ -209,7 +209,7 @@ def detector_worker(frame_queue):
             # -------------------------------------------------------------------------------------
 
             if config.ENABLE_CIGARETTE_DETECTION and frame_count % config.DETECT_CIGARETTE_FRAME == 0:
-                results = cigarette_model(frame, conf=config.YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD)
+                results = cigarette_model(frame, conf=config.YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD, verbose=False)
 
                 for r in results:
                     for box in r.boxes:
@@ -278,7 +278,7 @@ def detector_worker(frame_queue):
                 detected = False
 
                 # 👉 Try normal detection first (lower threshold for better recall)
-                glass_results = glasses_model(frame, conf=config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD)
+                glass_results = glasses_model(frame, conf=config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD, verbose=False)
 
                 for r in glass_results:
                     for box in r.boxes:
@@ -303,7 +303,7 @@ def detector_worker(frame_queue):
                     crop, (ox, oy) = center_crop(frame, zoom=1.8)
 
                     resized = cv2.resize(crop, (416, 416))
-                    zoom_results = glasses_model(resized, conf=config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD)
+                    zoom_results = glasses_model(resized, conf=config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD, verbose=False)
 
                     scale_x = crop.shape[1] / 416
                     scale_y = crop.shape[0] / 416

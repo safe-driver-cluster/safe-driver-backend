@@ -5,7 +5,7 @@ a = Analysis(
     ['run.py'],
     pathex=[],
     binaries=[],
-    datas=[('config', 'config'), ('model', 'model'), ('service', 'service'), ('utils', 'utils'), ('.env', '.env'), ('database', 'database'), ('firebase-admin-sdk', 'firebase-admin-sdk')],
+    datas=[('config', 'config'), ('model', 'model'), ('service', 'service'), ('utils', 'utils'), ('.env', '.'), ('banner.txt', '.'), ('shared.py', 'shared.py'), ('database', 'database'), ('firebase-admin-sdk', 'firebase-admin-sdk')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

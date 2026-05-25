@@ -173,7 +173,7 @@ class AlertManager:
             # self.output_stream.write(f"BEHAVIOR_DATA:{json.dumps(payload)}\n")
             # self.output_stream.flush()
             if behavior_data:
-                behavior_queue.put(behavior_data)
+                behavior_queue.put(payload)
         except Exception as exc:
             self.logger.error(f"Failed to send behavior data to parent: {exc}")
 

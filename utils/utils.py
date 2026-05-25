@@ -11,6 +11,14 @@ def resource_path(relative_path):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
 
+def get_app_dir():
+    if getattr(sys, 'frozen', False):
+        # Running as PyInstaller exe - use exe's directory
+        return os.path.dirname(sys.executable)
+    else:
+        # Running as normal script - use script's directory
+        return os.path.dirname(os.path.abspath(__file__))
+
 def now():
     """Return current timestamp in Sri Lanka time in ISO 8601 format"""
     # Get Sri Lanka timezone
@@ -22,7 +30,8 @@ def print_banner(logger):
     current_file = os.path.abspath(__file__)
     utils_dir = os.path.dirname(current_file)
     project_root = os.path.dirname(utils_dir)
-    banner_path = os.path.join(project_root, 'banner.txt')
+    # banner_path = os.path.join(project_root, 'banner.txt')
+    banner_path = resource_path('banner.txt')
     
     try:
         if os.path.exists(banner_path):

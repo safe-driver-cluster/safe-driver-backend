@@ -156,4 +156,4 @@ if __name__ == "__main__":
 
 Step 3 — Build the executable
 WINDOWS
-pyinstaller --onefile --name safedriverapp --add-data "config;config" --add-data "model;model" --add-data "service;service" --add-data "utils;utils" --add-data ".env;.env" --add-data "banner.txt;banner.txt" --add-data "database;database" --add-data "firebase-admin-sdk;firebase-admin-sdk" run.py
+pyinstaller --onefile --name safedriverapp --add-data "config;config" --add-data "model;model" --add-data "service;service" --add-data "utils;utils" --add-data ".env;." --add-data "banner.txt;." --add-data "shared.py;shared.py" --add-data "database;database" --add-data "firebase-admin-sdk;firebase-admin-sdk" run.py

@@ -23,6 +23,8 @@ from firebase_admin import credentials, db
 
 import model.frame_detector as frame_detect
 
+from shared import stop_event
+
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -41,41 +43,6 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
-
-# ============================================================================
-# FIREBASE INITIALIZATION
-# ============================================================================
-
-logger.info("=" * 80)
-logger.info("SafeDriver Monitoring System Detector Starting...")
-logger.info("=" * 80)
-
-logger.info("Initializing Firebase Admin SDK in detect.py...")
-try:
-    # Check if Firebase app is already initialized
-    firebase_admin.get_app()
-    logger.info("Firebase Admin SDK already initialized in detect.py")
-except ValueError:
-    # Initialize Firebase if not already done
-    cred = credentials.Certificate(util.resource_path("firebase-admin-sdk/serviceAccountKey.json")) #safe-driver-system-b3da24192be1
-    firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
-    })
-    logger.info("Firebase Admin SDK initialized successfully in detect.py")
-
-# Import firestore_helper after Firebase is initialized
-from database.firestore_helper import firestore_helper
-logger.info("Imported firestore_helper module successfully in detect.py")
-
-# ============================================================================
-# GLOBAL VARIABLES AND CONSTANTS
-# ============================================================================
-
-# load configurations
-utils.get_model_configurations(logger)
-
-# Log configuration on startup
-utils.log_config(logger)
 
 # Global variables to calculate FPS
 COUNTER, FPS = 0, 0
@@ -887,7 +854,7 @@ def run(model: str, num_faces: int,
     detection_failures = 0
 
     try:
-        while cap.isOpened():
+        while cap.isOpened() and not stop_event.is_set():
             success, image = cap.read()
             frame_count += 1
             
@@ -1164,6 +1131,42 @@ def run(model: str, num_faces: int,
 
 
 def main():
+
+    # ============================================================================
+    # FIREBASE INITIALIZATION
+    # ============================================================================
+
+    logger.info("=" * 80)
+    logger.info("SafeDriver Monitoring System Detector Starting...")
+    logger.info("=" * 80)
+
+    logger.info("Initializing Firebase Admin SDK in detect.py...")
+    try:
+        # Check if Firebase app is already initialized
+        firebase_admin.get_app()
+        logger.info("Firebase Admin SDK already initialized in detect.py")
+    except ValueError:
+        # Initialize Firebase if not already done
+        cred = credentials.Certificate(util.resource_path("firebase-admin-sdk/serviceAccountKey.json")) #safe-driver-system-b3da24192be1
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
+        })
+        logger.info("Firebase Admin SDK initialized successfully in detect.py")
+
+    # Import firestore_helper after Firebase is initialized
+    from database.firestore_helper import firestore_helper
+    logger.info("Imported firestore_helper module successfully in detect.py")
+
+    # ============================================================================
+    # GLOBAL VARIABLES AND CONSTANTS
+    # ============================================================================
+
+    # load configurations
+    utils.get_model_configurations(logger)
+
+    # Log configuration on startup
+    utils.log_config(logger)
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
@@ -1204,7 +1207,7 @@ def main():
         required=False,
         default=960)
     
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     run(args.model, int(args.numFaces), args.minFaceDetectionConfidence,
         args.minFacePresenceConfidence, args.minTrackingConfidence,
