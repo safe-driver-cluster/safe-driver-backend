@@ -146,6 +146,58 @@ latest_behavior_data = {
 #         model_service.update_device_status(status="offline")
 #         logger.info("Device status updated to offline")
 
+async def watchdog():
+    """Monitor detect thread and restart if it crashes"""
+    global detect_process, monitor_task
+
+    logger.info("Watchdog started - monitoring detect thread")
+
+    while not stop_event.is_set():
+        await asyncio.sleep(5)  # Check every 5 seconds
+
+        if stop_event.is_set():
+            break
+
+        if detect_process is not None and not detect_process.is_alive():
+            logger.warning("Detect thread crashed! Restarting...")
+
+            # Cancel old monitor task
+            if monitor_task:
+                monitor_task.cancel()
+                try:
+                    await monitor_task
+                except asyncio.CancelledError:
+                    pass
+
+            # Clear queue
+            while not behavior_queue.empty():
+                try:
+                    behavior_queue.get_nowait()
+                except queue.Empty:
+                    break
+
+            # Reset stop event in case it was set
+            stop_event.clear()
+
+            # Start new detect thread
+            detect_process = threading.Thread(
+                target=detect_main,
+                daemon=True,
+                name="detect-thread"
+            )
+            detect_process.start()
+            logger.info(f"Detect thread restarted: {detect_process.name}")
+
+            # Restart monitor task
+            monitor_task = asyncio.create_task(read_behavior_queue())
+            logger.info("Behavior queue monitor restarted")
+
+            if device_mac:
+                model_service.update_device_status(status="online")
+                logger.info("Device status updated to online after watchdog restart")
+
+    logger.info("Watchdog stopped")
+
 async def read_behavior_queue():
     global latest_behavior_data, device_mac
 
@@ -312,6 +364,11 @@ async def startup_event():
 
         logger.info("Started output monitoring tasks")
 
+        # ── Start watchdog ──────────────────────────────────────────────
+        asyncio.create_task(watchdog())
+        logger.info("Watchdog started")
+        # ───────────────────────────────────────────────────────────────
+
         model_service.update_device_status(status="online")
         logger.info("Device status updated to online")
         
@@ -367,16 +424,15 @@ async def shutdown_event():
 
     logger.info("Shutting down SafeDriver Backend")
 
-    # Cancel monitoring task
+    # stop_event.set() signals BOTH the detect thread AND the watchdog to stop
+    stop_event.set()
+
     if monitor_task:
         monitor_task.cancel()
         try:
             await monitor_task
         except asyncio.CancelledError:
             logger.info("Monitor task cancelled")
-
-    # Signal detect thread to stop
-    stop_event.set()
 
     if detect_process and detect_process.is_alive():
         detect_process.join(timeout=5)
@@ -385,7 +441,6 @@ async def shutdown_event():
         else:
             logger.info("Detect thread stopped successfully")
 
-    # Update device status
     if device_mac:
         try:
             model_service.update_device_status(status="offline")

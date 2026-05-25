@@ -766,6 +766,11 @@ def run(model: str, num_faces: int,
         min_face_presence_confidence: float, min_tracking_confidence: float,
         camera_id: int, width: int, height: int) -> None:
     """Continuously run inference on images acquired from the camera."""
+
+    # Force disable window when running as compiled exe
+    # OpenCV windows must run on main thread - causes hang in threaded mode
+    if getattr(sys, 'frozen', False):
+        config.ENABLE_WINDOW = False
     
     logger.info("=" * 80)
     logger.info("Starting SafeDriver Monitoring System...")
@@ -1124,7 +1129,10 @@ def run(model: str, num_faces: int,
         detector.close()
         cap.release()
         if config.ENABLE_WINDOW:
-            cv2.destroyAllWindows()
+            try:
+                cv2.destroyAllWindows()
+            except Exception as e:
+                logger.warning(f"Could not destroy windows: {e}")
         
         logger.info("SafeDriver Monitoring System stopped successfully")
         logger.info("=" * 80)
