@@ -41,35 +41,11 @@ detect_console_handler.setFormatter(logging.Formatter('%(message)s'))
 detect_logger.addHandler(detect_console_handler)
 detect_logger.propagate = False  # Don't propagate to root logger (prevents duplicate logs)
 
-utils.print_banner(logger)
-logger.info("=" * 80)
-logger.info("SafeDriver Monitoring System Starting...")
-logger.info("=" * 80)
 
-# ============================================================================
-# END LOGGING CONFIGURATION
-# ============================================================================
-
-# Suppress TensorFlow messages
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-logger.info("Initializing Firebase Admin SDK")
-try:
-    # Check if Firebase app is already initialized
-    firebase_admin.get_app()
-    logger.info("Firebase Admin SDK already initialized")
-except ValueError:
-    # Initialize Firebase if not already done
-    cred = credentials.Certificate(utils.resource_path("firebase-admin-sdk/serviceAccountKey.json"))  # safe-driver-system-b3da24192be1
-    firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
-    })
-    logger.info("Firebase Admin SDK initialized successfully")
 
 # Import firestore_helper after Firebase is initialized
 from database.firestore_helper import firestore_helper
-logger.info("Imported firestore_helper module")
+# logger.info("Imported firestore_helper module")
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -279,6 +255,32 @@ async def read_detect_process_stderr():
 @app.on_event("startup")
 async def startup_event():
     global detect_process, monitor_task, stderr_task, device_mac
+
+    utils.print_banner(logger)
+    logger.info("=" * 80)
+    logger.info("SafeDriver Monitoring System Starting...")
+    logger.info("=" * 80)
+
+    # ============================================================================
+    # END LOGGING CONFIGURATION
+    # ============================================================================
+
+    # Suppress TensorFlow messages
+    os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+    logger.info("Initializing Firebase Admin SDK")
+    try:
+        # Check if Firebase app is already initialized
+        firebase_admin.get_app()
+        logger.info("Firebase Admin SDK already initialized")
+    except ValueError:
+        # Initialize Firebase if not already done
+        cred = credentials.Certificate(utils.resource_path("firebase-admin-sdk/serviceAccountKey.json"))  # safe-driver-system-b3da24192be1
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
+        })
+        logger.info("Firebase Admin SDK initialized successfully")
 
     logger.info("=" * 80)
     logger.info("SafeDriver Backend Starting...")
