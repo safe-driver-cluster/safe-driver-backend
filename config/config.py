@@ -136,7 +136,7 @@ METRICS_TEXT_COLOR = [0, 0, 0]
 # Metrics Text Labels
 LABEL_PERCLOS = 'PERCLOS: {:.2f}'
 LABEL_BLINKS = 'Blinks/min: {:02d}'
-LABEL_CLOSURES = 'Closures(15s): {}'
+LABEL_CLOSURES = 'Closures({}s): {}'
 LABEL_YAWNS = 'Yawns: {}'
 LABEL_MICROSLEEPS = 'Microsleeps: {}'
 LABEL_DROWSY_EVENTS = 'Drowsy Events: {}'

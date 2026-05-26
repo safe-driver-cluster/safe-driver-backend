@@ -760,6 +760,12 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 'mouth_aspect_ratio': mouth_lower_down
             }
 
+def force_stop():
+    """Force release camera to unblock cap.read()"""
+    global current_cap
+    if current_cap is not None:
+        current_cap.release()
+        current_cap = None
 
 def run(model: str, num_faces: int,
         min_face_detection_confidence: float,
@@ -787,6 +793,8 @@ def run(model: str, num_faces: int,
     # Initialize camera
     logger.info(f"Initializing camera {camera_id}...")
     cap = cv2.VideoCapture(camera_id)
+    global current_cap
+    current_cap = cap
     
     if not cap.isOpened():
         logger.error(f"Failed to open camera {camera_id}")
@@ -852,6 +860,8 @@ def run(model: str, num_faces: int,
     logger.info("Starting video processing loop...")
     logger.info("Press ESC to exit")
     
+    object_detector = None
+
     if config.ENABLE_OBJECT_DETECTION:
         object_detector = frame_detect.DetectorProcess()   #create once
 
@@ -864,11 +874,17 @@ def run(model: str, num_faces: int,
             frame_count += 1
             
             if not success:
+                
                 detection_failures += 1
                 logger.error(f"Failed to read frame {frame_count}")
+                
+                if stop_event.is_set():      # ← add this check
+                    logger.info("Stop event set - exiting camera loop")
+                    break
+                
                 if detection_failures > 10:
                     logger.error("Too many consecutive frame read failures, exiting...")
-                    sys.exit(config.CAMERA_ERROR_MSG)
+                    break
                 continue
             
             detection_failures = 0
@@ -987,20 +1003,19 @@ def run(model: str, num_faces: int,
                         
                         cv2.addWeighted(overlay, config.METRICS_BG_OPACITY, 
                                       current_frame, 1 - config.METRICS_BG_OPACITY, 0, current_frame)
-                        
+
                         # Display metrics
                         metrics_data = [
                             (config.LABEL_PERCLOS.format(behavior_data['perclos']), config.PERCLOS_Y_OFFSET),
                             (config.LABEL_BLINKS.format(behavior_data['blinks_per_min']), config.BLINKS_Y_OFFSET),
-                            (config.LABEL_CLOSURES.format(behavior_data['closure_count']), config.CLOSURES_Y_OFFSET),
+                            (config.LABEL_CLOSURES.format(config.EYE_CLOSURE_FREQ_WIN, behavior_data['closure_count']), config.CLOSURES_Y_OFFSET),
                             (config.LABEL_YAWNS.format(behavior_data['yawn_count']), config.YAWNS_Y_OFFSET),
                             (config.LABEL_MICROSLEEPS.format(behavior_data['microsleep_count']), config.MICROSLEEPS_Y_OFFSET),
                             (config.LABEL_DROWSY_EVENTS.format(behavior_data['drowsy_count']), config.DROWSY_EVENTS_Y_OFFSET),
                             (config.LABEL_HEAD_POSE.format( behavior_data.get('head_pose', {}).get('direction', 'N/A')), config.HEAD_POSE_Y_OFFSET),
                             ('EAR : {:.2f}'.format(behavior_data['eye_aspect_ratio']), 180),
                             ('MAR : {:.2f}'.format(behavior_data['mouth_aspect_ratio']), 210)
-                        ]
-                        
+                                                                            ]
                         for text, y_offset in metrics_data:
                             cv2.putText(current_frame, text,
                                        (config.LEFT_MARGIN, config.ROW_SIZE + y_offset),
@@ -1125,6 +1140,14 @@ def run(model: str, num_faces: int,
         logger.info("Cleaning up resources...")
         logger.info(f"Total frames processed: {frame_count}")
         logger.info(f"Final stats - Yawns: {YAWN_COUNT}, Microsleeps: {MICROSLEEP_COUNT}, Drowsy Events: {DROWSY_COUNT}")
+
+        # ← Stop object detector explicitly before anything else
+        if object_detector is not None:
+            try:
+                object_detector.stop()
+                logger.info("Object detector stopped")
+            except Exception as e:
+                logger.warning(f"Error stopping object detector: {e}")
         
         detector.close()
         cap.release()

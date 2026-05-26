@@ -17,6 +17,8 @@ import queue
 import threading
 from shared import behavior_queue, stop_event
 from model.detect import main as detect_main
+from model.detect import force_stop
+
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -55,6 +57,8 @@ detect_process = None
 monitor_task = None
 stderr_task = None
 device_mac = None
+current_cap = None
+watchdog_task = None
 
 # Store latest behavior data in memory
 latest_behavior_data = {
@@ -254,7 +258,7 @@ async def read_detect_process_stderr():
 
 @app.on_event("startup")
 async def startup_event():
-    global detect_process, monitor_task, stderr_task, device_mac
+    global detect_process, monitor_task, stderr_task, device_mac, watchdog_task
 
     utils.print_banner(logger)
     logger.info("=" * 80)
@@ -367,8 +371,8 @@ async def startup_event():
         logger.info("Started output monitoring tasks")
 
         # ── Start watchdog ──────────────────────────────────────────────
-        asyncio.create_task(watchdog())
-        logger.info("Watchdog started")
+        # watchdog_task = asyncio.create_task(watchdog())
+        # logger.info("Watchdog started")
         # ───────────────────────────────────────────────────────────────
 
         model_service.update_device_status(status="online")
@@ -422,12 +426,19 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    global detect_process, monitor_task, device_mac
+    global detect_process, monitor_task, device_mac, watchdog_task
 
     logger.info("Shutting down SafeDriver Backend")
 
-    # stop_event.set() signals BOTH the detect thread AND the watchdog to stop
     stop_event.set()
+
+        # Cancel watchdog first
+    if watchdog_task:
+        watchdog_task.cancel()
+        try:
+            await watchdog_task
+        except asyncio.CancelledError:
+            logger.info("Watchdog task cancelled")
 
     if monitor_task:
         monitor_task.cancel()
@@ -437,9 +448,17 @@ async def shutdown_event():
             logger.info("Monitor task cancelled")
 
     if detect_process and detect_process.is_alive():
-        detect_process.join(timeout=5)
+        detect_process.join(timeout=3)  # wait 3 seconds
+        
         if detect_process.is_alive():
-            logger.warning("Detect thread did not stop in time")
+            logger.warning("Detect thread still alive - force stopping camera...")
+            force_stop()  # ← force release camera so cap.read() unblocks
+            detect_process.join(timeout=3)  # wait again
+            
+            if detect_process.is_alive():
+                logger.warning("Detect thread did not stop - continuing shutdown")
+            else:
+                logger.info("Detect thread stopped after force stop")
         else:
             logger.info("Detect thread stopped successfully")
 
