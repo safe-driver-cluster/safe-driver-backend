@@ -767,9 +767,9 @@ def run(model: str, num_faces: int,
         camera_id: int, width: int, height: int) -> None:
     """Continuously run inference on images acquired from the camera."""
 
-    # Force disable window when running as compiled exe
+    # Force disable window when running as compiled exe & os is linux
     # OpenCV windows must run on main thread - causes hang in threaded mode
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, 'frozen', False) and (sys.platform == "linux"):
         config.ENABLE_WINDOW = False
     
     logger.info("=" * 80)
