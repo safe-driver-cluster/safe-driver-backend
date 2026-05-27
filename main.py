@@ -13,6 +13,13 @@ import utils.utils as utils
 import firebase_admin
 from firebase_admin import credentials, db
 
+import queue
+import threading
+from shared import behavior_queue, stop_event
+from model.detect import main as detect_main
+from model.detect import force_stop
+
+
 # ============================================================================
 # LOGGING CONFIGURATION
 # ============================================================================
@@ -36,35 +43,11 @@ detect_console_handler.setFormatter(logging.Formatter('%(message)s'))
 detect_logger.addHandler(detect_console_handler)
 detect_logger.propagate = False  # Don't propagate to root logger (prevents duplicate logs)
 
-utils.print_banner(logger)
-logger.info("=" * 80)
-logger.info("SafeDriver Monitoring System Starting...")
-logger.info("=" * 80)
 
-# ============================================================================
-# END LOGGING CONFIGURATION
-# ============================================================================
-
-# Suppress TensorFlow messages
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-logger.info("Initializing Firebase Admin SDK")
-try:
-    # Check if Firebase app is already initialized
-    firebase_admin.get_app()
-    logger.info("Firebase Admin SDK already initialized")
-except ValueError:
-    # Initialize Firebase if not already done
-    cred = credentials.Certificate("firebase-admin-sdk/serviceAccountKey.json")  # safe-driver-system-b3da24192be1
-    firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
-    })
-    logger.info("Firebase Admin SDK initialized successfully")
 
 # Import firestore_helper after Firebase is initialized
 from database.firestore_helper import firestore_helper
-logger.info("Imported firestore_helper module")
+# logger.info("Imported firestore_helper module")
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -74,6 +57,8 @@ detect_process = None
 monitor_task = None
 stderr_task = None
 device_mac = None
+current_cap = None
+watchdog_task = None
 
 # Store latest behavior data in memory
 latest_behavior_data = {
@@ -84,62 +69,144 @@ latest_behavior_data = {
     "data": None
 }
 
-async def read_detect_process_output():
-    """Read and process output from detect.py subprocess"""
-    global detect_process, latest_behavior_data, device_mac
+# async def read_detect_process_output():
+#     """Read and process output from detect.py subprocess"""
+#     global detect_process, latest_behavior_data, device_mac
     
-    if not detect_process:
-        logger.error("detect_process is not initialized")
-        return
+#     if not detect_process:
+#         logger.error("detect_process is not initialized")
+#         return
     
-    logger.info("Started monitoring detect.py output (stdout)")
+#     logger.info("Started monitoring detect.py output (stdout)")
     
+#     try:
+#         while True:
+#             # Check if process is still running
+#             if detect_process.poll() is not None:
+#                 logger.warning(f"detect.py process terminated with code {detect_process.returncode}")
+#                 break
+            
+#             # Read line from stdout
+#             line = await asyncio.get_event_loop().run_in_executor(
+#                 None, detect_process.stdout.readline
+#             )
+            
+#             if line:
+#                 line = line.strip()
+                
+#                 # Check if it's a behavior data message
+#                 if line.startswith("BEHAVIOR_DATA:"):
+#                     try:
+#                         json_str = line.replace("BEHAVIOR_DATA:", "", 1)
+#                         behavior_message = json.loads(json_str)
+                        
+#                         # Update latest behavior data
+#                         latest_behavior_data = behavior_message
+                        
+#                         logger.info(f"Behavior Event: {behavior_message.get('type')} - {behavior_message.get('message')}")
+                        
+#                         # Save to Firebase
+#                         if device_mac:
+#                             db_helper.save_behavior_to_firebase(device_mac, behavior_message)
+#                         else:
+#                             logger.warning("Cannot save behavior event - device MAC not available")
+                        
+#                     except json.JSONDecodeError as e:
+#                         logger.error(f"Failed to parse behavior data: {e}")
+#                         logger.error(f"Raw line: {line}")
+#                     except Exception as e:
+#                         logger.error(f"Error processing behavior data: {e}", exc_info=True)
+            
+#             await asyncio.sleep(0.01)  # Small delay to prevent CPU spinning
+            
+#     except Exception as e:
+#         logger.error(f"Error reading detect process stdout: {e}", exc_info=True)
+#     finally:
+#         logger.info("Stopped monitoring detect.py output")
+#         model_service.update_device_status(status="offline")
+#         logger.info("Device status updated to offline")
+
+async def watchdog():
+    """Monitor detect thread and restart if it crashes"""
+    global detect_process, monitor_task
+
+    logger.info("Watchdog started - monitoring detect thread")
+
+    while not stop_event.is_set():
+        await asyncio.sleep(5)  # Check every 5 seconds
+
+        if stop_event.is_set():
+            break
+
+        if detect_process is not None and not detect_process.is_alive():
+            logger.warning("Detect thread crashed! Restarting...")
+
+            # Cancel old monitor task
+            if monitor_task:
+                monitor_task.cancel()
+                try:
+                    await monitor_task
+                except asyncio.CancelledError:
+                    pass
+
+            # Clear queue
+            while not behavior_queue.empty():
+                try:
+                    behavior_queue.get_nowait()
+                except queue.Empty:
+                    break
+
+            # Reset stop event in case it was set
+            stop_event.clear()
+
+            # Start new detect thread
+            detect_process = threading.Thread(
+                target=detect_main,
+                daemon=True,
+                name="detect-thread"
+            )
+            detect_process.start()
+            logger.info(f"Detect thread restarted: {detect_process.name}")
+
+            # Restart monitor task
+            monitor_task = asyncio.create_task(read_behavior_queue())
+            logger.info("Behavior queue monitor restarted")
+
+            if device_mac:
+                model_service.update_device_status(status="online")
+                logger.info("Device status updated to online after watchdog restart")
+
+    logger.info("Watchdog stopped")
+
+async def read_behavior_queue():
+    global latest_behavior_data, device_mac
+
+    logger.info("Started monitoring behavior queue")
+
     try:
         while True:
-            # Check if process is still running
-            if detect_process.poll() is not None:
-                logger.warning(f"detect.py process terminated with code {detect_process.returncode}")
-                break
-            
-            # Read line from stdout
-            line = await asyncio.get_event_loop().run_in_executor(
-                None, detect_process.stdout.readline
-            )
-            
-            if line:
-                line = line.strip()
-                
-                # Check if it's a behavior data message
-                if line.startswith("BEHAVIOR_DATA:"):
-                    try:
-                        json_str = line.replace("BEHAVIOR_DATA:", "", 1)
-                        behavior_message = json.loads(json_str)
-                        
-                        # Update latest behavior data
-                        latest_behavior_data = behavior_message
-                        
-                        logger.info(f"Behavior Event: {behavior_message.get('type')} - {behavior_message.get('message')}")
-                        
-                        # Save to Firebase
-                        if device_mac:
-                            db_helper.save_behavior_to_firebase(device_mac, behavior_message)
-                        else:
-                            logger.warning("Cannot save behavior event - device MAC not available")
-                        
-                    except json.JSONDecodeError as e:
-                        logger.error(f"Failed to parse behavior data: {e}")
-                        logger.error(f"Raw line: {line}")
-                    except Exception as e:
-                        logger.error(f"Error processing behavior data: {e}", exc_info=True)
-            
-            await asyncio.sleep(0.01)  # Small delay to prevent CPU spinning
-            
+            try:
+                payload = behavior_queue.get_nowait()
+
+                latest_behavior_data = payload
+
+                logger.info(f"Behavior Event: {payload.get('type')} - {payload.get('message')}")
+
+                if device_mac:
+                    db_helper.save_behavior_to_firebase(device_mac, payload)
+                else:
+                    logger.warning("Cannot save behavior - device MAC not available")
+
+            except queue.Empty:
+                pass  # No data yet, try again next loop
+
+            await asyncio.sleep(0.01)
+
     except Exception as e:
-        logger.error(f"Error reading detect process stdout: {e}", exc_info=True)
+        logger.error(f"Error reading behavior queue: {e}", exc_info=True)
     finally:
-        logger.info("Stopped monitoring detect.py output")
+        logger.info("Stopped monitoring behavior queue")
         model_service.update_device_status(status="offline")
-        logger.info("Device status updated to offline")
 
 
 async def read_detect_process_stderr():
@@ -154,6 +221,7 @@ async def read_detect_process_stderr():
     try:
         while True:
             if detect_process.poll() is not None:
+                logger.warning(f"detect.py process terminated with code {detect_process.returncode}")
                 break
             
             line = await asyncio.get_event_loop().run_in_executor(
@@ -190,7 +258,33 @@ async def read_detect_process_stderr():
 
 @app.on_event("startup")
 async def startup_event():
-    global detect_process, monitor_task, stderr_task, device_mac
+    global detect_process, monitor_task, stderr_task, device_mac, watchdog_task
+
+    utils.print_banner(logger)
+    logger.info("=" * 80)
+    logger.info("SafeDriver Monitoring System Starting...")
+    logger.info("=" * 80)
+
+    # ============================================================================
+    # END LOGGING CONFIGURATION
+    # ============================================================================
+
+    # Suppress TensorFlow messages
+    os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+    logger.info("Initializing Firebase Admin SDK")
+    try:
+        # Check if Firebase app is already initialized
+        firebase_admin.get_app()
+        logger.info("Firebase Admin SDK already initialized")
+    except ValueError:
+        # Initialize Firebase if not already done
+        cred = credentials.Certificate(utils.resource_path("firebase-admin-sdk/serviceAccountKey.json"))  # safe-driver-system-b3da24192be1
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
+        })
+        logger.info("Firebase Admin SDK initialized successfully")
 
     logger.info("=" * 80)
     logger.info("SafeDriver Backend Starting...")
@@ -235,26 +329,51 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Failed to check device registration: {e}", exc_info=True)
 
-    # Path to the same Python executable used by the current venv
-    venv_python = sys.executable  
+    venv_python = sys.executable
+
+    # if getattr(sys, 'frozen', False):
+    #     base_dir = os.path.dirname(sys.executable)
+    #     if sys.platform == "win32":
+    #         venv_python = os.path.join(base_dir, "python-3.10.9-embed-amd64", "python.exe")
+    #     else:
+    #         venv_python = os.path.join(base_dir, "python-3.10.9-embed-amd64", "python")
+    # else:
+    #     venv_python = sys.executable
+
     logger.info(f"Using Python executable: {venv_python}")
 
     try:
         # Start detect.py with stdout and stderr piped
-        detect_process = subprocess.Popen(
-            [venv_python, "-c", "from model.detect import main; main()"],
-            cwd=os.path.dirname(os.path.abspath(__file__)),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,  # Text mode for automatic line handling
-            bufsize=1  # Line buffered
+        # detect_process = subprocess.Popen(
+        #     [venv_python, "-c", "from model.detect import main; main()"],
+        #     cwd=os.path.dirname(os.path.abspath(__file__)),
+        #     stdout=subprocess.PIPE,
+        #     stderr=subprocess.PIPE,
+        #     universal_newlines=True,  # Text mode for automatic line handling
+        #     bufsize=1  # Line buffered
+        # )
+        # logger.info(f"Started detect.py with PID: {detect_process.pid}")
+
+        detect_process = threading.Thread(
+            target=detect_main,
+            daemon=True,
+            name="detect-thread"
         )
-        logger.info(f"Started detect.py with PID: {detect_process.pid}")
+        detect_process.start()
+        logger.info(f"Started detect thread: {detect_process.name}")
         
         # Start monitoring tasks
-        monitor_task = asyncio.create_task(read_detect_process_output())
-        stderr_task = asyncio.create_task(read_detect_process_stderr())
+        # monitor_task = asyncio.create_task(read_detect_process_output())
+        # stderr_task = asyncio.create_task(read_detect_process_stderr())
+
+        monitor_task = asyncio.create_task(read_behavior_queue())
+
         logger.info("Started output monitoring tasks")
+
+        # ── Start watchdog ──────────────────────────────────────────────
+        # watchdog_task = asyncio.create_task(watchdog())
+        # logger.info("Watchdog started")
+        # ───────────────────────────────────────────────────────────────
 
         model_service.update_device_status(status="online")
         logger.info("Device status updated to online")
@@ -266,45 +385,89 @@ async def startup_event():
             logger.info("Device status updated to offline")
 
 
+# @app.on_event("shutdown")
+# async def shutdown_event():
+#     global detect_process, monitor_task, stderr_task, device_mac
+    
+#     logger.info("Shutting down SafeDriver Backend")
+    
+#     # Cancel monitoring tasks
+#     if monitor_task:
+#         monitor_task.cancel()
+#         try:
+#             await monitor_task
+#         except asyncio.CancelledError:
+#             logger.info("Stdout monitoring task cancelled")
+    
+#     if stderr_task:
+#         stderr_task.cancel()
+#         try:
+#             await stderr_task
+#         except asyncio.CancelledError:
+#             logger.info("Stderr monitoring task cancelled")
+    
+#     # Stop detect.py when the API shuts down
+#     if detect_process:
+#         try:
+#             detect_process.terminate()
+#             detect_process.wait(timeout=5)
+#             logger.info("Stopped detect.py successfully")
+#         except Exception as e:
+#             logger.error(f"Error stopping detect.py: {e}", exc_info=True)
+#             detect_process.kill()  # Force kill if terminate fails
+    
+#     # Update device status to inactive
+#     if device_mac:
+#         try:
+#             model_service.update_device_status(status="offline")
+#             logger.info("Device status updated to offline")
+#         except Exception as e:
+#             logger.error(f"Failed to update device status: {e}")
+
 @app.on_event("shutdown")
 async def shutdown_event():
-    global detect_process, monitor_task, stderr_task, device_mac
-    
+    global detect_process, monitor_task, device_mac, watchdog_task
+
     logger.info("Shutting down SafeDriver Backend")
-    
-    # Cancel monitoring tasks
+
+    stop_event.set()
+
+        # Cancel watchdog first
+    if watchdog_task:
+        watchdog_task.cancel()
+        try:
+            await watchdog_task
+        except asyncio.CancelledError:
+            logger.info("Watchdog task cancelled")
+
     if monitor_task:
         monitor_task.cancel()
         try:
             await monitor_task
         except asyncio.CancelledError:
-            logger.info("Stdout monitoring task cancelled")
-    
-    if stderr_task:
-        stderr_task.cancel()
-        try:
-            await stderr_task
-        except asyncio.CancelledError:
-            logger.info("Stderr monitoring task cancelled")
-    
-    # Stop detect.py when the API shuts down
-    if detect_process:
-        try:
-            detect_process.terminate()
-            detect_process.wait(timeout=5)
-            logger.info("Stopped detect.py successfully")
-        except Exception as e:
-            logger.error(f"Error stopping detect.py: {e}", exc_info=True)
-            detect_process.kill()  # Force kill if terminate fails
-    
-    # Update device status to inactive
+            logger.info("Monitor task cancelled")
+
+    if detect_process and detect_process.is_alive():
+        detect_process.join(timeout=3)  # wait 3 seconds
+        
+        if detect_process.is_alive():
+            logger.warning("Detect thread still alive - force stopping camera...")
+            force_stop()  # ← force release camera so cap.read() unblocks
+            detect_process.join(timeout=3)  # wait again
+            
+            if detect_process.is_alive():
+                logger.warning("Detect thread did not stop - continuing shutdown")
+            else:
+                logger.info("Detect thread stopped after force stop")
+        else:
+            logger.info("Detect thread stopped successfully")
+
     if device_mac:
         try:
             model_service.update_device_status(status="offline")
             logger.info("Device status updated to offline")
         except Exception as e:
             logger.error(f"Failed to update device status: {e}")
-
 
 @app.get("/")
 def root():
@@ -485,76 +648,165 @@ def update_specific_configuration(
         }
 
 
+# @app.post("/process/restart")
+# async def restart_detection_process():
+#     """Restart the detection process to apply configuration changes"""
+#     global detect_process, monitor_task, stderr_task, device_mac
+    
+#     try:
+#         logger.info("Restarting detection process to apply configuration changes...")
+        
+#         # Stop current process
+#         if monitor_task:
+#             monitor_task.cancel()
+#             try:
+#                 await monitor_task
+#             except asyncio.CancelledError:
+#                 logger.info("Stdout monitoring task cancelled")
+        
+#         if stderr_task:
+#             stderr_task.cancel()
+#             try:
+#                 await stderr_task
+#             except asyncio.CancelledError:
+#                 logger.info("Stderr monitoring task cancelled")
+        
+#         if detect_process:
+#             try:
+#                 detect_process.terminate()
+#                 detect_process.wait(timeout=5)
+#                 logger.info("Stopped detect.py process")
+#                 model_service.update_device_status(status="offline")
+#                 logger.info("Device status updated to offline")
+#             except Exception as e:
+#                 logger.error(f"Error stopping detect.py: {e}")
+#                 detect_process.kill()
+        
+#         # Start new process
+#         venv_python = sys.executable
+#         # detect_process = subprocess.Popen(
+#         #     [venv_python, "-c", "from model.detect import main; main()"],
+#         #     cwd=os.path.dirname(os.path.abspath(__file__)),
+#         #     stdout=subprocess.PIPE,
+#         #     stderr=subprocess.PIPE,
+#         #     universal_newlines=True,
+#         #     bufsize=1
+#         # )
+#         # model_service.update_device_status(status="restarting")
+#         # logger.info("Device status updated to restarting")
+
+#         # logger.info(f"Restarted detect.py with PID: {detect_process.pid}")
+        
+#         # # Start monitoring tasks
+#         # monitor_task = asyncio.create_task(read_behavior_queue())
+#         # stderr_task = asyncio.create_task(read_detect_process_stderr())
+#         # logger.info("Restarted output monitoring tasks")
+
+#         # model_service.update_device_status(status="online")
+#         # logger.info("Device status updated to online")
+
+#         detect_process = threading.Thread(
+#             target=detect_main,
+#             daemon=True,
+#             name="detect-thread"
+#         )
+#         detect_process.start()
+#         logger.info(f"Started detect thread: {detect_process.name}")
+        
+#         # Start monitoring tasks
+#         # monitor_task = asyncio.create_task(read_detect_process_output())
+#         stderr_task = asyncio.create_task(read_detect_process_stderr())
+
+#         monitor_task = asyncio.create_task(read_behavior_queue())
+
+#         logger.info("Started output monitoring tasks")
+
+#         model_service.update_device_status(status="online")
+#         logger.info("Device status updated to online")
+        
+#         return {
+#             "success": True,
+#             "message": "Detection process restarted successfully",
+#             "new_pid": detect_process.pid
+#         }
+        
+#     except Exception as e:
+#         logger.error(f"Error restarting detection process: {e}", exc_info=True)
+#         return {
+#             "success": False,
+#             "message": f"Failed to restart process: {str(e)}"
+#         }
+
 @app.post("/process/restart")
 async def restart_detection_process():
     """Restart the detection process to apply configuration changes"""
-    global detect_process, monitor_task, stderr_task, device_mac
-    
+    global detect_process, monitor_task, device_mac
+
     try:
-        logger.info("Restarting detection process to apply configuration changes...")
-        
-        # Stop current process
+        logger.info("Restarting detection process...")
+
+        # ── 1. Stop the queue monitor task ──────────────────────────────
         if monitor_task:
             monitor_task.cancel()
             try:
                 await monitor_task
             except asyncio.CancelledError:
-                logger.info("Stdout monitoring task cancelled")
-        
-        if stderr_task:
-            stderr_task.cancel()
+                logger.info("Monitor task cancelled")
+
+        # ── 2. Signal detect thread to stop ─────────────────────────────
+        stop_event.set()
+
+        if detect_process and detect_process.is_alive():
+            detect_process.join(timeout=10)  # Wait max 10 seconds
+            if detect_process.is_alive():
+                logger.warning("Detect thread did not stop in time")
+            else:
+                logger.info("Detect thread stopped")
+
+        model_service.update_device_status(status="offline")
+        logger.info("Device status updated to offline")
+
+        # ── 3. Clear stop flag and queue for fresh start ─────────────────
+        stop_event.clear()
+
+        # Clear any leftover data in queue
+        while not behavior_queue.empty():
             try:
-                await stderr_task
-            except asyncio.CancelledError:
-                logger.info("Stderr monitoring task cancelled")
-        
-        if detect_process:
-            try:
-                detect_process.terminate()
-                detect_process.wait(timeout=5)
-                logger.info("Stopped detect.py process")
-                model_service.update_device_status(status="offline")
-                logger.info("Device status updated to offline")
-            except Exception as e:
-                logger.error(f"Error stopping detect.py: {e}")
-                detect_process.kill()
-        
-        # Start new process
-        venv_python = sys.executable
-        detect_process = subprocess.Popen(
-            [venv_python, "-c", "from model.detect import main; main()"],
-            cwd=os.path.dirname(os.path.abspath(__file__)),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-            bufsize=1
-        )
+                behavior_queue.get_nowait()
+            except queue.Empty:
+                break
+
+        # ── 4. Start new detect thread ───────────────────────────────────
         model_service.update_device_status(status="restarting")
         logger.info("Device status updated to restarting")
 
-        logger.info(f"Restarted detect.py with PID: {detect_process.pid}")
-        
-        # Start monitoring tasks
-        monitor_task = asyncio.create_task(read_detect_process_output())
-        stderr_task = asyncio.create_task(read_detect_process_stderr())
-        logger.info("Restarted output monitoring tasks")
+        detect_process = threading.Thread(
+            target=detect_main,
+            daemon=True,
+            name="detect-thread"
+        )
+        detect_process.start()
+        logger.info(f"Started new detect thread: {detect_process.name}")
+
+        # ── 5. Restart queue monitor ─────────────────────────────────────
+        monitor_task = asyncio.create_task(read_behavior_queue())
+        logger.info("Restarted behavior queue monitor")
 
         model_service.update_device_status(status="online")
         logger.info("Device status updated to online")
-        
+
         return {
             "success": True,
             "message": "Detection process restarted successfully",
-            "new_pid": detect_process.pid
+            "thread_name": detect_process.name   # ← thread name instead of pid
         }
-        
+
     except Exception as e:
         logger.error(f"Error restarting detection process: {e}", exc_info=True)
         return {
             "success": False,
             "message": f"Failed to restart process: {str(e)}"
         }
-
 
 @app.put("/config/update-and-restart")
 async def update_configuration_and_restart(
