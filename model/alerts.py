@@ -7,6 +7,8 @@ from typing import Any, Callable, Dict, Optional, TextIO
 import config.config as config
 import model.utilmethods as utils
 
+from shared import behavior_queue
+
 
 ALERT_PRIORITY_ORDER = {
     "face_missing": 0,
@@ -168,8 +170,10 @@ class AlertManager:
         }
 
         try:
-            self.output_stream.write(f"BEHAVIOR_DATA:{json.dumps(payload)}\n")
-            self.output_stream.flush()
+            # self.output_stream.write(f"BEHAVIOR_DATA:{json.dumps(payload)}\n")
+            # self.output_stream.flush()
+            if behavior_data:
+                behavior_queue.put(payload)
         except Exception as exc:
             self.logger.error(f"Failed to send behavior data to parent: {exc}")
 

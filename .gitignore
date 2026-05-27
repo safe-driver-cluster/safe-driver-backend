@@ -1,5 +1,4 @@
 # Environments
-.env
 .venv
 env/
 venv/
@@ -21,3 +20,5 @@ firebase-admin-sdk/
 dist/
 build/
 venv_1/
+config.bat
+node_modules

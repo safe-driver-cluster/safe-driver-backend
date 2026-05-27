@@ -102,17 +102,42 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
         if not config.ENABLE_VOICE_ALERTS:
             return
 
+        # def _play_sound(text_inner):
+        #     filename = None
+        #     try:
+        #         # unique file name
+        #         filename = f"{label}.mp3"
+
+        #         # generate TTS
+        #         tts = gTTS(text=text_inner, lang='en')
+        #         tts.save(filename)
+
+        #         # play audio
+        #         pygame.mixer.music.load(utils.resource_path(filename))
+        #         pygame.mixer.music.play()
+
+        #         while pygame.mixer.music.get_busy():
+        #             pygame.time.Clock().tick(10)
+
+        #     except Exception as e:
+        #         print(f"[TTS Error] {e}")
+
+        #     finally:
+        #         try:
+        #             if filename and os.path.exists(filename):
+        #                 os.remove(utils.resource_path(filename))
+        #         except:
+        #             pass
+
         def _play_sound(text_inner):
             filename = None
             try:
-                # unique file name
-                filename = f"{label}.mp3"
+                app_dir = utils.get_app_dir()
+                filename = os.path.join(app_dir, f"{label}.mp3")
 
-                # generate TTS
                 tts = gTTS(text=text_inner, lang='en')
                 tts.save(filename)
 
-                # play audio
                 pygame.mixer.music.load(filename)
                 pygame.mixer.music.play()
 
