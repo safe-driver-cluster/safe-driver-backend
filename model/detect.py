@@ -19,6 +19,7 @@ from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
 
 import model.utilmethods as utils
+import utils.utils as util
 import config.config as config
 from model.alerts import AlertManager
 
@@ -26,6 +27,8 @@ import firebase_admin
 from firebase_admin import credentials, db
 
 import model.frame_detector as frame_detect
+
+from shared import stop_event
 
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
@@ -964,12 +967,23 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 'mouth_aspect_ratio': mouth_lower_down
             }
 
+def force_stop():
+    """Force release camera to unblock cap.read()"""
+    global current_cap
+    if current_cap is not None:
+        current_cap.release()
+        current_cap = None
 
 def run(model: str, num_faces: int,
         min_face_detection_confidence: float,
         min_face_presence_confidence: float, min_tracking_confidence: float,
         camera_id: int, width: int, height: int) -> None:
     """Continuously run inference on images acquired from the camera."""
+
+    # Force disable window when running as compiled exe & os is linux
+    # OpenCV windows must run on main thread - causes hang in threaded mode
+    if getattr(sys, 'frozen', False) and (sys.platform == "linux"):
+        config.ENABLE_WINDOW = False
     
     logger.info("=" * 80)
     logger.info("Starting SafeDriver Monitoring System...")
@@ -986,6 +1000,9 @@ def run(model: str, num_faces: int,
     # Initialize camera with Pi-safe fallback strategy.
     logger.info(f"Initializing camera {camera_id} (backend={CAMERA_BACKEND})...")
     cap, selected_camera_id, backend_name = create_camera_capture(camera_id, width, height)
+
+    global current_cap
+    current_cap = cap
 
     if cap is None:
         logger.error("Failed to open any camera using OpenCV or rpicam-vid fallback. Exiting...")
@@ -1052,6 +1069,8 @@ def run(model: str, num_faces: int,
     logger.info("Starting video processing loop...")
     logger.info("Press ESC to exit")
     
+    object_detector = None
+
     if config.ENABLE_OBJECT_DETECTION:
         object_detector = frame_detect.DetectorProcess()   #create once
 
@@ -1059,16 +1078,22 @@ def run(model: str, num_faces: int,
     detection_failures = 0
 
     try:
-        while cap.isOpened():
+        while cap.isOpened() and not stop_event.is_set():
             success, image = cap.read()
             frame_count += 1
             
             if not success:
+                
                 detection_failures += 1
                 logger.error(f"Failed to read frame {frame_count}")
+                
+                if stop_event.is_set():      # ← add this check
+                    logger.info("Stop event set - exiting camera loop")
+                    break
+                
                 if detection_failures > 10:
                     logger.error("Too many consecutive frame read failures, exiting...")
-                    sys.exit(config.CAMERA_ERROR_MSG)
+                    break
                 continue
             
             detection_failures = 0
@@ -1187,20 +1212,19 @@ def run(model: str, num_faces: int,
                         
                         cv2.addWeighted(overlay, config.METRICS_BG_OPACITY, 
                                       current_frame, 1 - config.METRICS_BG_OPACITY, 0, current_frame)
-                        
+
                         # Display metrics
                         metrics_data = [
                             (config.LABEL_PERCLOS.format(behavior_data['perclos']), config.PERCLOS_Y_OFFSET),
                             (config.LABEL_BLINKS.format(behavior_data['blinks_per_min']), config.BLINKS_Y_OFFSET),
-                            (config.LABEL_CLOSURES.format(behavior_data['closure_count']), config.CLOSURES_Y_OFFSET),
+                            (config.LABEL_CLOSURES.format(config.EYE_CLOSURE_FREQ_WIN, behavior_data['closure_count']), config.CLOSURES_Y_OFFSET),
                             (config.LABEL_YAWNS.format(behavior_data['yawn_count']), config.YAWNS_Y_OFFSET),
                             (config.LABEL_MICROSLEEPS.format(behavior_data['microsleep_count']), config.MICROSLEEPS_Y_OFFSET),
                             (config.LABEL_DROWSY_EVENTS.format(behavior_data['drowsy_count']), config.DROWSY_EVENTS_Y_OFFSET),
                             (config.LABEL_HEAD_POSE.format( behavior_data.get('head_pose', {}).get('direction', 'N/A')), config.HEAD_POSE_Y_OFFSET),
                             ('EAR : {:.2f}'.format(behavior_data['eye_aspect_ratio']), 180),
                             ('MAR : {:.2f}'.format(behavior_data['mouth_aspect_ratio']), 210)
-                        ]
-                        
+                                                                            ]
                         for text, y_offset in metrics_data:
                             cv2.putText(current_frame, text,
                                        (config.LEFT_MARGIN, config.ROW_SIZE + y_offset),
@@ -1325,24 +1349,71 @@ def run(model: str, num_faces: int,
         logger.info("Cleaning up resources...")
         logger.info(f"Total frames processed: {frame_count}")
         logger.info(f"Final stats - Yawns: {YAWN_COUNT}, Microsleeps: {MICROSLEEP_COUNT}, Drowsy Events: {DROWSY_COUNT}")
+
+        # ← Stop object detector explicitly before anything else
+        if object_detector is not None:
+            try:
+                object_detector.stop()
+                logger.info("Object detector stopped")
+            except Exception as e:
+                logger.warning(f"Error stopping object detector: {e}")
         
         detector.close()
         cap.release()
         if config.ENABLE_WINDOW:
-            cv2.destroyAllWindows()
+            try:
+                cv2.destroyAllWindows()
+            except Exception as e:
+                logger.warning(f"Could not destroy windows: {e}")
         
         logger.info("SafeDriver Monitoring System stopped successfully")
         logger.info("=" * 80)
 
 
 def main():
+
+    # ============================================================================
+    # FIREBASE INITIALIZATION
+    # ============================================================================
+
+    logger.info("=" * 80)
+    logger.info("SafeDriver Monitoring System Detector Starting...")
+    logger.info("=" * 80)
+
+    logger.info("Initializing Firebase Admin SDK in detect.py...")
+    try:
+        # Check if Firebase app is already initialized
+        firebase_admin.get_app()
+        logger.info("Firebase Admin SDK already initialized in detect.py")
+    except ValueError:
+        # Initialize Firebase if not already done
+        cred = credentials.Certificate(util.resource_path("firebase-admin-sdk/serviceAccountKey.json")) #safe-driver-system-b3da24192be1
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
+        })
+        logger.info("Firebase Admin SDK initialized successfully in detect.py")
+
+    # Import firestore_helper after Firebase is initialized
+    from database.firestore_helper import firestore_helper
+    logger.info("Imported firestore_helper module successfully in detect.py")
+
+    # ============================================================================
+    # GLOBAL VARIABLES AND CONSTANTS
+    # ============================================================================
+
+    # load configurations
+    utils.get_model_configurations(logger)
+
+    # Log configuration on startup
+    utils.log_config(logger)
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '--model',
         help='Name of face landmarker model.',
         required=False,
-        default='model/face_landmarker.task')
+        default=util.resource_path('model/face_landmarker.task'))
     parser.add_argument(
         '--numFaces',
         help='Max number of faces that can be detected by the landmarker.',
@@ -1382,7 +1453,7 @@ def main():
         type=int,
         default=480)
     
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     run(args.model, args.numFaces, args.minFaceDetectionConfidence,
         args.minFacePresenceConfidence, args.minTrackingConfidence,
