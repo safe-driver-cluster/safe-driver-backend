@@ -161,9 +161,8 @@ def beep_success():
 
 
 def wait_for_finger(sensor, timeout=10):
-    """Wait for finger image read for up to timeout seconds."""
-    start_time = time.time()
-    while (time.time() - start_time) < timeout:
+    """Wait for finger image read"""
+    while True:
         if sensor.readImage():
             return True
         time.sleep(0.1)
@@ -204,35 +203,37 @@ def match_fingerprint():
             announce('Wrong password for fingerprint sensor.')
             return False
 
-        announce('Sensor connected successfully!', speak=False)
-        announce('Place finger for verification.')
+        announce('Fingerprint Sensor connected successfully!', speak=True, beep=False)
+        announce('Place finger for driver verification.')
 
-        if not wait_for_finger(sensor, timeout=10):
-            announce('Timeout. Finger not placed.')
-            return False
+        while True:
+            if not wait_for_finger(sensor, timeout=0):
+                announce('Timeout. Finger not placed.')
+                return False
 
-        sensor.convertImage(0x01)
-        result = sensor.searchTemplate()
-        position = result[0]
-        accuracy = result[1]
+            sensor.convertImage(0x01)
+            result = sensor.searchTemplate()
+            position = result[0]
+            accuracy = result[1]
 
-        if position >= 0:
-            scanner_id = get_scanner_id()
-            template_fingerprint_id = build_fingerprint_template_id(scanner_id, position)
+            if position >= 0:
+                scanner_id = get_scanner_id()
+                template_fingerprint_id = build_fingerprint_template_id(scanner_id, position)
 
-            # Machine-readable line for integrating with APIs/Firebase update flow.
-            print(
-                f'FINGERPRINT_MATCH: scanner_id= {scanner_id} | template_position= {position} | accuracy= {accuracy} | template_id= {template_fingerprint_id}'
-            )
+                # Machine-readable line for integrating with APIs/Firebase update flow.
+                print(
+                    f'FINGERPRINT_MATCH: scanner_id= {scanner_id} | template_position= {position} | accuracy= {accuracy} | template_id= {template_fingerprint_id}'
+                )
 
-            beep_success()
-            announce(
-                f'Fingerprint matched successfully.'
-            )
-            return True
-
-        announce('No fingerprint match found.')
-        return False
+                beep_success()
+                announce(
+                    f'Fingerprint matched successfully.'
+                )
+                continue
+            else:
+                announce('No match found. Please try again.')
+                continue
+            
 
     except Exception as e:
         announce('Fingerprint matching failed.')
