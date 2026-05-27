@@ -160,3 +160,6 @@ WINDOWS
 pyinstaller --onefile --name safedriverapp --add-data "config;config" --add-data "model;model" --add-data "service;service" --add-data "utils;utils" --add-data ".env;." --add-data "banner.txt;." --add-data "shared.py;shared.py" --add-data "database;database" --add-data "firebase-admin-sdk;firebase-admin-sdk" run.py
 
 pyinstaller --onefile --name safedriverapp --add-data "model/face_landmarker.task;model" --add-data "model/yolov8n.pt;model" --add-data "model/cigarette_model.pt;model" --add-data "model/glasses_model.pt;model" --add-data ".env;." --add-data "banner.txt;." --add-data "firebase-admin-sdk;firebase-admin-sdk" run.py
+
+RASPBARRY
+pyinstaller --onefile --name safedriverapp --add-data "model/face_landmarker.task:model" --add-data "model/yolov8n.pt:model" --add-data "model/cigarette_model.pt:model" --add-data "model/glasses_model.pt:model" --add-data ".env:." --add-data "banner.txt:." --add-data "firebase-admin-sdk:firebase-admin-sdk" run.py
