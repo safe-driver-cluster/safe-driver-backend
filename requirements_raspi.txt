@@ -97,3 +97,4 @@ urllib3==2.5.0
 uvicorn==0.38.0
 
 python-dotenv==1.2.1
+pyfingerprint==1.5
