@@ -5,6 +5,7 @@ import tempfile
 from pathlib import Path
 from pyfingerprint.pyfingerprint import PyFingerprint
 from time import sleep
+from database.firestore_helper import FirestoreHelper
 
 try:
     from gtts import gTTS
@@ -14,6 +15,7 @@ except Exception:
 buzzer = None
 buzzer_checked = False
 
+firestore_helper = FirestoreHelper()
 
 def _get_buzzer():
     """Initialize GPIO buzzer only when needed."""
@@ -238,6 +240,57 @@ def enroll_fingerprint():
     # If LED color command exists, implement here
 
     return True
+
+def enroll_fingerprint_with_id(driver_id: str):
+    payload = None
+    announce('Starting fingerprint enrollment...')
+
+    # Step 1: Turn LED blue (ready)
+    announce('Ready for first scan.')
+    # If LED color command exists, implement here
+    
+    # Step 2: Wait for first finger
+    announce('Place finger for first scan.')
+    if not wait_for_finger(5):
+        announce('Timeout. Finger not placed.')
+        return payload
+
+    # Step 3: Convert image to characteristics
+    f.convertImage(0x01)
+    beep_success()
+    announce('First scan successful!')
+
+    # Step 4: Ask for second scan
+    announce('Please place the same finger again for second scan.')
+    # Step 5: Turn LED Orange
+    announce('Second scan in progress.', speak=False)
+    # If LED color command exists, implement here
+
+    if not wait_for_finger(5):
+        announce('Timeout. Finger not placed.')
+        return payload
+
+    # Step 6: Convert image to characteristics
+    f.convertImage(0x02)
+
+    # Step 7: Compare characteristics
+    if f.compareCharacteristics() == 0:
+        announce('Fingerprints do not match. Operation dismissed.')
+        return payload
+
+    # Step 8: Create template
+    positionNumber = f.storeTemplate()
+    announce(f'Second scan successful. Fingerprint enrolled successfully! Template position: {positionNumber}')
+    beep_success()
+
+    # Step 9: Save template_id to firestore
+    payload = firestore_helper.register_driver_fingerprint(driver_id=driver_id, template_position=positionNumber)
+
+    # Step 10: Turn LED back to Blue
+    announce('Enrollment complete.')
+    # If LED color command exists, implement here
+
+    return payload
 
 # -------------------------------
 # Execute enrollment

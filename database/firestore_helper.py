@@ -9,6 +9,7 @@ import config.config as config
 import cv2
 import inspect
 from google.cloud.firestore_v1.base_query import FieldFilter
+import fingerprint.utils as fp_utils
 
 logger = logging.getLogger(__name__)
 
@@ -227,6 +228,7 @@ class FirestoreHelper:
                 payload['fingerprint_id'] = fingerprint_data
 
             template_id = None
+            scanner_id = fp_utils.get_scanner_id() if scanner_id is None else scanner_id
             if scanner_id is not None and template_position is not None:
                 template_position = int(template_position)
                 template_id = self.build_fingerprint_template_id(scanner_id, template_position)

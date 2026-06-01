@@ -8,6 +8,9 @@ import hashlib
 from pathlib import Path
 from pyfingerprint.pyfingerprint import PyFingerprint
 from time import sleep
+from database.firestore_helper import FirestoreHelper
+firestore_helper = FirestoreHelper()
+
 
 try:
     from gtts import gTTS
@@ -229,6 +232,13 @@ def match_fingerprint():
                 announce(
                     f'Fingerprint matched successfully.'
                 )
+
+                driver_id = firestore_helper.get_driver_by_fingerprint(scanner_id=scanner_id, template_position=position)
+                if driver_id:
+                    announce(f'Welcome back, driver {driver_id}!')
+                else:
+                    announce('Fingerprint matched but no associated driver found. Please try again.')
+
                 continue
             else:
                 announce('No match found. Please try again.')
@@ -242,9 +252,12 @@ def match_fingerprint():
         return False
 
 
-if __name__ == '__main__':
+def main():
     success = match_fingerprint()
     if success:
         announce('Fingerprint verification completed successfully.')
     else:
         announce('Fingerprint verification failed or dismissed.')
+
+if __name__ == '__main__':
+    main()

@@ -9,6 +9,8 @@ import service.model_service as model_service
 from database import db_helper
 from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
 import utils.utils as utils
+import config.config as config
+
 
 import firebase_admin
 from firebase_admin import credentials, db
@@ -18,6 +20,11 @@ import threading
 from shared import behavior_queue, stop_event
 from model.detect import main as detect_main
 from model.detect import force_stop
+
+import fingerprint.enroll as enroll
+import fingerprint.live as live
+
+from fingerprint.live import main as live_main
 
 
 # ============================================================================
@@ -85,6 +92,7 @@ stderr_task = None
 device_mac = None
 current_cap = None
 watchdog_task = None
+fingerprint_live = None
 
 # Store latest behavior data in memory
 latest_behavior_data = {
@@ -284,7 +292,7 @@ async def read_detect_process_stderr():
 
 @app.on_event("startup")
 async def startup_event():
-    global detect_process, monitor_task, stderr_task, device_mac, watchdog_task
+    global detect_process, monitor_task, stderr_task, device_mac, watchdog_task, fingerprint_live
 
     utils.print_banner(logger)
     logger.info("=" * 80)
@@ -372,13 +380,14 @@ async def startup_event():
         # )
         # logger.info(f"Started detect.py with PID: {detect_process.pid}")
 
-        detect_process = threading.Thread(
-            target=detect_main,
-            daemon=True,
-            name="detect-thread"
-        )
-        detect_process.start()
-        logger.info(f"Started detect thread: {detect_process.name}")
+        if config.ENABLE_DETECTION:
+            detect_process = threading.Thread(
+                target=detect_main,
+                daemon=True,
+                name="detect-thread"
+            )
+            detect_process.start()
+            logger.info(f"Started detect thread: {detect_process.name}")
         
         # Start monitoring tasks
         # monitor_task = asyncio.create_task(read_detect_process_output())
@@ -395,6 +404,15 @@ async def startup_event():
 
         model_service.update_device_status(status="online")
         logger.info("Device status updated to online")
+
+        # FINGERPRINT ENROLLMENT TEST
+        fingerprint_live = threading.Thread(
+            target=live_main,
+            daemon=True,
+            name="fingerprint-live-thread"
+        )
+        fingerprint_live.start()
+        logger.info(f"Started fingerprint live thread: {fingerprint_live.name}")
         
     except Exception as e:
         logger.error(f"Failed to start detect.py: {e}", exc_info=True)
@@ -857,8 +875,6 @@ async def update_configuration_and_restart(
         if not result['success']:
             return result
         
-        # Update local configuration
-        import config.config as config
         setattr(config, config_name, processed_value)
         logger.info(f"Updated local configuration {config_name} = {processed_value}")
         
@@ -991,6 +1007,20 @@ async def update_vehicle_registration_number(vehicle_reg_no: str):
         
     except Exception as e:
         logger.error(f"Error updating vehicle registration number for MAC {device_mac}: {e}")
+        return {
+            'success': False,
+            'message': str(e)
+        }
+
+# Calling for enroll fingerprint when receive an external request
+@app.post("/fingerprint/enroll")
+async def enroll_fingerprint_for_driver(driver_id: str):
+    """Enroll a fingerprint for a specific driver."""
+    try:
+        result = enroll.enroll_fingerprint_with_id(driver_id)
+        return result
+    except Exception as e:
+        logger.error(f"Error enrolling fingerprint for driver {driver_id}: {e}")
         return {
             'success': False,
             'message': str(e)
