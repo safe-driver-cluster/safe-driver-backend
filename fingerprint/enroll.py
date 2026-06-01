@@ -2,6 +2,7 @@ import time
 import subprocess
 import shutil
 import tempfile
+import logging
 from pathlib import Path
 from pyfingerprint.pyfingerprint import PyFingerprint
 from time import sleep
@@ -16,6 +17,7 @@ buzzer = None
 buzzer_checked = False
 
 firestore_helper = FirestoreHelper()
+logger = logging.getLogger(__name__)
 
 def _get_buzzer():
     """Initialize GPIO buzzer only when needed."""
@@ -144,7 +146,7 @@ def _play_audio_file(file_path):
 
 
 def announce(message, speak=True, beep=False):
-    print(message)
+    logger.info(message)
     if speak:
         _speak_message(message)
     if beep:
@@ -251,7 +253,7 @@ def enroll_fingerprint_with_id(driver_id: str):
     
     # Step 2: Wait for first finger
     announce('Place finger for first scan.')
-    if not wait_for_finger(5):
+    if not wait_for_finger(10):
         announce('Timeout. Finger not placed.')
         return payload
 
@@ -266,7 +268,7 @@ def enroll_fingerprint_with_id(driver_id: str):
     announce('Second scan in progress.', speak=False)
     # If LED color command exists, implement here
 
-    if not wait_for_finger(5):
+    if not wait_for_finger(10):
         announce('Timeout. Finger not placed.')
         return payload
 

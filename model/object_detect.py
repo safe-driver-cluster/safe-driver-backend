@@ -1,6 +1,10 @@
 from ultralytics import YOLO
 import cv2
 import time
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 prev_time = 0
 frame_count = 0
@@ -49,7 +53,7 @@ while True:
                                 cv2.FONT_HERSHEY_SIMPLEX,
                                 0.5, (0,255,0), 2)
 
-                    print(f"{label} detected: {conf:.2f}")
+                    logger.info(f"{label} detected: {conf:.2f}")
 
     # -------------------------------
     # 2. CIGARETTE DETECTION
@@ -72,7 +76,7 @@ while True:
                                 cv2.FONT_HERSHEY_SIMPLEX,
                                 0.5, (0,0,255), 2)
 
-                    print("Cigarette detected!")
+                    logger.info("Cigarette detected!")
 
     # -------------------------------
     # 3. GLASSES DETECTION
@@ -114,7 +118,7 @@ while True:
                                 cv2.FONT_HERSHEY_SIMPLEX,
                                 0.5, (255,0,0), 2)
 
-                    print("Glasses detected!")
+                    logger.info("Glasses detected!")
                     detected = True
 
         # 👉 If not detected → use center zoom (your idea 🔥)
@@ -147,7 +151,7 @@ while True:
                                     cv2.FONT_HERSHEY_SIMPLEX,
                                     0.5, (255,0,0), 2)
 
-                        print("Glasses detected (zoom)!")
+                        logger.info("Glasses detected (zoom)!")
 
     # -------------------------------
     # FPS CALCULATION

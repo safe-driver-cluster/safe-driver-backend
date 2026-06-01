@@ -5,12 +5,13 @@ import tempfile
 import os
 import socket
 import hashlib
+import logging
 from pathlib import Path
 from pyfingerprint.pyfingerprint import PyFingerprint
 from time import sleep
 from database.firestore_helper import FirestoreHelper
 firestore_helper = FirestoreHelper()
-
+logger = logging.getLogger(__name__)
 
 try:
     from gtts import gTTS
@@ -145,7 +146,7 @@ def _speak_message(message):
 
 
 def announce(message, speak=True, beep=False):
-    print(message)
+    logger.info(message)
     if speak:
         _speak_message(message)
     if beep:
@@ -224,7 +225,7 @@ def match_fingerprint():
                 template_fingerprint_id = build_fingerprint_template_id(scanner_id, position)
 
                 # Machine-readable line for integrating with APIs/Firebase update flow.
-                print(
+                logger.info(
                     f'FINGERPRINT_MATCH: scanner_id= {scanner_id} | template_position= {position} | accuracy= {accuracy} | template_id= {template_fingerprint_id}'
                 )
 
@@ -235,7 +236,8 @@ def match_fingerprint():
 
                 driver_id = firestore_helper.get_driver_by_fingerprint(scanner_id=scanner_id, template_position=position)
                 if driver_id:
-                    announce(f'Welcome back, driver {driver_id}!')
+                    driver_name = firestore_helper.get_driver(driver_id).get('name', 'Unknown')
+                    announce(f'Welcome back, driver {driver_name}!')
                 else:
                     announce('Fingerprint matched but no associated driver found. Please try again.')
 

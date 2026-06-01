@@ -1,9 +1,11 @@
 import serial
 import pynmea2
+import logging
+logger = logging.getLogger(__name__)
 
 gps = serial.Serial("/dev/serial0", baudrate=9600, timeout=1)
 
-print("Reading GPS...")
+logger.info("Reading GPS...")
 
 while True:
     try:
@@ -19,10 +21,10 @@ while True:
             # convert knots → km/h
             speed_kmh = float(speed_knots) * 1.852 if speed_knots else 0
 
-            print("Latitude :", lat)
-            print("Longitude:", lng)
-            print("Speed    :", round(speed_kmh, 2), "km/h")
-            print("----------------------")
+            logger.info("Latitude :", lat)
+            logger.info("Longitude:", lng)
+            logger.info("Speed    :", round(speed_kmh, 2), "km/h")
+            logger.info("----------------------")
 
     except Exception:
         pass

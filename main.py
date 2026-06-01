@@ -23,9 +23,9 @@ from model.detect import force_stop
 
 import fingerprint.enroll as enroll
 import fingerprint.live as live
+import fingerprint.remove as remove
 
 from fingerprint.live import main as live_main
-
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -1018,6 +1018,20 @@ async def enroll_fingerprint_for_driver(driver_id: str):
     """Enroll a fingerprint for a specific driver."""
     try:
         result = enroll.enroll_fingerprint_with_id(driver_id)
+        return result
+    except Exception as e:
+        logger.error(f"Error enrolling fingerprint for driver {driver_id}: {e}")
+        return {
+            'success': False,
+            'message': str(e)
+        }
+
+# Calling for remove fingerprint when receive an external request
+@app.post("/fingerprint/remove")
+async def enroll_fingerprint_for_driver(driver_id: str | None = None, position:int | None = None, mac:str | None = None):
+    """Remove a fingerprint for a specific driver."""
+    try:
+        result = remove.delete_fingerprint(mac=mac, position=position, driver_id=driver_id)
         return result
     except Exception as e:
         logger.error(f"Error enrolling fingerprint for driver {driver_id}: {e}")

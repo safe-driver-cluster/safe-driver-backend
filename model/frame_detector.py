@@ -298,7 +298,7 @@ def detector_worker(frame_queue):
                                                 cv2.FONT_HERSHEY_SIMPLEX,
                                                 0.5, (255,0,0), 2)
 
-                                print("Glasses detected!")
+                                logger.info("Glasses detected!")
                                 detected = True
 
                     # 👉 If not detected → use center zoom (your idea 🔥)
@@ -332,7 +332,7 @@ def detector_worker(frame_queue):
                                                     cv2.FONT_HERSHEY_SIMPLEX,
                                                     0.5, (255,0,0), 2)
 
-                                    print("Glasses detected (zoom)!")
+                                    logger.info("Glasses detected (zoom)!")
 
                 # -------------------------------------------------------------------------------------
                 # SHOW FRAME

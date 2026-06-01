@@ -8,6 +8,14 @@ import hashlib
 from pathlib import Path
 from pyfingerprint.pyfingerprint import PyFingerprint
 from time import sleep
+import logging
+
+try:
+    from gtts import gTTS
+except Exception:
+    gTTS = None
+
+logger = logging.getLogger(__name__)
 
 _AUDIO_PLAYER = None
 
@@ -76,3 +84,98 @@ def _play_audio_file(file_path):
         return True
     except Exception:
         return False
+
+def _play_audio_beep():
+    """Try to play beep on system audio output (headphones/earbuds)."""
+    alsa_sample = Path('/usr/share/sounds/alsa/Front_Center.wav')
+
+    commands = []
+    if alsa_sample.exists():
+        commands.append(['paplay', str(alsa_sample)])
+        commands.append(['aplay', '-q', str(alsa_sample)])
+
+    commands.append(['speaker-test', '-q', '-t', 'sine', '-f', '1000', '-l', '1'])
+
+    for command in commands:
+        if shutil.which(command[0]) is None:
+            continue
+
+        try:
+            result = subprocess.run(
+                command,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=3,
+                check=False,
+            )
+            if result.returncode == 0:
+                return True
+        except Exception:
+            continue
+
+    return False
+
+
+def _speak_message(message):
+    """Speak a short message through the current audio output device."""
+    if gTTS is not None:
+        temp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as temp_file:
+                temp_path = temp_file.name
+
+            tts = gTTS(text=message, lang='en')
+            tts.save(temp_path)
+            if _play_audio_file(temp_path):
+                return True
+        except Exception:
+            pass
+        finally:
+            if temp_path:
+                try:
+                    Path(temp_path).unlink(missing_ok=True)
+                except Exception:
+                    pass
+
+    tts_commands = [
+        ['spd-say', '-w', message],
+        ['espeak', message],
+    ]
+
+    for command in tts_commands:
+        if shutil.which(command[0]) is None:
+            continue
+
+        try:
+            result = subprocess.run(
+                command,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=8,
+                check=False,
+            )
+            if result.returncode == 0:
+                return True
+        except Exception:
+            continue
+
+    return False
+
+
+def announce(message, speak=True, beep=False):
+    logger.info(message)
+    if speak:
+        _speak_message(message)
+    if beep:
+        beep_success()
+
+
+def beep_success():
+    if _play_audio_beep():
+        return
+
+    buzzer_device = _get_buzzer()
+    if buzzer_device is not None:
+        buzzer_device.on()
+        sleep(0.2)
+        buzzer_device.off()

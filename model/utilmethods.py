@@ -8,6 +8,9 @@ import os
 from gtts import gTTS
 from database.firestore_helper import firestore_helper
 import utils.utils as utils
+import logging
+logger = logging.getLogger(__name__)
+
 
 import pygame
 pygame.mixer.init()
@@ -88,14 +91,14 @@ def log_config(logger):
 #                     playsound(filename)
 #                 # os.remove(filename)
 #             except Exception as e:
-#                 print(f"[TTS Error] {e}")
+#                 logger.info(f"[TTS Error] {e}")
 
 #         # Run TTS in a separate thread
 #         t = threading.Thread(target=_play_sound, args=(message,))
 #         t.daemon = True  # ensures thread exits when main program exits
 #         t.start()
 #     except Exception as e:
-#         print(f"Error performing voice alert: {e}")
+#         logger.info(f"Error performing voice alert: {e}")
 
 def perform_voice_alerts(message, label="VOICE_ALERT"):
     try:
@@ -120,7 +123,7 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
         #             pygame.time.Clock().tick(10)
 
         #     except Exception as e:
-        #         print(f"[TTS Error] {e}")
+        #         logger.info(f"[TTS Error] {e}")
 
         #     finally:
         #         try:
@@ -145,7 +148,7 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
                     pygame.time.Clock().tick(10)
 
             except Exception as e:
-                print(f"[TTS Error] {e}")
+                logger.info(f"[TTS Error] {e}")
 
             finally:
                 try:
@@ -159,7 +162,7 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
         t.start()
 
     except Exception as e:
-        print(f"Error performing voice alert: {e}")
+        logger.info(f"Error performing voice alert: {e}")
 
 def get_model_configurations(logger):
     """Get model configurations from Firestore"""

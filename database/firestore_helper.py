@@ -297,7 +297,7 @@ class FirestoreHelper:
                     data = template_doc.to_dict() or {}
                     driver_id = data.get('driver_id')
                     if driver_id:
-                        logger.info(f"Driver found for template ID: {driver_id}")
+                        logger.info(f"Driver ID {driver_id} found!")
                         return driver_id
 
             drivers_ref = self.db.collection('drivers')
@@ -416,6 +416,29 @@ class FirestoreHelper:
             
         except Exception as e:
             logger.error(f"Error retrieving vehicle by device ID: {e}")
+            return None
+
+    def get_driver(self, driver_id: str) -> Optional[Dict]:
+        """
+        Retrieve driver information by driver ID from Firestore.
+        
+        Args:
+            driver_id (str): Driver ID to search for
+        """
+        try:
+            self._ensure_db_initialized()
+            driver_ref = self.db.collection('drivers').document(driver_id)
+            doc = driver_ref.get()
+            
+            if doc.exists:
+                logger.info(f"Driver found for driver ID {driver_id}")
+                return doc.to_dict()
+            else:
+                logger.info(f"No driver found for driver ID {driver_id}")
+                return None
+            
+        except Exception as e:
+            logger.error(f"Error retrieving driver by ID: {e}")
             return None
 
 # Create a singleton instance

@@ -5,6 +5,8 @@ import tempfile
 import os
 import socket
 import hashlib
+import logging
+
 from pathlib import Path
 from pyfingerprint.pyfingerprint import PyFingerprint
 from time import sleep
@@ -17,6 +19,7 @@ except Exception:
 
 buzzer = None
 buzzer_checked = False
+logger = logging.getLogger(__name__)
 
 
 def _get_buzzer():
@@ -143,7 +146,7 @@ def _speak_message(message):
 
 
 def announce(message, speak=True, beep=False):
-    print(message)
+    logger.info(message)
     if speak:
         _speak_message(message)
     if beep:
@@ -196,7 +199,7 @@ def match_fingerprint():
             template_fingerprint_id = utils.build_fingerprint_template_id(scanner_id, position)
 
             # Machine-readable line for integrating with APIs/Firebase update flow.
-            print(
+            logger.info(
                 f'FINGERPRINT_MATCH: scanner_id= {scanner_id} | template_position= {position} | accuracy= {accuracy} | template_id= {template_fingerprint_id}'
             )
 
