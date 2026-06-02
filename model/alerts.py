@@ -364,7 +364,7 @@ class AlertManager:
 
         if event_type == config.BEHAVIOR_MOBILE_USE:
             if level == 1:
-                return config.VOICE_ALERT_PHONE, "VOICE_ALERT_PHONE"
+                return config.VOICE_ALERT_PHONE_ENGLISH, "VOICE_ALERT_PHONE_ENGLISH"
             if level == 2:
                 return config.VOICE_ALERT_PHONE_L2, "VOICE_ALERT_PHONE_L2"
             if level == 3:
@@ -372,7 +372,7 @@ class AlertManager:
             
         if event_type == config.BEHAVIOR_SMOKING:
             if level == 1:
-                return config.VOICE_ALERT_SMOKING, "VOICE_ALERT_SMOKING"
+                return config.VOICE_ALERT_SMOKING_ENGLISH, "VOICE_ALERT_SMOKING_ENGLISH"
             if level == 2:
                 return config.VOICE_ALERT_SMOKING_L2, "VOICE_ALERT_SMOKING_L2"
             if level == 3:
@@ -380,7 +380,7 @@ class AlertManager:
 
         if event_type == config.BEHAVIOR_DRINKING:
             if level == 1:
-                return config.VOICE_ALERT_DRINKING, "VOICE_ALERT_DRINKING"
+                return config.VOICE_ALERT_DRINKING_ENGLISH, "VOICE_ALERT_DRINKING_ENGLISH"
             if level == 2:
                 return config.VOICE_ALERT_DRINKING_L2, "VOICE_ALERT_DRINKING_L2"
             if level == 3:
