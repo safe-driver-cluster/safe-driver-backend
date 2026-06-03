@@ -12,6 +12,8 @@ from time import sleep
 from database.firestore_helper import FirestoreHelper
 from database import db_helper
 from service.model_service import (get_mac_address)
+import config.config as config
+
 firestore_helper = FirestoreHelper()
 logger = logging.getLogger(__name__)
 
@@ -238,8 +240,12 @@ def match_fingerprint():
 
                 driver_id = firestore_helper.get_driver_by_fingerprint(scanner_id=scanner_id, template_position=position)
                 if driver_id:
-                    driver_name = firestore_helper.get_driver(driver_id).get('name', 'Unknown')
-                    announce(f'Welcome back, driver {driver_name}!')
+                    driver_obj = firestore_helper.get_driver(driver_id)
+                    driver_name = driver_obj.get('name', 'Unknown')
+                    driver_language = driver_obj.get('language', 'ENGLISH')
+
+                    # update configuration LANGUAGE
+                    config.LANGUAGE = driver_language
 
                     # check driver already assigend
                     current_driver = db_helper.get_assigned_driver(get_mac_address().upper())
@@ -254,6 +260,8 @@ def match_fingerprint():
                         # update assigned driver
                         db_helper.update_assigned_driver(None, get_mac_address().upper())
                         logger.info(f'Updated assigned driver to {None} for device {get_mac_address().upper()}')
+                    
+                    announce(f'Welcome back, driver {driver_name}!')
                     
                 else:
                     announce('Fingerprint matched but no associated driver found. Please try again.')

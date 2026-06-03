@@ -257,8 +257,17 @@ class AlertManager:
             voice_cooldown_ok = last_voice is None or (now_ts - last_voice) < config.VOICE_ALERT_COOLDOWN_SEC
 
             if buzzer_used >= config.MAXIMUM_BUZZER_ALERTS_PER_TYPE and allow_voice and voice_cooldown_ok and voice_used < config.MAXIMUM_VOICE_ALERTS_PER_TYPE:
+                
                 # voice_text = voice_message or message
-                voice_text, voice_label = self.get_voice_msg_by_level(event_type, level=voice_used + 1)
+                if(config.LANGUAGE == "ENGLISH"):
+                    voice_text, voice_label = self.get_voice_msg_by_level_english(event_type, level=voice_used + 1)
+                elif(config.LANGUAGE == "SINHALA"):
+                    voice_text, voice_label = self.get_voice_msg_by_level_sinhala(event_type, level=voice_used + 1)
+                elif(config.LANGUAGE == "TAMIL"):
+                    voice_text, voice_label = self.get_voice_msg_by_level_tamil(event_type, level=voice_used + 1)
+                else:
+                    voice_text, voice_label = self.get_voice_msg_by_level_english(event_type, level=voice_used + 1)
+                
                 if isinstance(voice_text, str) and voice_text.strip():
                     # check if previous voice performing
                     if self._voice_cycle_state["emitted"]:
@@ -291,7 +300,7 @@ class AlertManager:
                 self.last_buzzer_alert_time_by_type[policy_key] = now_ts
                 self._buzzer_cycle_state["emitted"] = True
     
-    def get_voice_msg_by_level(self, event_type: str, level: int) -> str:
+    def get_voice_msg_by_level_english(self, event_type: str, level: int) -> str:
         """Return appropriate voice message based on event type and severity level."""
 
         # Behavior Data Message Types
@@ -308,82 +317,276 @@ class AlertManager:
 
         if event_type == config.BEHAVIOR_DROWSY:
             if level == 1:
-                return config.VOICE_ALERT_DROWSY, "VOICE_ALERT_DROWSY"
+                return config.VOICE_ALERT_DROWSY_ENGLISH, "VOICE_ALERT_DROWSY_ENGLISH"
             if level == 2:
-                return config.VOICE_ALERT_DROWSY_L2, "VOICE_ALERT_DROWSY_L2"
+                return config.VOICE_ALERT_DROWSY_L2_ENGLISH, "VOICE_ALERT_DROWSY_L2_ENGLISH"
             if level == 3:
-                return config.VOICE_ALERT_DROWSY_L3, "VOICE_ALERT_DROWSY_L3"
+                return config.VOICE_ALERT_DROWSY_L3_ENGLISH, "VOICE_ALERT_DROWSY_L3_ENGLISH"
 
         if event_type == config.BEHAVIOR_DISTRACTION:
             if level == 1:
-                return config.VOICE_ALERT_DISTRACTION, "VOICE_ALERT_DISTRACTION"
+                return config.VOICE_ALERT_DISTRACTION_ENGLISH, "VOICE_ALERT_DISTRACTION_ENGLISH"
             if level == 2:
-                return config.VOICE_ALERT_DISTRACTION_L2, "VOICE_ALERT_DISTRACTION_L2"
+                return config.VOICE_ALERT_DISTRACTION_L2_ENGLISH, "VOICE_ALERT_DISTRACTION_L2_ENGLISH"
             if level == 3:
-                return config.VOICE_ALERT_DISTRACTION_L3, "VOICE_ALERT_DISTRACTION_L3"
+                return config.VOICE_ALERT_DISTRACTION_L3_ENGLISH, "VOICE_ALERT_DISTRACTION_L3_ENGLISH"
 
         if event_type == config.BEHAVIOR_HEAD_TURN:
             if level == 1:
-                return config.VOICE_ALERT_HEAD_TURN, "VOICE_ALERT_HEAD_TURN"
+                return config.VOICE_ALERT_HEAD_TURN_ENGLISH, "VOICE_ALERT_HEAD_TURN_ENGLISH"
             if level == 2:
-                return config.VOICE_ALERT_HEAD_TURN_L2, "VOICE_ALERT_HEAD_TURN_L2"
+                return config.VOICE_ALERT_HEAD_TURN_L2_ENGLISH, "VOICE_ALERT_HEAD_TURN_L2_ENGLISH"
             if level == 3:
-                return config.VOICE_ALERT_HEAD_TURN_L3, "VOICE_ALERT_HEAD_TURN_L3"
+                return config.VOICE_ALERT_HEAD_TURN_L3_ENGLISH, "VOICE_ALERT_HEAD_TURN_L3_ENGLISH"
 
         if event_type == config.BEHAVIOR_PERCLOS_REACHED:
             if level == 1:
-                return config.VOICE_ALERT_PERCLOS, "VOICE_ALERT_PERCLOS"
+                return config.VOICE_ALERT_PERCLOS_ENGLISH, "VOICE_ALERT_PERCLOS_ENGLISH"
             if level == 2:
-                return config.VOICE_ALERT_PERCLOS_L2, "VOICE_ALERT_PERCLOS_L2"
+                return config.VOICE_ALERT_PERCLOS_L2_ENGLISH, "VOICE_ALERT_PERCLOS_L2_ENGLISH"
             if level == 3:
-                return config.VOICE_ALERT_PERCLOS_L3, "VOICE_ALERT_PERCLOS_L3"
+                return config.VOICE_ALERT_PERCLOS_L3_ENGLISH, "VOICE_ALERT_PERCLOS_L3_ENGLISH"
 
         if event_type == config.BEHAVIOR_YAWN:
             if level == 1:
-                return config.VOICE_ALERT_YAWNING, "VOICE_ALERT_YAWNING"
+                return config.VOICE_ALERT_YAWNING_ENGLISH, "VOICE_ALERT_YAWNING_ENGLISH"
             if level == 2:
-                return config.VOICE_ALERT_YAWNING_L2, "VOICE_ALERT_YAWNING_L2"
+                return config.VOICE_ALERT_YAWNING_L2_ENGLISH, "VOICE_ALERT_YAWNING_L2_ENGLISH"
             if level == 3:
-                return config.VOICE_ALERT_YAWNING_L3, "VOICE_ALERT_YAWNING_L3"
+                return config.VOICE_ALERT_YAWNING_L3_ENGLISH, "VOICE_ALERT_YAWNING_L3_ENGLISH"
             
         if event_type == config.BEHAVIOR_MICROSLEEP:
             if level == 1:
-                return config.VOICE_ALERT_MICROSLEEP, "VOICE_ALERT_MICROSLEEP"
+                return config.VOICE_ALERT_MICROSLEEP_ENGLISH, "VOICE_ALERT_MICROSLEEP_ENGLISH"
             if level == 2:
-                return config.VOICE_ALERT_MICROSLEEP_L2, "VOICE_ALERT_MICROSLEEP_L2"
+                return config.VOICE_ALERT_MICROSLEEP_L2_ENGLISH, "VOICE_ALERT_MICROSLEEP_L2_ENGLISH"
             if level == 3:
-                return config.VOICE_ALERT_MICROSLEEP_L3, "VOICE_ALERT_MICROSLEEP_L3"
+                return config.VOICE_ALERT_MICROSLEEP_L3_ENGLISH, "VOICE_ALERT_MICROSLEEP_L3_ENGLISH"
 
         if event_type == config.BEHAVIOR_FREQUENT_CLOSURES:
             if level == 1:
-                return config.VOICE_ALERT_FREQUENT_CLOSURES, "VOICE_ALERT_FREQUENT_CLOSURES"
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_ENGLISH, "VOICE_ALERT_FREQUENT_CLOSURES_ENGLISH"
             if level == 2:
-                return config.VOICE_ALERT_FREQUENT_CLOSURES_L2, "VOICE_ALERT_FREQUENT_CLOSURES_L2"
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_L2_ENGLISH, "VOICE_ALERT_FREQUENT_CLOSURES_L2_ENGLISH"
             if level == 3:
-                return config.VOICE_ALERT_FREQUENT_CLOSURES_L3, "VOICE_ALERT_FREQUENT_CLOSURES_L3"
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_L3_ENGLISH, "VOICE_ALERT_FREQUENT_CLOSURES_L3_ENGLISH"
 
         if event_type == config.BEHAVIOR_MOBILE_USE:
             if level == 1:
                 return config.VOICE_ALERT_PHONE_ENGLISH, "VOICE_ALERT_PHONE_ENGLISH"
             if level == 2:
-                return config.VOICE_ALERT_PHONE_L2, "VOICE_ALERT_PHONE_L2"
+                return config.VOICE_ALERT_PHONE_L2_ENGLISH, "VOICE_ALERT_PHONE_L2_ENGLISH"
             if level == 3:
-                return config.VOICE_ALERT_PHONE_L3, "VOICE_ALERT_PHONE_L3"
+                return config.VOICE_ALERT_PHONE_L3_ENGLISH, "VOICE_ALERT_PHONE_L3_ENGLISH"
             
         if event_type == config.BEHAVIOR_SMOKING:
             if level == 1:
                 return config.VOICE_ALERT_SMOKING_ENGLISH, "VOICE_ALERT_SMOKING_ENGLISH"
             if level == 2:
-                return config.VOICE_ALERT_SMOKING_L2, "VOICE_ALERT_SMOKING_L2"
+                return config.VOICE_ALERT_SMOKING_L2_ENGLISH, "VOICE_ALERT_SMOKING_L2_ENGLISH"
             if level == 3:
-                return config.VOICE_ALERT_SMOKING_L3, "VOICE_ALERT_SMOKING_L3"
+                return config.VOICE_ALERT_SMOKING_L3_ENGLISH, "VOICE_ALERT_SMOKING_L3_ENGLISH"
 
         if event_type == config.BEHAVIOR_DRINKING:
             if level == 1:
                 return config.VOICE_ALERT_DRINKING_ENGLISH, "VOICE_ALERT_DRINKING_ENGLISH"
             if level == 2:
-                return config.VOICE_ALERT_DRINKING_L2, "VOICE_ALERT_DRINKING_L2"
+                return config.VOICE_ALERT_DRINKING_L2_ENGLISH, "VOICE_ALERT_DRINKING_L2_ENGLISH"
             if level == 3:
-                return config.VOICE_ALERT_DRINKING_L3, "VOICE_ALERT_DRINKING_L3"
+                return config.VOICE_ALERT_DRINKING_L3_ENGLISH, "VOICE_ALERT_DRINKING_L3_ENGLISH"
+
+        return config.VOICE_ALERT_DEFAULT, "VOICE_ALERT_DEFAULT"
+    
+    def get_voice_msg_by_level_sinhala(self, event_type: str, level: int) -> str:
+        """Return appropriate voice message based on event type and severity level."""
+
+        # Behavior Data Message Types
+        # BEHAVIOR_FREQUENT_CLOSURES = 'frequent_closures'
+        # BEHAVIOR_MICROSLEEP = 'microsleep'
+        # BEHAVIOR_YAWN = 'yawn'
+        # BEHAVIOR_DROWSY = 'drowsy'
+        # BEHAVIOR_PERCLOS_REACHED = 'perclos_threshold_reached'
+        # BEHAVIOR_DISTRACTION = 'distraction'
+        # BEHAVIOR_HEAD_TURN = "head_turn"
+        # BEHAVIOR_MOBILE_USE = 'mobile_use'
+        # BEHAVIOR_SMOKING = 'smoking'
+        # BEHAVIOR_DRINKING = 'drinking'
+
+        if event_type == config.BEHAVIOR_DROWSY:
+            if level == 1:
+                return config.VOICE_ALERT_DROWSY_SINHALA, "VOICE_ALERT_DROWSY_SINHALA"
+            if level == 2:
+                return config.VOICE_ALERT_DROWSY_L2_SINHALA, "VOICE_ALERT_DROWSY_L2_SINHALA"
+            if level == 3:
+                return config.VOICE_ALERT_DROWSY_L3_SINHALA, "VOICE_ALERT_DROWSY_L3_SINHALA"
+
+        if event_type == config.BEHAVIOR_DISTRACTION:
+            if level == 1:
+                return config.VOICE_ALERT_DISTRACTION_SINHALA, "VOICE_ALERT_DISTRACTION_SINHALA"
+            if level == 2:
+                return config.VOICE_ALERT_DISTRACTION_L2_SINHALA, "VOICE_ALERT_DISTRACTION_L2_SINHALA"
+            if level == 3:
+                return config.VOICE_ALERT_DISTRACTION_L3_SINHALA, "VOICE_ALERT_DISTRACTION_L3_SINHALA"
+
+        if event_type == config.BEHAVIOR_HEAD_TURN:
+            if level == 1:
+                return config.VOICE_ALERT_HEAD_TURN_SINHALA, "VOICE_ALERT_HEAD_TURN"
+            if level == 2:
+                return config.VOICE_ALERT_HEAD_TURN_L2_SINHALA, "VOICE_ALERT_HEAD_TURN_L2"
+            if level == 3:
+                return config.VOICE_ALERT_HEAD_TURN_L3_SINHALA, "VOICE_ALERT_HEAD_TURN_L3"
+
+        if event_type == config.BEHAVIOR_PERCLOS_REACHED:
+            if level == 1:
+                return config.VOICE_ALERT_PERCLOS_SINHALA, "VOICE_ALERT_PERCLOS_SINHALA"
+            if level == 2:
+                return config.VOICE_ALERT_PERCLOS_L2_SINHALA, "VOICE_ALERT_PERCLOS_L2_SINHALA"
+            if level == 3:
+                return config.VOICE_ALERT_PERCLOS_L3_SINHALA, "VOICE_ALERT_PERCLOS_L3_SINHALA"
+
+        if event_type == config.BEHAVIOR_YAWN:
+            if level == 1:
+                return config.VOICE_ALERT_YAWNING_SINHALA, "VOICE_ALERT_YAWNING_SINHALA"
+            if level == 2:
+                return config.VOICE_ALERT_YAWNING_L2_SINHALA, "VOICE_ALERT_YAWNING_L2_SINHALA"
+            if level == 3:
+                return config.VOICE_ALERT_YAWNING_L3_SINHALA, "VOICE_ALERT_YAWNING_L3_SINHALA"
+            
+        if event_type == config.BEHAVIOR_MICROSLEEP:
+            if level == 1:
+                return config.VOICE_ALERT_MICROSLEEP_SINHALA, "VOICE_ALERT_MICROSLEEP_SINHALA"
+            if level == 2:
+                return config.VOICE_ALERT_MICROSLEEP_L2_SINHALA, "VOICE_ALERT_MICROSLEEP_L2_SINHALA"
+            if level == 3:
+                return config.VOICE_ALERT_MICROSLEEP_L3_SINHALA, "VOICE_ALERT_MICROSLEEP_L3_SINHALA"
+
+        if event_type == config.BEHAVIOR_FREQUENT_CLOSURES:
+            if level == 1:
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_SINHALA, "VOICE_ALERT_FREQUENT_CLOSURES_SINHALA"
+            if level == 2:
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_L2_SINHALA, "VOICE_ALERT_FREQUENT_CLOSURES_L2_SINHALA"
+            if level == 3:
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_L3_SINHALA, "VOICE_ALERT_FREQUENT_CLOSURES_L3_SINHALA"
+
+        if event_type == config.BEHAVIOR_MOBILE_USE:
+            if level == 1:
+                return config.VOICE_ALERT_PHONE_SINHALA, "VOICE_ALERT_PHONE_SINHALA"
+            if level == 2:
+                return config.VOICE_ALERT_PHONE_L2_SINHALA, "VOICE_ALERT_PHONE_L2_SINHALA"
+            if level == 3:
+                return config.VOICE_ALERT_PHONE_L3_SINHALA, "VOICE_ALERT_PHONE_L3_SINHALA"
+            
+        if event_type == config.BEHAVIOR_SMOKING:
+            if level == 1:
+                return config.VOICE_ALERT_SMOKING_SINHALA, "VOICE_ALERT_SMOKING_SINHALA"
+            if level == 2:
+                return config.VOICE_ALERT_SMOKING_L2_SINHALA, "VOICE_ALERT_SMOKING_L2_SINHALA"
+            if level == 3:
+                return config.VOICE_ALERT_SMOKING_L3_SINHALA, "VOICE_ALERT_SMOKING_L3_SINHALA"
+
+        if event_type == config.BEHAVIOR_DRINKING:
+            if level == 1:
+                return config.VOICE_ALERT_DRINKING_SINHALA, "VOICE_ALERT_DRINKING_SINHALA"
+            if level == 2:
+                return config.VOICE_ALERT_DRINKING_L2_SINHALA, "VOICE_ALERT_DRINKING_L2_SINHALA"
+            if level == 3:
+                return config.VOICE_ALERT_DRINKING_L3_SINHALA, "VOICE_ALERT_DRINKING_L3_SINHALA"
+
+        return config.VOICE_ALERT_DEFAULT, "VOICE_ALERT_DEFAULT"
+    
+    def get_voice_msg_by_level_tamil(self, event_type: str, level: int) -> str:
+        """Return appropriate voice message based on event type and severity level."""
+
+        # Behavior Data Message Types
+        # BEHAVIOR_FREQUENT_CLOSURES = 'frequent_closures'
+        # BEHAVIOR_MICROSLEEP = 'microsleep'
+        # BEHAVIOR_YAWN = 'yawn'
+        # BEHAVIOR_DROWSY = 'drowsy'
+        # BEHAVIOR_PERCLOS_REACHED = 'perclos_threshold_reached'
+        # BEHAVIOR_DISTRACTION = 'distraction'
+        # BEHAVIOR_HEAD_TURN = "head_turn"
+        # BEHAVIOR_MOBILE_USE = 'mobile_use'
+        # BEHAVIOR_SMOKING = 'smoking'
+        # BEHAVIOR_DRINKING = 'drinking'
+
+        if event_type == config.BEHAVIOR_DROWSY:
+            if level == 1:
+                return config.VOICE_ALERT_DROWSY_TAMIL, "VOICE_ALERT_DROWSY_TAMIL"
+            if level == 2:
+                return config.VOICE_ALERT_DROWSY_L2_TAMIL, "VOICE_ALERT_DROWSY_L2_TAMIL"
+            if level == 3:
+                return config.VOICE_ALERT_DROWSY_L3_TAMIL, "VOICE_ALERT_DROWSY_L3_TAMIL"
+
+        if event_type == config.BEHAVIOR_DISTRACTION:
+            if level == 1:
+                return config.VOICE_ALERT_DISTRACTION_TAMIL, "VOICE_ALERT_DISTRACTION_TAMIL"
+            if level == 2:
+                return config.VOICE_ALERT_DISTRACTION_L2_TAMIL, "VOICE_ALERT_DISTRACTION_L2_TAMIL"
+            if level == 3:
+                return config.VOICE_ALERT_DISTRACTION_L3_TAMIL, "VOICE_ALERT_DISTRACTION_L3_TAMIL"
+
+        if event_type == config.BEHAVIOR_HEAD_TURN:
+            if level == 1:
+                return config.VOICE_ALERT_HEAD_TURN_TAMIL, "VOICE_ALERT_HEAD_TURN_TAMIL"
+            if level == 2:
+                return config.VOICE_ALERT_HEAD_TURN_L2_TAMIL, "VOICE_ALERT_HEAD_TURN_L2_TAMIL"
+            if level == 3:
+                return config.VOICE_ALERT_HEAD_TURN_L3_TAMIL, "VOICE_ALERT_HEAD_TURN_L3_TAMIL"
+
+        if event_type == config.BEHAVIOR_PERCLOS_REACHED:
+            if level == 1:
+                return config.VOICE_ALERT_PERCLOS_TAMIL, "VOICE_ALERT_PERCLOS_TAMIL"
+            if level == 2:
+                return config.VOICE_ALERT_PERCLOS_L2_TAMIL, "VOICE_ALERT_PERCLOS_L2_TAMIL"
+            if level == 3:
+                return config.VOICE_ALERT_PERCLOS_L3_TAMIL, "VOICE_ALERT_PERCLOS_L3_TAMIL"
+
+        if event_type == config.BEHAVIOR_YAWN:
+            if level == 1:
+                return config.VOICE_ALERT_YAWNING_TAMIL, "VOICE_ALERT_YAWNING_TAMIL"
+            if level == 2:
+                return config.VOICE_ALERT_YAWNING_L2_TAMIL, "VOICE_ALERT_YAWNING_L2_TAMIL"
+            if level == 3:
+                return config.VOICE_ALERT_YAWNING_L3_TAMIL, "VOICE_ALERT_YAWNING_L3_TAMIL"
+            
+        if event_type == config.BEHAVIOR_MICROSLEEP:
+            if level == 1:
+                return config.VOICE_ALERT_MICROSLEEP_TAMIL, "VOICE_ALERT_MICROSLEEP_TAMIL"
+            if level == 2:
+                return config.VOICE_ALERT_MICROSLEEP_L2_TAMIL, "VOICE_ALERT_MICROSLEEP_L2_TAMIL"
+            if level == 3:
+                return config.VOICE_ALERT_MICROSLEEP_L3_TAMIL, "VOICE_ALERT_MICROSLEEP_L3_TAMIL"
+
+        if event_type == config.BEHAVIOR_FREQUENT_CLOSURES:
+            if level == 1:
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_TAMIL, "VOICE_ALERT_FREQUENT_CLOSURES_TAMIL"
+            if level == 2:
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_L2_TAMIL, "VOICE_ALERT_FREQUENT_CLOSURES_L2_TAMIL"
+            if level == 3:
+                return config.VOICE_ALERT_FREQUENT_CLOSURES_L3_TAMIL, "VOICE_ALERT_FREQUENT_CLOSURES_L3_TAMIL"
+
+        if event_type == config.BEHAVIOR_MOBILE_USE:
+            if level == 1:
+                return config.VOICE_ALERT_PHONE_TAMIL, "VOICE_ALERT_PHONE_TAMIL"
+            if level == 2:
+                return config.VOICE_ALERT_PHONE_L2_TAMIL, "VOICE_ALERT_PHONE_L2_TAMIL"
+            if level == 3:
+                return config.VOICE_ALERT_PHONE_L3_TAMIL, "VOICE_ALERT_PHONE_L3_TAMIL"
+            
+        if event_type == config.BEHAVIOR_SMOKING:
+            if level == 1:
+                return config.VOICE_ALERT_SMOKING_TAMIL, "VOICE_ALERT_SMOKING_TAMIL"
+            if level == 2:
+                return config.VOICE_ALERT_SMOKING_L2_TAMIL, "VOICE_ALERT_SMOKING_L2_TAMIL"
+            if level == 3:
+                return config.VOICE_ALERT_SMOKING_L3_TAMIL, "VOICE_ALERT_SMOKING_L3_TAMIL"
+
+        if event_type == config.BEHAVIOR_DRINKING:
+            if level == 1:
+                return config.VOICE_ALERT_DRINKING_TAMIL, "VOICE_ALERT_DRINKING_TAMIL"
+            if level == 2:
+                return config.VOICE_ALERT_DRINKING_L2_TAMIL, "VOICE_ALERT_DRINKING_L2_TAMIL"
+            if level == 3:
+                return config.VOICE_ALERT_DRINKING_L3_TAMIL, "VOICE_ALERT_DRINKING_L3_TAMIL"
 
         return config.VOICE_ALERT_DEFAULT, "VOICE_ALERT_DEFAULT"

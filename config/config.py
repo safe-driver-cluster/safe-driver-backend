@@ -7,7 +7,7 @@ VERSION_NO = "1.0.0"
 # 'en' for English
 # 'si' for Sinhala (සිංහල)
 # 'ta' for Tamil (தமிழ்)
-LANGUAGE = 'en'
+LANGUAGE = 'ENGLISH'
 
 # Drowsiness Detection Thresholds
 EYE_CLOSED_THRESH = 0.60
