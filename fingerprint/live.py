@@ -240,6 +240,8 @@ def match_fingerprint():
                 if driver_id:
                     driver_name = firestore_helper.get_driver(driver_id).get('name', 'Unknown')
                     announce(f'Welcome back, driver {driver_name}!')
+
+                    # check driver already assigend
                     
                     # update assigned driver
                     db_helper.update_assigned_driver(driver_id, get_mac_address().upper())
