@@ -14,8 +14,8 @@ EYE_CLOSED_THRESH = 0.60
 EYE_PARTIAL_THRESH = 0.40
 MICROSLEEP_SEC = 1.5
 PERCLOS_WIN_SEC = 60.0
-PERCLOS_DROWSY = 0.20
-EYE_CLOSURE_FREQ_WIN = 15.0
+PERCLOS_DROWSY = 0.50
+EYE_CLOSURE_FREQ_WIN = 25.0
 EYE_CLOSURE_FREQ_THRESH = 4
 MIN_CLOSURE_DURATION = 0.4
 BLINK_MAX_DURATION = 0.4
@@ -212,6 +212,8 @@ CAMERA_ERROR_MSG = 'ERROR: Unable to read from webcam. Please verify your webcam
 
 ENABLE_WINDOW = True  # Set to False to disable cv2.imshow (for headless environments)
 ENABLE_DETECTION = True  # Set to False to disable all detection (for performance testing)
+ENABLE_FINGERPRINT = False  # Set to False to disable fingerprinting (for performance testing)
+ENABLE_GPS = False  # Set to False to disable GPS location retrieval (for performance testing)
 
 # =================================================================================================================================
 # MULTILINGUAL CONFIGURATIONS
