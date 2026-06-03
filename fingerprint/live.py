@@ -10,6 +10,8 @@ from pathlib import Path
 from pyfingerprint.pyfingerprint import PyFingerprint
 from time import sleep
 from database.firestore_helper import FirestoreHelper
+from database import db_helper
+from service.model_service import (get_mac_address)
 firestore_helper = FirestoreHelper()
 logger = logging.getLogger(__name__)
 
@@ -238,6 +240,11 @@ def match_fingerprint():
                 if driver_id:
                     driver_name = firestore_helper.get_driver(driver_id).get('name', 'Unknown')
                     announce(f'Welcome back, driver {driver_name}!')
+                    
+                    # update assigned driver
+                    db_helper.update_assigned_driver(driver_id, get_mac_address().upper())
+                    logger.info(f'Updated assigned driver to {driver_id} for device {get_mac_address().upper()}')
+                    
                 else:
                     announce('Fingerprint matched but no associated driver found. Please try again.')
 
