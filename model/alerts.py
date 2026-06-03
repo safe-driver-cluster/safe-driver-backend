@@ -167,6 +167,7 @@ class AlertManager:
             "message": message,
             "time": event_time or self.now_provider(),
             "data": behavior_data or {},
+            "driver": "DRV003"
         }
 
         try:
