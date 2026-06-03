@@ -461,3 +461,26 @@ def check_vehicle_registration_by_mac(device_mac: str) -> bool:
     except Exception as e:
         logger.error(f"Error checking vehicle registration number for MAC {device_mac}: {e}")
         return False
+    
+# get assigned driver for a device from realtime database/devices/{device_mac}/assigned_driver
+def get_assigned_driver(device_mac: str) -> str:
+    """
+    Get the assigned driver for a device.
+    
+    Args:
+        device_mac (str): MAC address of the device"""
+    try:
+        ref = db.reference(f'devices/{device_mac}/assigned_driver')
+        
+        assigned_driver = ref.get()
+        
+        if assigned_driver is None or assigned_driver == '':
+            logger.warning(f"Assigned driver for device with MAC {device_mac} not found")
+            return ''
+        
+        logger.debug(f"Device {device_mac} assigned driver retrieved: {assigned_driver}")
+        return assigned_driver
+        
+    except Exception as e:
+        logger.error(f"Error retrieving assigned driver for MAC {device_mac}: {e}")
+        return ''

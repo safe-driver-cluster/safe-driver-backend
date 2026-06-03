@@ -179,7 +179,7 @@ except Exception as e:
     announce('Sensor initialization failed!')
     print('Exception:', e)
     _speak_message(f'Sensor initialization failed. {e}')
-    exit(1)
+    # exit(1)
 
 # -------------------------------
 # Function to wait for finger

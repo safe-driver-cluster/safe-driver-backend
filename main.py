@@ -359,6 +359,10 @@ async def startup_event():
             else:
                 logger.info(f"Vehicle registration number already set for device {device_mac}")
                 logger.info(f"Vehicle registration number for device {device_mac}: {db_helper.get_vehicle_reg_no(device_mac)}")
+
+                # get assigned driver id from realtime database using device_mac
+                assigned_driver_id = db_helper.get_assigned_driver(device_mac)
+                logger.info(f"Assigned driver ID for device {device_mac}: {assigned_driver_id}")
                 
     except Exception as e:
         logger.error(f"Failed to check device registration: {e}", exc_info=True)
