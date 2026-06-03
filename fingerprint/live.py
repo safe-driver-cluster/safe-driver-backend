@@ -260,8 +260,12 @@ def match_fingerprint():
                         # update assigned driver
                         db_helper.update_assigned_driver(None, get_mac_address().upper())
                         logger.info(f'Updated assigned driver to {None} for device {get_mac_address().upper()}')
+                    elif not current_driver:
+                        # update assigned driver
+                        db_helper.update_assigned_driver(driver_id, get_mac_address().upper())
+                        logger.info(f'Updated assigned driver to {driver_id} for device {get_mac_address().upper()}')
                     
-                    announce(f'Welcome back, driver {driver_name}!')
+                        announce(f'Welcome back, driver {driver_name}!')
                     
                 else:
                     announce('Fingerprint matched but no associated driver found. Please try again.')
