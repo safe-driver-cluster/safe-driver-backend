@@ -296,6 +296,7 @@ def save_behavior_to_firebase(mac: str, behavior_data: dict):
             'message': behavior_data.get('message'),
             'time': behavior_data.get('time', utils.now()),
             'number_plate': number_plate,
+            'driver': behavior_data.get('driver', ''),
         }
         
         # Save to latest

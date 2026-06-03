@@ -191,6 +191,7 @@ class FirestoreHelper:
                 'message': behavior_data.get('message'),
                 'time': behavior_data.get('time', utils.now()),
                 'number_plate':number_plate,
+                'driver': behavior_data.get('driver'),
             }
             doc_ref.set(alert_data)
             

@@ -8,7 +8,7 @@ from fingerprint.utils import (
     init_audio,
 )
 from database.firestore_helper import FirestoreHelper
-from service.model_service import (get_mac_address)
+from service.model_service import (get_mac_address_alternative)
 
 firestore_helper = FirestoreHelper()
 
@@ -28,7 +28,7 @@ def delete_fingerprint(
 
     Returns True on full success, False if any step failed.
     """
-    device_mac = get_mac_address()
+    device_mac = get_mac_address_alternative()
     if mac.upper() != device_mac.upper():
         announce(f"MAC address mismatch. Operation allowed only on device with MAC {device_mac}.")
         return False

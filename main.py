@@ -10,7 +10,7 @@ from database import db_helper
 from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
 import utils.utils as utils
 import config.config as config
-from service.model_service import (get_mac_address)
+from service.model_service import (get_mac_address_alternative)
 
 import firebase_admin
 from firebase_admin import credentials, db
@@ -365,8 +365,8 @@ async def startup_event():
                 logger.info(f"Assigned driver ID for device {device_mac}: {assigned_driver_id}")
 
                 # update assigned driver
-                db_helper.update_assigned_driver(None, get_mac_address().upper())
-                logger.info(f'Updated assigned driver to {None} for device {get_mac_address().upper()}')
+                db_helper.update_assigned_driver(None, get_mac_address_alternative().upper())
+                logger.info(f'Updated assigned driver to {None} for device {get_mac_address_alternative().upper()}')
                 
     except Exception as e:
         logger.error(f"Failed to check device registration: {e}", exc_info=True)
