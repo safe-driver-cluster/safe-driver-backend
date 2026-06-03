@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import subprocess
+import platform
 from dotenv import load_dotenv
 
 import numpy as np
@@ -29,6 +30,14 @@ from firebase_admin import credentials, db
 import model.frame_detector as frame_detect
 
 from shared import stop_event
+
+import warnings
+
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    module="google.protobuf.symbol_database"
+)
 
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
@@ -503,13 +512,13 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                         "face_lost": True,
                         "source": "face_missing",
                     },
-                    policy_key="face_missing",
+                    policy_key="distraction",
                     cycle_id=int(now * 1000),
                     current_count=face_missing_count,
                     threshold=config.FACE_MISSING_COUNT_THRESH,
                     send_cloud=True,
                     trigger_voice=True,
-                    voice_message=config.VOICE_ALERT_DISTRACTION,
+                    voice_message=config.VOICE_ALERT_DISTRACTION_ENGLISH,
                     trigger_buzzer=True,
                     buzzer_message=config.WARNING_DISTRACTION,
                     timeframe_count=timeframe_count,
@@ -599,7 +608,7 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                     threshold=config.HEAD_TURN_COUNT_THRESH,
                     send_cloud=True,
                     trigger_voice=True,
-                    voice_message=config.VOICE_ALERT_HEAD_TURN,
+                    voice_message=config.VOICE_ALERT_HEAD_TURN_ENGLISH,
                     trigger_buzzer=True,
                     buzzer_message=config.WARNING_HEAD_TURN,
                     timeframe_count=timeframe_count,
@@ -664,11 +673,11 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                     "perclos": perclos,
                     "time_window": config.PERCLOS_WIN_SEC
                 },
-                policy_key="drowsy",
+                policy_key="perclos_threshold_reached",
                 cycle_id=alert_cycle_id,
                 send_cloud=False,
                 trigger_voice=True,
-                voice_message=config.VOICE_ALERT_PERCLOS,
+                voice_message=config.VOICE_ALERT_PERCLOS_ENGLISH,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_PERCLOS,
                 timeframe_count=timeframe_count
@@ -725,7 +734,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 threshold=config.FREQUENT_CLOSURES_THRESH,
                 send_cloud=True,
                 trigger_voice=True,
-                voice_message=config.VOICE_ALERT_DROWSY,
+                voice_message=config.VOICE_ALERT_DROWSY_ENGLISH,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_FREQUENT_CLOSURES,
                 timeframe_count=timeframe_count
@@ -784,7 +793,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 threshold=config.MICROSLEEP_EVENT_COUNT_THRESH,
                 send_cloud=True,
                 trigger_voice=True,
-                voice_message=config.VOICE_ALERT_MICROSLEEP,
+                voice_message=config.VOICE_ALERT_MICROSLEEP_ENGLISH,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_MICROSLEEP,
                 timeframe_count=timeframe_count
@@ -828,7 +837,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                         threshold=config.YAWN_EVENT_COUNT_THRESH,
                         send_cloud=True,
                         trigger_voice=True,
-                        voice_message=config.VOICE_ALERT_YAWNING,
+                        voice_message=config.VOICE_ALERT_YAWNING_ENGLISH,
                         trigger_buzzer=True,
                         buzzer_message=config.WARNING_YAWNING,
                         timeframe_count=timeframe_count
@@ -869,7 +878,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 threshold=config.DROWSY_EVENT_COUNT_THRESH,
                 send_cloud=True,
                 trigger_voice=True,
-                voice_message=config.VOICE_ALERT_DROWSY,
+                voice_message=config.VOICE_ALERT_DROWSY_ENGLISH,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_DROWSY,
                 timeframe_count=timeframe_count
@@ -940,11 +949,11 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 tag="DISTRACTION_EVENT",
                 event_type=config.BEHAVIOR_DISTRACTION,
                 message=config.CONSOLE_DISTRACTION,
-                policy_key="head_turn",
+                policy_key="distraction",
                 cycle_id=int(time.time() * 1000),
                 send_cloud=False,
                 trigger_voice=True,
-                voice_message=config.VOICE_ALERT_DISTRACTION,
+                voice_message=config.VOICE_ALERT_DISTRACTION_ENGLISH,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_DISTRACTION,
                 timeframe_count=timeframe_count
@@ -997,20 +1006,33 @@ def run(model: str, num_faces: int,
     logger.info(f"Tracking confidence: {min_tracking_confidence}")
     logger.info("=" * 80)
 
-    # Initialize camera with Pi-safe fallback strategy.
-    logger.info(f"Initializing camera {camera_id} (backend={CAMERA_BACKEND})...")
-    cap, selected_camera_id, backend_name = create_camera_capture(camera_id, width, height)
+    system = platform.system().lower()
+    logger.info(f"Detected OS: {system}")
+
+    if system == "windows":
+        # Initialize camera
+        logger.info(f"Initializing camera {camera_id}...")
+        cap = cv2.VideoCapture(camera_id)
+
+        if not cap.isOpened():
+            logger.error(f"Failed to open camera {camera_id}")
+            sys.exit(config.CAMERA_ERROR_MSG)
+    else:
+        # Linux / Raspberry Pi
+        # Initialize camera with Pi-safe fallback strategy.
+        logger.info(f"Initializing camera {camera_id} (backend={CAMERA_BACKEND})...")
+        cap, selected_camera_id, backend_name = create_camera_capture(camera_id, width, height)
+
+        if cap is None:
+            logger.error("Failed to open any camera using OpenCV or rpicam-vid fallback. Exiting...")
+            sys.exit(config.CAMERA_ERROR_MSG)
+
+        logger.info(f"Camera opened with backend: {backend_name}")
+        if selected_camera_id != camera_id:
+            logger.info(f"Requested camera {camera_id} unavailable. Using camera {selected_camera_id}.")
 
     global current_cap
     current_cap = cap
-
-    if cap is None:
-        logger.error("Failed to open any camera using OpenCV or rpicam-vid fallback. Exiting...")
-        sys.exit(config.CAMERA_ERROR_MSG)
-
-    logger.info(f"Camera opened with backend: {backend_name}")
-    if selected_camera_id != camera_id:
-        logger.info(f"Requested camera {camera_id} unavailable. Using camera {selected_camera_id}.")
     
     actual_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     actual_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
