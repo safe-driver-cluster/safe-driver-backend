@@ -138,7 +138,14 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
                 app_dir = utils.get_app_dir()
                 filename = os.path.join(app_dir, f"{label}.mp3")
 
-                tts = gTTS(text=text_inner, lang='en')
+                if(config.LANGUAGE == "ENGLISH"):
+                    tts = gTTS(text=text_inner, lang='en')
+                elif(config.LANGUAGE == "SINHALA"):
+                    tts = gTTS(text=text_inner, lang='si')
+                elif(config.LANGUAGE == "TAMIL"):
+                    tts = gTTS(text=text_inner, lang='ta')
+                else:
+                    tts = gTTS(text=text_inner, lang='en')
                 tts.save(filename)
 
                 pygame.mixer.music.load(filename)
