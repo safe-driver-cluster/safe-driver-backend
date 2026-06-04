@@ -8,6 +8,7 @@ VERSION_NO = "1.0.0"
 # 'si' for Sinhala (සිංහල)
 # 'ta' for Tamil (தமிழ்)
 LANGUAGE = 'ENGLISH'
+SYSTEM = 'linux' # 'windows' or 'linux'
 
 # Drowsiness Detection Thresholds
 EYE_CLOSED_THRESH = 0.60

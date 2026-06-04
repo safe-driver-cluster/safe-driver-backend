@@ -21,7 +21,7 @@ from shared import behavior_queue, stop_event
 from model.detect import main as detect_main
 from model.detect import force_stop
 
-if(config.ENABLE_FINGERPRINT):
+if(config.ENABLE_FINGERPRINT and config.SYSTEM != 'windows'):
     import fingerprint.enroll as enroll
     import fingerprint.live as live
     import fingerprint.remove as remove
@@ -414,7 +414,7 @@ async def startup_event():
         logger.info("Device status updated to online")
 
         # FINGERPRINT ENROLLMENT TEST
-        if(config.ENABLE_FINGERPRINT):
+        if(config.ENABLE_FINGERPRINT and config.SYSTEM != 'windows'):
             fingerprint_live = threading.Thread(
                 target=live_main,
                 daemon=True,
