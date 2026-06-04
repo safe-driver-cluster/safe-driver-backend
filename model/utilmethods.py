@@ -157,12 +157,12 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
             except Exception as e:
                 logger.info(f"[TTS Error] {e}")
 
-            finally:
-                try:
-                    if filename and os.path.exists(filename):
-                        os.remove(filename)
-                except:
-                    pass
+            # finally:
+            #     try:
+            #         if filename and os.path.exists(filename):
+            #             os.remove(filename)
+            #     except:
+            #         pass
 
         t = threading.Thread(target=_play_sound, args=(message,))
         t.daemon = True
