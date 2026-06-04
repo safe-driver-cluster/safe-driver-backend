@@ -215,6 +215,16 @@ ENABLE_DETECTION = True  # Set to False to disable all detection (for performanc
 ENABLE_FINGERPRINT = False  # Set to False to disable fingerprinting (for performance testing)
 ENABLE_GPS = False  # Set to False to disable GPS location retrieval (for performance testing)
 
+# ======================================================
+# GPS CONFIGURATIONS
+# ======================================================
+
+DEVICE_ID = ""
+SPEED_LIMIT = 20.0
+SPEED_THRESHOLD = 2.0
+PUSH_INTERVAL = 5          # push every 5 seconds minimum
+SPEED_CHANGE_THRESHOLD = 3 # push immediately if speed changes by 3 km/h
+
 # =================================================================================================================================
 # MULTILINGUAL CONFIGURATIONS
 # =================================================================================================================================

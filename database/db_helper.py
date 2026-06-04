@@ -166,6 +166,8 @@ def update_device_status(mac: str, status: str) -> dict:
             'message': str(e)
         }
 
+# update gps to firebase realtime db
+
 
 def update_last_active(mac: str) -> dict:
     """
