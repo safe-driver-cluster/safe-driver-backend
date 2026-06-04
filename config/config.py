@@ -224,6 +224,7 @@ SPEED_LIMIT = 20.0
 SPEED_THRESHOLD = 2.0
 PUSH_INTERVAL = 5          # push every 5 seconds minimum
 SPEED_CHANGE_THRESHOLD = 3 # push immediately if speed changes by 3 km/h
+CURRENT_SPEED = 0.0
 
 # =================================================================================================================================
 # MULTILINGUAL CONFIGURATIONS

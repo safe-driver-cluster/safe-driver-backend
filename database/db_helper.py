@@ -167,7 +167,56 @@ def update_device_status(mac: str, status: str) -> dict:
         }
 
 # update gps to firebase realtime db
-
+def update_device_gps(mac: str, data: any) -> dict:
+    """
+    Update device GPS data.
+    
+    Args:
+        mac (str): MAC address of the device
+        latitude (float): Latitude value
+        longitude (float): Longitude value
+        speed (float): Speed value
+        
+    Returns:
+        dict: Update result
+    """
+    try:
+        ref = db.reference(f'devices/{mac}')
+        
+        # Check if device exists
+        device_data = ref.get()
+        
+        if device_data is None:
+            logger.warning(f"Device with MAC {mac} not found")
+            return {
+                'success': False,
+                'message': 'Device not found'
+            }
+        
+        # Update GPS data and last updated time
+        ref.update({
+            'gps': {
+                'latitude': data['latitude'],
+                'longitude': data['longitude'],
+                'speed': data['speed'],
+                'active_speed': data['active_speed'],
+                'timestamp': utils.now()
+            },
+            'last_updated_date_time': utils.now()
+        })
+        
+        return {
+            'success': True,
+            'mac': mac,
+            'message': 'GPS data updated successfully'
+        }
+        
+    except Exception as e:
+        logger.error(f"Error updating GPS data for MAC {mac}: {e}")
+        return {
+            'success': False,
+            'message': str(e)
+        }
 
 def update_last_active(mac: str) -> dict:
     """

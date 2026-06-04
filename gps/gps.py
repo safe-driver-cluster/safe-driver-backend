@@ -2,6 +2,8 @@ import serial
 import pynmea2
 import logging
 import time
+import config.config as config
+from service.model_service import (get_mac_address_alternative)
 from database.firestore_helper import FirestoreHelper
 from database import db_helper
 firestore_helper = FirestoreHelper()
@@ -40,31 +42,32 @@ while True:
             lng = msg.longitude
             speed_kmh = float(msg.spd_over_grnd) * 1.852 if msg.spd_over_grnd else 0.0
 
-            if speed_kmh < SPEED_THRESHOLD:
+            if speed_kmh < config.SPEED_THRESHOLD:
                 speed_kmh = 0.0
 
-            is_overspeeding = speed_kmh > SPEED_LIMIT
+            active_speed = speed_kmh > config.SPEED_LIMIT
             now = time.time()
 
             # Push if: 5 seconds passed OR speed changed significantly
-            speed_changed = abs(speed_kmh - last_speed) >= SPEED_CHANGE_THRESHOLD
-            time_elapsed = (now - last_push_time) >= PUSH_INTERVAL
+            speed_changed = abs(speed_kmh - last_speed) >= config.SPEED_CHANGE_THRESHOLD
+            time_elapsed = (now - last_push_time) >= config.PUSH_INTERVAL
 
             if time_elapsed or speed_changed:
                 data = {
-                    "lat": round(lat, 6),
-                    "lng": round(lng, 6),
-                    "speed_kmh": round(speed_kmh, 2),
-                    "is_overspeeding": is_overspeeding,
+                    "latitude": round(lat, 6),
+                    "longitude": round(lng, 6),
+                    "speed": round(speed_kmh, 2),
+                    "active_speed": active_speed,
                     "timestamp": int(now)
                 }
 
-                ref.update(data)
+                config.CURRENT_SPEED = round(speed_kmh, 2)
+                db_helper.update_device_gps(get_mac_address_alternative(), data)
 
                 last_push_time = now
                 last_speed = speed_kmh
 
-                if is_overspeeding:
+                if active_speed:
                     logger.warning(f"⚠️  OVERSPEED: {round(speed_kmh, 2)} km/h")
                 else:
                     logger.info(f"✅ Speed: {round(speed_kmh, 2)} km/h | Pushed to Firebase")
