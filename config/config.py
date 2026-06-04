@@ -307,7 +307,7 @@ VOICE_ALERT_FREQUENT_CLOSURES_L3_ENGLISH = 'Frequent eye closures detected! If y
 
 # Voice Alert Messages
 VOICE_ALERT_MICROSLEEP_SINHALA = 'සුළු මොහොතක නින්දක් (Microsleep) හඳුනාගෙන ඇත! කරුණාකර අවධානයෙන් සිටින්න.'
-VOICE_ALERT_YAWNING_SINHALA = 'හෑල්ලුම් යෑමක් (ඈනුම් ඇරීමක්) හඳුනාගෙන ඇත! කරුණාකර අවධානය යොමු කරන්න.'
+VOICE_ALERT_YAWNING_SINHALA = 'ඈනුම් යෑමක් හඳුනාගෙන ඇත! කරුණාකර අවධානය යොමු කරන්න.'
 VOICE_ALERT_DROWSY_SINHALA = 'නිදිමත ගතියක් හඳුනාගෙන ඇත! කරුණාකර සුළු විවේකයක් ගන්න.'
 VOICE_ALERT_DISTRACTION_SINHALA = 'රියදුරුගේ අවධානය ගිලිහී ඇති බව හඳුනාගෙන ඇත! කරුණාකර මාර්ගය වෙත අවධානය යොමු කරන්න.'
 VOICE_ALERT_HEAD_TURN_SINHALA = 'හිස හරවා බැලීමක් හඳුනාගෙන ඇත! කරුණාකර ඔබේ දෑස් මාර්ගය වෙතම යොමු කර තබාගන්න.'

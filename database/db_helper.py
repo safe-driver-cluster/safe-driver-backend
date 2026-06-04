@@ -348,6 +348,7 @@ def save_behavior_to_firebase(mac: str, behavior_data: dict):
             'time': behavior_data.get('time', utils.now()),
             'number_plate': number_plate,
             'driver': behavior_data.get('driver', ''),
+            'evidence': 'https://firebasestorage.googleapis.com/v0/b/safe-driver-system.firebasestorage.app/o/evidence%2Fman-driving-car-700x400.jpg?alt=media&token=5f3e2648-be8c-42e8-b69d-61988dce8cd1'
         }
         
         # Save to latest
