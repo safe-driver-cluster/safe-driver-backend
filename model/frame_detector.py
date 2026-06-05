@@ -346,7 +346,7 @@ def detector_worker(frame_queue):
     except KeyboardInterrupt:         # ← catch the interrupt cleanly
         logger.info("Object detection process interrupted - shutting down cleanly")
     except Exception as e:
-        logger.error(f"Detection process error: {e}", exc_info=True)
+        logger.info(f"Detection process error: {e}", exc_info=True)
     finally:
         logger.info("Object detection process stopped")
 
