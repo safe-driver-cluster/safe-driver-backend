@@ -116,7 +116,11 @@ def detector_worker(frame_queue):
         global frame_count
 
         while True:
-            frame = frame_queue.get()
+            try:
+                frame = frame_queue.get(timeout=5)
+            except queue.Empty:
+                logger.warning("Detector: no frame received for 5s, still waiting...")
+                continue
             now = time.time()
 
             if frame is None:
