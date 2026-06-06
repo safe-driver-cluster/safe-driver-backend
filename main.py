@@ -196,7 +196,7 @@ async def watchdog():
 
             # Start new detect thread
             detect_process = threading.Thread(
-                target=detect.main(),
+                target=detect.main,
                 daemon=True,
                 name="detect-thread"
             )
@@ -391,7 +391,7 @@ async def startup_event():
 
         if config.ENABLE_DETECTION:
             detect_process = threading.Thread(
-                target=detect.main(),
+                target=detect.main,
                 daemon=True,
                 name="detect-thread"
             )
@@ -827,7 +827,7 @@ async def restart_detection_process():
         logger.info("Device status updated to restarting")
 
         detect_process = threading.Thread(
-            target=detect.main(),
+            target=detect.main,
             daemon=True,
             name="detect-thread"
         )
