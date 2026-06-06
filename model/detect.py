@@ -73,41 +73,41 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ============================================================================
-# FIREBASE INITIALIZATION
-# ============================================================================
+# # ============================================================================
+# # FIREBASE INITIALIZATION
+# # ============================================================================
 
-logger.info("=" * 80)
-logger.info("SafeDriver Monitoring System Detector Starting...")
-logger.info("=" * 80)
+# logger.info("=" * 80)
+# logger.info("SafeDriver Monitoring System Detector Starting...")
+# logger.info("=" * 80)
 
-logger.info("Initializing Firebase Admin SDK in detect.py...")
-try:
-    # Check if Firebase app is already initialized
-    firebase_admin.get_app()
-    logger.info("Firebase Admin SDK already initialized in detect.py")
-except ValueError:
-    # Initialize Firebase if not already done
-    logger.info(f"Using Firebase Admin SDK path: {ADMIN_SDK_PATH}")
-    cred = credentials.Certificate(ADMIN_SDK_PATH) # safe-driver-system-b3da24192be1
-    firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
-    })
-    logger.info("Firebase Admin SDK initialized successfully in detect.py")
+# logger.info("Initializing Firebase Admin SDK in detect.py...")
+# try:
+#     # Check if Firebase app is already initialized
+#     firebase_admin.get_app()
+#     logger.info("Firebase Admin SDK already initialized in detect.py")
+# except ValueError:
+#     # Initialize Firebase if not already done
+#     logger.info(f"Using Firebase Admin SDK path: {ADMIN_SDK_PATH}")
+#     cred = credentials.Certificate(ADMIN_SDK_PATH) # safe-driver-system-b3da24192be1
+#     firebase_admin.initialize_app(cred, {
+#         'databaseURL': 'https://safe-driver-system-default-rtdb.firebaseio.com/'
+#     })
+#     logger.info("Firebase Admin SDK initialized successfully in detect.py")
 
-# Import firestore_helper after Firebase is initialized
-from database.firestore_helper import firestore_helper
-logger.info("Imported firestore_helper module successfully in detect.py")
+# # Import firestore_helper after Firebase is initialized
+# from database.firestore_helper import firestore_helper
+# logger.info("Imported firestore_helper module successfully in detect.py")
 
-# ============================================================================
-# GLOBAL VARIABLES AND CONSTANTS
-# ============================================================================
+# # ============================================================================
+# # GLOBAL VARIABLES AND CONSTANTS
+# # ============================================================================
 
-# load configurations
-utils.get_model_configurations(logger)
+# # load configurations
+# utils.get_model_configurations(logger)
 
-# Log configuration on startup
-utils.log_config(logger)
+# # Log configuration on startup
+# utils.log_config(logger)
 
 # Global variables to calculate FPS
 COUNTER, FPS = 0, 0
@@ -521,7 +521,7 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                     threshold=config.FACE_MISSING_COUNT_THRESH,
                     send_cloud=True,
                     trigger_voice=True,
-                    voice_message=config.VOICE_ALERT_DISTRACTION_ENGLISH,
+                    voice_message=config.VOICE_ALERT_DISTRACTION,
                     trigger_buzzer=True,
                     buzzer_message=config.WARNING_DISTRACTION,
                     timeframe_count=timeframe_count,
@@ -611,7 +611,7 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                     threshold=config.HEAD_TURN_COUNT_THRESH,
                     send_cloud=True,
                     trigger_voice=True,
-                    voice_message=config.VOICE_ALERT_HEAD_TURN_ENGLISH,
+                    voice_message=config.VOICE_ALERT_HEAD_TURN,
                     trigger_buzzer=True,
                     buzzer_message=config.WARNING_HEAD_TURN,
                     timeframe_count=timeframe_count,
@@ -680,7 +680,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 cycle_id=alert_cycle_id,
                 send_cloud=False,
                 trigger_voice=True,
-                voice_message=config.VOICE_ALERT_PERCLOS_ENGLISH,
+                voice_message=config.VOICE_ALERT_PERCLOS,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_PERCLOS,
                 timeframe_count=timeframe_count
@@ -737,7 +737,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 threshold=config.FREQUENT_CLOSURES_THRESH,
                 send_cloud=True,
                 trigger_voice=True,
-                voice_message=config.VOICE_ALERT_DROWSY_ENGLISH,
+                voice_message=config.VOICE_ALERT_DROWSY,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_FREQUENT_CLOSURES,
                 timeframe_count=timeframe_count
@@ -796,7 +796,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 threshold=config.MICROSLEEP_EVENT_COUNT_THRESH,
                 send_cloud=True,
                 trigger_voice=True,
-                voice_message=config.VOICE_ALERT_MICROSLEEP_ENGLISH,
+                voice_message=config.VOICE_ALERT_MICROSLEEP,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_MICROSLEEP,
                 timeframe_count=timeframe_count
@@ -840,7 +840,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                         threshold=config.YAWN_EVENT_COUNT_THRESH,
                         send_cloud=True,
                         trigger_voice=True,
-                        voice_message=config.VOICE_ALERT_YAWNING_ENGLISH,
+                        voice_message=config.VOICE_ALERT_YAWNING,
                         trigger_buzzer=True,
                         buzzer_message=config.WARNING_YAWNING,
                         timeframe_count=timeframe_count
@@ -881,7 +881,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 threshold=config.DROWSY_EVENT_COUNT_THRESH,
                 send_cloud=True,
                 trigger_voice=True,
-                voice_message=config.VOICE_ALERT_DROWSY_ENGLISH,
+                voice_message=config.VOICE_ALERT_DROWSY,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_DROWSY,
                 timeframe_count=timeframe_count
@@ -956,7 +956,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 cycle_id=int(time.time() * 1000),
                 send_cloud=False,
                 trigger_voice=True,
-                voice_message=config.VOICE_ALERT_DISTRACTION_ENGLISH,
+                voice_message=config.VOICE_ALERT_DISTRACTION,
                 trigger_buzzer=True,
                 buzzer_message=config.WARNING_DISTRACTION,
                 timeframe_count=timeframe_count

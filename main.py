@@ -18,8 +18,7 @@ from firebase_admin import credentials, db
 import queue
 import threading
 from shared import behavior_queue, stop_event
-from model.detect import main as detect_main
-from model.detect import force_stop
+import model.detect as detect
 
 if(config.ENABLE_FINGERPRINT and config.SYSTEM != 'windows'):
     import fingerprint.enroll as enroll
@@ -35,8 +34,11 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('safe_driver_debug.log'),
-        logging.StreamHandler(sys.stdout)
+        logging.StreamHandler(stream=open(sys.stdout.fileno(), 
+                                             mode='w', 
+                                             encoding='utf-8', 
+                                             closefd=False)),
+        logging.FileHandler('safe_driver_debug.log', encoding='utf-8')
     ]
 )
 logger = logging.getLogger(__name__)
@@ -194,7 +196,7 @@ async def watchdog():
 
             # Start new detect thread
             detect_process = threading.Thread(
-                target=detect_main,
+                target=detect.main(),
                 daemon=True,
                 name="detect-thread"
             )
@@ -389,7 +391,7 @@ async def startup_event():
 
         if config.ENABLE_DETECTION:
             detect_process = threading.Thread(
-                target=detect_main,
+                target=detect.main(),
                 daemon=True,
                 name="detect-thread"
             )
@@ -496,7 +498,7 @@ async def shutdown_event():
         
         if detect_process.is_alive():
             logger.warning("Detect thread still alive - force stopping camera...")
-            force_stop()  # ← force release camera so cap.read() unblocks
+            detect.force_stop()  # ← force release camera so cap.read() unblocks
             detect_process.join(timeout=3)  # wait again
             
             if detect_process.is_alive():
@@ -825,7 +827,7 @@ async def restart_detection_process():
         logger.info("Device status updated to restarting")
 
         detect_process = threading.Thread(
-            target=detect_main,
+            target=detect.main(),
             daemon=True,
             name="detect-thread"
         )

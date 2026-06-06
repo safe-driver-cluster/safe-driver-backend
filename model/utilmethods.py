@@ -105,48 +105,20 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
         if not config.ENABLE_VOICE_ALERTS:
             return
 
-        # def _play_sound(text_inner):
-        #     filename = None
-        #     try:
-        #         # unique file name
-        #         filename = f"{label}.mp3"
-
-        #         # generate TTS
-        #         tts = gTTS(text=text_inner, lang='en')
-        #         tts.save(filename)
-
-        #         # play audio
-        #         pygame.mixer.music.load(utils.resource_path(filename))
-        #         pygame.mixer.music.play()
-
-        #         while pygame.mixer.music.get_busy():
-        #             pygame.time.Clock().tick(10)
-
-        #     except Exception as e:
-        #         logger.info(f"[TTS Error] {e}")
-
-        #     finally:
-        #         try:
-        #             if filename and os.path.exists(filename):
-        #                 os.remove(utils.resource_path(filename))
-        #         except:
-        #             pass
-
         def _play_sound(text_inner):
-            filename = None
             try:
                 app_dir = utils.get_app_dir()
-                filename = os.path.join(app_dir, f"{label}.mp3")
+                language = config.LANGUAGE if config.LANGUAGE in ("ENGLISH", "SINHALA", "TAMIL") else "ENGLISH"
+                lang_code = {"ENGLISH": "en", "SINHALA": "si", "TAMIL": "ta"}
 
-                if(config.LANGUAGE == "ENGLISH"):
-                    tts = gTTS(text=text_inner, lang='en')
-                elif(config.LANGUAGE == "SINHALA"):
-                    tts = gTTS(text=text_inner, lang='si')
-                elif(config.LANGUAGE == "TAMIL"):
-                    tts = gTTS(text=text_inner, lang='ta')
-                else:
-                    tts = gTTS(text=text_inner, lang='en')
-                tts.save(filename)
+                # Build path: audio/ENGLISH/VOICE_ALERT_DISTRACTION_ENGLISH.mp3
+                filename = os.path.join(os.path.dirname(app_dir), "audio", language, f"{label}_{language}.mp3")
+
+                if not os.path.exists(filename):
+                    logger.warning(f"[Sound] File not found: {filename}. Generating via TTS...")
+                    os.makedirs(os.path.dirname(filename), exist_ok=True)
+                    tts = gTTS(text=text_inner, lang=lang_code[language])
+                    tts.save(filename)
 
                 pygame.mixer.music.load(filename)
                 pygame.mixer.music.play()
@@ -155,14 +127,7 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
                     pygame.time.Clock().tick(10)
 
             except Exception as e:
-                logger.info(f"[TTS Error] {e}")
-
-            # finally:
-            #     try:
-            #         if filename and os.path.exists(filename):
-            #             os.remove(filename)
-            #     except:
-            #         pass
+                logger.info(f"[Sound Error] {e}")
 
         t = threading.Thread(target=_play_sound, args=(message,))
         t.daemon = True
