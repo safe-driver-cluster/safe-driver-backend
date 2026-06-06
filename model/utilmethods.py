@@ -138,7 +138,14 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
                 app_dir = utils.get_app_dir()
                 filename = os.path.join(app_dir, f"{label}.mp3")
 
-                tts = gTTS(text=text_inner, lang='en')
+                if(config.LANGUAGE == "ENGLISH"):
+                    tts = gTTS(text=text_inner, lang='en')
+                elif(config.LANGUAGE == "SINHALA"):
+                    tts = gTTS(text=text_inner, lang='si')
+                elif(config.LANGUAGE == "TAMIL"):
+                    tts = gTTS(text=text_inner, lang='ta')
+                else:
+                    tts = gTTS(text=text_inner, lang='en')
                 tts.save(filename)
 
                 pygame.mixer.music.load(filename)
@@ -150,12 +157,12 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
             except Exception as e:
                 logger.info(f"[TTS Error] {e}")
 
-            finally:
-                try:
-                    if filename and os.path.exists(filename):
-                        os.remove(filename)
-                except:
-                    pass
+            # finally:
+            #     try:
+            #         if filename and os.path.exists(filename):
+            #             os.remove(filename)
+            #     except:
+            #         pass
 
         t = threading.Thread(target=_play_sound, args=(message,))
         t.daemon = True

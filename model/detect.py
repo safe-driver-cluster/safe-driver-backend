@@ -51,7 +51,10 @@ mp_drawing_styles = mp.solutions.drawing_styles
 load_dotenv()
 
 # Get environment variables
-ADMIN_SDK_PATH = os.getenv('ADMIN_SDK_PATH', '/home/safedriver/Desktop/safe-driver-backend/firebase-admin-sdk/serviceAccountKey.json')
+if(config.SYSTEM == 'linux'):
+    ADMIN_SDK_PATH = os.getenv('ADMIN_SDK_PATH', '/home/safedriver/Desktop/safe-driver-backend/firebase-admin-sdk/serviceAccountKey.json')
+else:
+    ADMIN_SDK_PATH = os.getenv('ADMIN_SDK_PATH', 'firebase-admin-sdk/serviceAccountKey.json')
 CAMERA_ID = int(os.getenv('CAMERA_ID', '0'))
 CAMERA_BACKEND = os.getenv('CAMERA_BACKEND', 'auto').lower()
 
@@ -991,8 +994,8 @@ def run(model: str, num_faces: int,
 
     # Force disable window when running as compiled exe & os is linux
     # OpenCV windows must run on main thread - causes hang in threaded mode
-    if getattr(sys, 'frozen', False) and (sys.platform == "linux"):
-        config.ENABLE_WINDOW = False
+    # if getattr(sys, 'frozen', False) and (sys.platform == "linux"):
+    #     config.ENABLE_WINDOW = False
     
     logger.info("=" * 80)
     logger.info("Starting SafeDriver Monitoring System...")
@@ -1007,11 +1010,12 @@ def run(model: str, num_faces: int,
     logger.info("=" * 80)
 
     system = platform.system().lower()
+    config.SYSTEM = system
     logger.info(f"Detected OS: {system}")
 
     if system == "windows":
         # Initialize camera
-        logger.info(f"Initializing camera {camera_id}...")
+        logger.info(f"Initializing camera {camera_id} (backend={CAMERA_BACKEND})...")
         cap = cv2.VideoCapture(camera_id)
 
         if not cap.isOpened():

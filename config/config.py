@@ -8,6 +8,7 @@ VERSION_NO = "1.0.0"
 # 'si' for Sinhala (සිංහල)
 # 'ta' for Tamil (தமிழ்)
 LANGUAGE = 'ENGLISH'
+SYSTEM = 'linux' # 'windows' or 'linux'
 
 # Drowsiness Detection Thresholds
 EYE_CLOSED_THRESH = 0.60
@@ -215,6 +216,17 @@ ENABLE_DETECTION = True  # Set to False to disable all detection (for performanc
 ENABLE_FINGERPRINT = False  # Set to False to disable fingerprinting (for performance testing)
 ENABLE_GPS = False  # Set to False to disable GPS location retrieval (for performance testing)
 
+# ======================================================
+# GPS CONFIGURATIONS
+# ======================================================
+
+DEVICE_ID = ""
+SPEED_LIMIT = 20.0
+SPEED_THRESHOLD = 2.0
+PUSH_INTERVAL = 5          # push every 5 seconds minimum
+SPEED_CHANGE_THRESHOLD = 3 # push immediately if speed changes by 3 km/h
+CURRENT_SPEED = 0.0
+
 # =================================================================================================================================
 # MULTILINGUAL CONFIGURATIONS
 # =================================================================================================================================
@@ -296,7 +308,7 @@ VOICE_ALERT_FREQUENT_CLOSURES_L3_ENGLISH = 'Frequent eye closures detected! If y
 
 # Voice Alert Messages
 VOICE_ALERT_MICROSLEEP_SINHALA = 'සුළු මොහොතක නින්දක් (Microsleep) හඳුනාගෙන ඇත! කරුණාකර අවධානයෙන් සිටින්න.'
-VOICE_ALERT_YAWNING_SINHALA = 'හෑල්ලුම් යෑමක් (ඈනුම් ඇරීමක්) හඳුනාගෙන ඇත! කරුණාකර අවධානය යොමු කරන්න.'
+VOICE_ALERT_YAWNING_SINHALA = 'ඈනුම් යෑමක් හඳුනාගෙන ඇත! කරුණාකර අවධානය යොමු කරන්න.'
 VOICE_ALERT_DROWSY_SINHALA = 'නිදිමත ගතියක් හඳුනාගෙන ඇත! කරුණාකර සුළු විවේකයක් ගන්න.'
 VOICE_ALERT_DISTRACTION_SINHALA = 'රියදුරුගේ අවධානය ගිලිහී ඇති බව හඳුනාගෙන ඇත! කරුණාකර මාර්ගය වෙත අවධානය යොමු කරන්න.'
 VOICE_ALERT_HEAD_TURN_SINHALA = 'හිස හරවා බැලීමක් හඳුනාගෙන ඇත! කරුණාකර ඔබේ දෑස් මාර්ගය වෙතම යොමු කර තබාගන්න.'
