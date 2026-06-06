@@ -51,10 +51,10 @@ detect_console_handler.setFormatter(logging.Formatter('%(message)s'))
 detect_logger.addHandler(detect_console_handler)
 detect_logger.propagate = False  # Don't propagate to root logger (prevents duplicate logs)
 
-utils.print_banner(logger)
-logger.info("=" * 80)
-logger.info("SafeDriver Monitoring System Starting...")
-logger.info("=" * 80)
+# utils.print_banner(logger)
+# logger.info("=" * 80)
+# logger.info("SafeDriver Monitoring System Starting...")
+# logger.info("=" * 80)
 
 # ============================================================================
 # END LOGGING CONFIGURATION
