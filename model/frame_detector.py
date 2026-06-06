@@ -382,9 +382,17 @@ class DetectorProcess:
             pass
 
     def stop(self):
+        # Force None into queue by clearing it first
+        while not self.frame_queue.empty():
+            try:
+                self.frame_queue.get_nowait()
+            except:
+                break
+        
         try:
-            self.frame_queue.put_nowait(None)
+            self.frame_queue.put(None, timeout=2)  # blocking put, guarantees delivery
         except:
             pass
-        self.thread.join(timeout=3)
+        
+        self.thread.join(timeout=5)
         logger.info("Object detector thread stopped")
