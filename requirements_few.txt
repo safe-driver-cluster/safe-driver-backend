@@ -3,12 +3,12 @@ firebase_admin==7.1.0
 getmac==0.9.5
 gpiozero==2.0.1
 gTTS==2.5.4
-mediapipe==0.10.14
-numpy==2.4.6
-opencv_contrib_python==4.11.0.86
-opencv_python==4.13.0.92
+mediapipe==0.10.18
+numpy<1.26.4
+opencv_contrib_python==4.9.0.80
+opencv_python==4.9.0.80
 polars==1.40.1
-protobuf==7.35.0
+protobuf>=4.25.3,<5
 pydantic==2.13.4
 pyfingerprint==1.5
 pygame==2.6.1
