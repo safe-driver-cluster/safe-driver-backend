@@ -102,21 +102,25 @@ def _increment_detect_count(counter_key):
     return new_value
     
 def detector_worker(frame_queue):
-    from ultralytics import YOLO
-
-    # Load models INSIDE process
-    detect_model = YOLO(util.resource_path("model/yolov8n.pt"))  # safe-driver-system-b3da24192be1
-    cigarette_model = YOLO(util.resource_path("model/cigarette_model.pt"))
-    glasses_model = YOLO(util.resource_path("model/glasses_model.pt"))
-
-    logger.info("Object Detection process started.")
-
-    global DETECT_PHONE, DETECT_BOTTLE, DETECT_CIGARETTE, DETECT_GLASSES, DETECT_PHONE_COUNT, DETECT_BOTTLE_COUNT, DETECT_CIGARETTE_COUNT, DETECT_GLASSES_COUNT
-    global frame_count
-
     try:
+        from ultralytics import YOLO
+
+        # Load models INSIDE process
+        detect_model = YOLO(util.resource_path("model/yolov8n.pt"))  # safe-driver-system-b3da24192be1
+        cigarette_model = YOLO(util.resource_path("model/cigarette_model.pt"))
+        glasses_model = YOLO(util.resource_path("model/glasses_model.pt"))
+
+        logger.info("Object Detection process started.")
+
+        global DETECT_PHONE, DETECT_BOTTLE, DETECT_CIGARETTE, DETECT_GLASSES, DETECT_PHONE_COUNT, DETECT_BOTTLE_COUNT, DETECT_CIGARETTE_COUNT, DETECT_GLASSES_COUNT
+        global frame_count
+
         while True:
-            frame = frame_queue.get()
+            try:
+                frame = frame_queue.get(timeout=5)
+            except queue.Empty:
+                logger.warning("Detector: no frame received for 5s, still waiting...")
+                continue
             now = time.time()
 
             if frame is None:
@@ -378,9 +382,17 @@ class DetectorProcess:
             pass
 
     def stop(self):
+        # Force None into queue by clearing it first
+        while not self.frame_queue.empty():
+            try:
+                self.frame_queue.get_nowait()
+            except:
+                break
+        
         try:
-            self.frame_queue.put_nowait(None)
+            self.frame_queue.put(None, timeout=2)  # blocking put, guarantees delivery
         except:
             pass
-        self.thread.join(timeout=3)
+        
+        self.thread.join(timeout=5)
         logger.info("Object detector thread stopped")
