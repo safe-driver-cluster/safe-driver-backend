@@ -6,7 +6,6 @@ from typing import Any, Callable, Dict, Optional, TextIO
 
 import config.config as config
 import model.utilmethods as utils
-from service.vibration_service import vibration_service as default_vibration_service
 
 from shared import behavior_queue
 
@@ -31,14 +30,12 @@ class AlertManager:
         output_stream: TextIO,
         threshold_defaults: Optional[Dict[str, bool]] = None,
         buzzer_callback: Optional[Callable[[], None]] = None,
-        vibration_service=default_vibration_service,
     ):
         self.logger = logger
         self.now_provider = now_provider
         self.output_stream = output_stream
         self.threshold_alert_sent = threshold_defaults.copy() if threshold_defaults else {}
         self.buzzer_callback = buzzer_callback
-        self.vibration_service = vibration_service
         self.last_event_time_by_type: Dict[str, float] = {}
         self.consecutive_count_by_type: Dict[str, int] = {}
         self.last_voice_alert_time_by_type: Dict[str, float] = {}
@@ -121,8 +118,6 @@ class AlertManager:
         self.last_buzzer_alert_time_by_type.pop(policy_key, None)
         self.voice_alert_count_by_type.pop(policy_key, None)
         self.buzzer_alert_count_by_type.pop(policy_key, None)
-        if self.vibration_service:
-            self.vibration_service.stop()
 
     def _update_event_activity(self, policy_key: str, now_ts: float) -> int:
         """Track consecutive occurrences and reset state after inactivity window."""
@@ -156,33 +151,6 @@ class AlertManager:
 
         state["priority"] = priority
         return True
-
-    def _resolve_vibration_level(
-        self,
-        *,
-        payload_data: Dict[str, Any],
-        consecutive_count: int,
-        threshold_reached: bool,
-        threshold: Optional[int],
-    ) -> int:
-        """Map alert activity to the haptic escalation level."""
-        explicit_level = payload_data.get("alert_level") or payload_data.get("level")
-        if isinstance(explicit_level, int) and explicit_level in config.VIBRATION_PATTERNS:
-            return explicit_level
-
-        if threshold is not None and threshold_reached:
-            return config.VIBRATION_LEVEL_3
-
-        if consecutive_count >= config.BUZZER_ALERT_CONSECUTIVE_EVENT_THRESH:
-            return config.VIBRATION_LEVEL_2
-
-        return config.VIBRATION_LEVEL_1
-
-    def _run_vibration_alert(self, level: int) -> None:
-        if not self.vibration_service:
-            return
-
-        self.vibration_service.run_pattern(level)
 
     def send_behavior_to_parent(
         self,
@@ -268,14 +236,6 @@ class AlertManager:
                 send_cloud = False
             else:
                 self.threshold_alert_sent[threshold_key] = True
-
-        vibration_level = self._resolve_vibration_level(
-            payload_data=payload_data,
-            consecutive_count=consecutive_count,
-            threshold_reached=threshold_reached,
-            threshold=threshold,
-        )
-        self._run_vibration_alert(vibration_level)
 
         if send_cloud:
             self.send_behavior_to_parent(
