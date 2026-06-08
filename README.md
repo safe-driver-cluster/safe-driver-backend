@@ -202,23 +202,65 @@ python gps/gps_simulator.py --dry-run
 Step 1 — Install PyInstaller in your venv
 pip install pyinstaller
 
-Step 2 — Create a launcher file [run.py]
-import uvicorn
+Step 2 - Use the existing `run.py` launcher.
 
-if __name__ == "__main__":
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=False   # reload must be OFF for compiled builds
-    )
+Step 3 - Build the executable
 
-Step 3 — Build the executable
+Run each command from the project root after activating the correct platform's
+virtual environment. PyInstaller builds must run on the target operating system
+and architecture.
 
-WINDOWS
-pyinstaller --onefile --name safedriverapp --add-data "config;config" --add-data "model;model" --add-data "service;service" --add-data "utils;utils" --add-data ".env;." --add-data "banner.txt;." --add-data "shared.py;shared.py" --add-data "database;database" --add-data "firebase-admin-sdk;firebase-admin-sdk" run.py
+### Windows x64 build
 
-pyinstaller --onefile --name safedriverapp --add-data "model/face_landmarker.task;model" --add-data "model/yolov8n.pt;model" --add-data "model/cigarette_model.pt;model" --add-data "model/glasses_model.pt;model" --add-data ".env;." --add-data "banner.txt;." --add-data "firebase-admin-sdk;firebase-admin-sdk" --hidden-import=dotenv run.py
+This build packages the PyTorch `.pt` object-detection models.
 
-RASPBARRY
-pyinstaller --onefile --name safedriverapp --add-data "model/face_landmarker.task:model" --add-data "model/yolov8n.pt:model" --add-data "model/cigarette_model.pt:model" --add-data "model/glasses_model.pt:model" --add-data ".env:." --add-data "banner.txt:." --add-data "firebase-admin-sdk:firebase-admin-sdk" run.py
+```powershell
+pyinstaller --clean --noconfirm --onefile --name safedriverapp-windows `
+  --add-data "model/face_landmarker.task;model" `
+  --add-data "model/yolov8n.pt;model" `
+  --add-data "model/cigarette_model.pt;model" `
+  --add-data "model/glasses_model.pt;model" `
+  --add-data ".env;." `
+  --add-data "banner.txt;." `
+  --add-data "firebase-admin-sdk;firebase-admin-sdk" `
+  --hidden-import database.storage_helper `
+  --hidden-import gps.gps `
+  --collect-all mediapipe `
+  --collect-all ultralytics `
+  run.py
+```
+
+Output: `dist/safedriverapp-windows.exe`
+
+### Raspberry Pi OS ARM64 build
+
+This build packages the ARM-friendly NCNN model directories. Do not package
+the `.pt` models for Raspberry Pi object detection.
+
+```bash
+pyinstaller --clean --noconfirm --onefile --name safedriverapp-raspi-arm64 \
+  --add-data "model/face_landmarker.task:model" \
+  --add-data "model/yolov8n_ncnn_model:model/yolov8n_ncnn_model" \
+  --add-data "model/cigarette_model_ncnn_model:model/cigarette_model_ncnn_model" \
+  --add-data "model/glasses_model_ncnn_model:model/glasses_model_ncnn_model" \
+  --add-data ".env:." \
+  --add-data "banner.txt:." \
+  --add-data "firebase-admin-sdk:firebase-admin-sdk" \
+  --hidden-import database.storage_helper \
+  --hidden-import gps.gps \
+  --hidden-import fingerprint.enroll \
+  --hidden-import fingerprint.remove \
+  --hidden-import fingerprint.live \
+  --collect-all mediapipe \
+  --collect-all ultralytics \
+  --collect-all ncnn \
+  run.py
+```
+
+Output: `dist/safedriverapp-raspi-arm64`
+
+The `audio/` directory is not packaged because voice-alert files are downloaded
+from Firebase Storage during application startup.
+
+Do not publish a build artifact containing
+`firebase-admin-sdk/serviceAccountKey.json` to a public repository or release.

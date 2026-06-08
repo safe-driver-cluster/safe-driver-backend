@@ -1,4 +1,5 @@
 import os
+import platform
 
 import cv2
 
@@ -10,7 +11,7 @@ VERSION_NO = "1.0.0"
 # 'si' for Sinhala (සිංහල)
 # 'ta' for Tamil (தமிழ்)
 LANGUAGE = 'SINHALA'
-SYSTEM = 'linux' # 'windows' or 'linux'
+SYSTEM = platform.system().lower()
 
 # Drowsiness Detection Thresholds
 EYE_CLOSED_THRESH = 0.60

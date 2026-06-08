@@ -48,13 +48,15 @@ mp_drawing_styles = mp.solutions.drawing_styles
 # ============================================================================
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(util.resource_path(".env"))
 
 # Get environment variables
-if(config.SYSTEM == 'linux'):
-    ADMIN_SDK_PATH = os.getenv('ADMIN_SDK_PATH', '/home/safedriver/Desktop/safe-driver-backend/firebase-admin-sdk/serviceAccountKey.json')
-else:
-    ADMIN_SDK_PATH = os.getenv('ADMIN_SDK_PATH', 'firebase-admin-sdk/serviceAccountKey.json')
+admin_sdk_path = os.getenv("ADMIN_SDK_PATH", "firebase-admin-sdk/serviceAccountKey.json")
+ADMIN_SDK_PATH = (
+    admin_sdk_path
+    if os.path.isabs(admin_sdk_path)
+    else util.resource_path(admin_sdk_path)
+)
 CAMERA_ID = int(os.getenv('CAMERA_ID', '0'))
 CAMERA_BACKEND = os.getenv('CAMERA_BACKEND', 'auto').lower()
 

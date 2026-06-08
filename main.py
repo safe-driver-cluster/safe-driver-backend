@@ -11,6 +11,7 @@ from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
 import utils.utils as utils
 import config.config as config
 from service.model_service import (get_mac_address_alternative)
+from dotenv import load_dotenv
 
 import firebase_admin
 from firebase_admin import credentials, db
@@ -63,7 +64,13 @@ detect_logger.propagate = False  # Don't propagate to root logger (prevents dupl
 # Suppress TensorFlow messages
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-ADMIN_SDK_PATH = os.getenv('ADMIN_SDK_PATH', '/home/safedriver/Desktop/safe-driver-backend/firebase-admin-sdk/serviceAccountKey.json')
+load_dotenv(utils.resource_path(".env"))
+admin_sdk_path = os.getenv("ADMIN_SDK_PATH", "firebase-admin-sdk/serviceAccountKey.json")
+ADMIN_SDK_PATH = (
+    admin_sdk_path
+    if os.path.isabs(admin_sdk_path)
+    else utils.resource_path(admin_sdk_path)
+)
 
 logger.info("Initializing Firebase Admin SDK")
 try:
