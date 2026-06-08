@@ -16,6 +16,7 @@
 
 ### create python environment
         python -m venv venv
+        py -3.11 -m venv venv           - using python 3.11.9
         .\venv\Scripts\Activate         - WINDOWS
 
         python -m venv venv             - [use python 3.13.5 because there not exists dabian versions for all windows dependancies in python 3.10]
