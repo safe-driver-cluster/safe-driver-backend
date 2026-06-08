@@ -1,10 +1,10 @@
 from collections import deque
 import cv2
 import logging
+import platform
 import sys
 import time
 
-from polars import duration
 import config.config as config
 from model.alerts import AlertManager
 import model.utilmethods as utils
@@ -103,14 +103,52 @@ def _increment_detect_count(counter_key):
     
 def detector_worker(frame_queue):
     try:
+        if platform.system().lower() == "linux":
+            # PyTorch/OpenCV otherwise create several native worker threads.
+            # On a Raspberry Pi this competes heavily with MediaPipe and can
+            # trigger an OOM/native abort that produces no Python traceback.
+            import torch
+
+            torch.set_num_threads(config.OBJECT_DETECTION_TORCH_THREADS_LINUX)
+            try:
+                torch.set_num_interop_threads(1)
+            except RuntimeError:
+                pass
+            cv2.setNumThreads(1)
+
         from ultralytics import YOLO
 
-        # Load models INSIDE process
-        detect_model = YOLO(util.resource_path("model/yolov8n.pt"))  # safe-driver-system-b3da24192be1
-        cigarette_model = YOLO(util.resource_path("model/cigarette_model.pt"))
-        glasses_model = YOLO(util.resource_path("model/glasses_model.pt"))
+        # Only load enabled models. Loading every model at once creates a large
+        # memory spike on Raspberry Pi even when a detector is disabled.
+        detect_model = (
+            YOLO(util.resource_path("model/yolov8n.pt"))
+            if config.ENABLE_PHONE_BOTTLE_PERSON_DETECTION
+            else None
+        )
+        cigarette_model = (
+            YOLO(util.resource_path("model/cigarette_model.pt"))
+            if config.ENABLE_CIGARETTE_DETECTION
+            else None
+        )
+        glasses_model = (
+            YOLO(util.resource_path("model/glasses_model.pt"))
+            if config.ENABLE_GLASSES_DETECTION
+            else None
+        )
 
-        logger.info("Object Detection process started.")
+        inference_size = (
+            config.OBJECT_DETECTION_IMGSZ_LINUX
+            if platform.system().lower() == "linux"
+            else config.OBJECT_DETECTION_IMGSZ
+        )
+
+        logger.info(
+            "Object Detection worker started (imgsz=%s, phone/bottle=%s, cigarette=%s, glasses=%s).",
+            inference_size,
+            detect_model is not None,
+            cigarette_model is not None,
+            glasses_model is not None,
+        )
 
         global DETECT_PHONE, DETECT_BOTTLE, DETECT_CIGARETTE, DETECT_GLASSES, DETECT_PHONE_COUNT, DETECT_BOTTLE_COUNT, DETECT_CIGARETTE_COUNT, DETECT_GLASSES_COUNT
         global frame_count
@@ -134,7 +172,12 @@ def detector_worker(frame_queue):
                 # 1. OBJECT DETECTION (phone, bottle)
                 # -------------------------------------------------------------------------------------
                 if config.ENABLE_PHONE_BOTTLE_PERSON_DETECTION and frame_count % config.DETECT_PHONE_BOTTLE_PERSON_FRAME == 0:
-                    detect_results = detect_model(frame, conf=config.YOLO_MODEL_PHONE_BOTTLE_PERSON_CONFIDENCE_THRESHOLD, verbose=False)
+                    detect_results = detect_model(
+                        frame,
+                        conf=config.YOLO_MODEL_PHONE_BOTTLE_PERSON_CONFIDENCE_THRESHOLD,
+                        imgsz=inference_size,
+                        verbose=False,
+                    )
 
                     for r in detect_results:
                         for box in r.boxes:
@@ -216,7 +259,12 @@ def detector_worker(frame_queue):
                 # -------------------------------------------------------------------------------------
 
                 if config.ENABLE_CIGARETTE_DETECTION and frame_count % config.DETECT_CIGARETTE_FRAME == 0:
-                    results = cigarette_model(frame, conf=config.YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD, verbose=False)
+                    results = cigarette_model(
+                        frame,
+                        conf=config.YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD,
+                        imgsz=inference_size,
+                        verbose=False,
+                    )
 
                     for r in results:
                         for box in r.boxes:
@@ -285,7 +333,12 @@ def detector_worker(frame_queue):
                     detected = False
 
                     # 👉 Try normal detection first (lower threshold for better recall)
-                    glass_results = glasses_model(frame, conf=config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD, verbose=False)
+                    glass_results = glasses_model(
+                        frame,
+                        conf=config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD,
+                        imgsz=inference_size,
+                        verbose=False,
+                    )
 
                     for r in glass_results:
                         for box in r.boxes:
@@ -310,7 +363,12 @@ def detector_worker(frame_queue):
                         crop, (ox, oy) = center_crop(frame, zoom=1.8)
 
                         resized = cv2.resize(crop, (416, 416))
-                        zoom_results = glasses_model(resized, conf=config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD, verbose=False)
+                        zoom_results = glasses_model(
+                            resized,
+                            conf=config.YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD,
+                            imgsz=inference_size,
+                            verbose=False,
+                        )
 
                         scale_x = crop.shape[1] / 416
                         scale_y = crop.shape[0] / 416
@@ -344,8 +402,8 @@ def detector_worker(frame_queue):
                 if config.ENABLE_CV2_WINDOW:
                     cv2.imshow("Safe Driver System", frame)
 
-            except Exception as e:
-                logger.info("Detection error:", e)
+            except Exception:
+                logger.exception("Object detection inference failed")
 
     except KeyboardInterrupt:         # ← catch the interrupt cleanly
         logger.info("Object detection process interrupted - shutting down cleanly")
@@ -369,6 +427,9 @@ class DetectorProcess:
 
     def _run(self):
         detector_worker(self.frame_queue)
+
+    def is_alive(self):
+        return self.thread.is_alive()
 
     def submit_frame(self, frame):
         if self.frame_queue.full():

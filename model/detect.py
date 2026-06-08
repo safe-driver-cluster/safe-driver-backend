@@ -1102,6 +1102,22 @@ def run(model: str, num_faces: int,
 
     frame_count = 0
     detection_failures = 0
+    object_detection_frame_interval = (
+        config.OBJECT_DETECTION_FRAME_INTERVAL_LINUX
+        if system == "linux"
+        else config.OBJECT_DETECTION_FRAME_INTERVAL
+    )
+    object_detection_input_size = (
+        config.OBJECT_DETECTION_IMGSZ_LINUX
+        if system == "linux"
+        else config.OBJECT_DETECTION_IMGSZ
+    )
+    logger.info(
+        "Object detection settings: every %s camera frames at %sx%s",
+        object_detection_frame_interval,
+        object_detection_input_size,
+        object_detection_input_size,
+    )
 
     try:
         while cap.isOpened() and not stop_event.is_set():
@@ -1127,13 +1143,16 @@ def run(model: str, num_faces: int,
             # ======================= PREPROCESS ==========================
             image = cv2.flip(image, 1)
 
-            # Small frame for YOLO (performance boost 🚀)
-            small_frame = cv2.resize(image, (416, 416))
-
             # ======================= OBJECT DETECTION (ASYNC) ============
             if config.ENABLE_OBJECT_DETECTION:
-                # Send only every 3rd frame to reduce load
-                if frame_count % 3 == 0:
+                if object_detector is not None and not object_detector.is_alive():
+                    logger.error("Object detection worker stopped unexpectedly; continuing face detection only")
+                    object_detector = None
+                elif object_detector is not None and frame_count % object_detection_frame_interval == 0:
+                    small_frame = cv2.resize(
+                        image,
+                        (object_detection_input_size, object_detection_input_size),
+                    )
                     object_detector.submit_frame(small_frame)
 
             # ======================= MEDIAPIPE ===========================
