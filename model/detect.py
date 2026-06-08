@@ -1040,6 +1040,7 @@ def run(model: str, num_faces: int,
         min_face_presence_confidence: float, min_tracking_confidence: float,
         camera_id: int, width: int, height: int) -> None:
     """Continuously run inference on images acquired from the camera."""
+    utils.reset_voice_alert_shutdown()
 
     # Force disable window when running as compiled exe & os is linux
     # OpenCV windows must run on main thread - causes hang in threaded mode
@@ -1493,7 +1494,8 @@ def run(model: str, num_faces: int,
                 logger.info("Object detector stopped")
             except Exception as e:
                 logger.warning(f"Error stopping object detector: {e}")
-        
+
+        utils.shutdown_voice_alerts()
         detector.close()
         cap.release()
         if config.ENABLE_WINDOW:

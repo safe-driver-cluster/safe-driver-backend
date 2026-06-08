@@ -243,7 +243,8 @@ async def read_behavior_queue():
         logger.error(f"Error reading behavior queue: {e}", exc_info=True)
     finally:
         logger.info("Stopped monitoring behavior queue")
-        model_service.update_device_status(status="offline")
+        if not stop_event.is_set():
+            model_service.update_device_status(status="offline")
 
 
 async def read_detect_process_stderr():
@@ -532,12 +533,13 @@ async def shutdown_event():
             logger.info("Monitor task cancelled")
 
     if detect_process and detect_process.is_alive():
-        detect_process.join(timeout=3)  # wait 3 seconds
+        detect_process.join(timeout=2)
         
         if detect_process.is_alive():
             logger.warning("Detect thread still alive - force stopping camera...")
             detect.force_stop()  # ← force release camera so cap.read() unblocks
-            detect_process.join(timeout=3)  # wait again
+            # Object-process and MediaPipe cleanup can take several seconds.
+            detect_process.join(timeout=12)
             
             if detect_process.is_alive():
                 logger.warning("Detect thread did not stop - continuing shutdown")

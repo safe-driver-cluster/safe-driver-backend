@@ -16,6 +16,9 @@ import pygame
 pygame.mixer.init()
 
 _VOICE_PLAYBACK_LOCK = threading.Lock()
+_VOICE_THREADS_LOCK = threading.Lock()
+_VOICE_THREADS = set()
+_VOICE_STOP_EVENT = threading.Event()
 
 def now():
     """Return current UTC timestamp in ISO format"""
@@ -104,12 +107,15 @@ def log_config(logger):
 
 def perform_voice_alerts(message, label="VOICE_ALERT"):
     try:
-        if not config.ENABLE_VOICE_ALERTS:
+        if not config.ENABLE_VOICE_ALERTS or _VOICE_STOP_EVENT.is_set():
             return
 
         def _play_sound(text_inner):
-            with _VOICE_PLAYBACK_LOCK:
-                try:
+            try:
+                with _VOICE_PLAYBACK_LOCK:
+                    if _VOICE_STOP_EVENT.is_set():
+                        return
+
                     language = config.LANGUAGE if config.LANGUAGE in ("ENGLISH", "SINHALA", "TAMIL") else "ENGLISH"
                     lang_code = {"ENGLISH": "en", "SINHALA": "si", "TAMIL": "ta"}
 
@@ -127,19 +133,50 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
                     pygame.mixer.music.play()
 
                     while pygame.mixer.music.get_busy():
+                        if _VOICE_STOP_EVENT.is_set():
+                            pygame.mixer.music.stop()
+                            break
                         pygame.time.Clock().tick(10)
 
                     logger.info("Voice playback completed: %s", filename)
 
-                except Exception as e:
+            except Exception as e:
+                if not _VOICE_STOP_EVENT.is_set():
                     logger.info(f"[Sound Error] {e}")
+            finally:
+                with _VOICE_THREADS_LOCK:
+                    _VOICE_THREADS.discard(threading.current_thread())
 
         t = threading.Thread(target=_play_sound, args=(message,))
         t.daemon = True
+        with _VOICE_THREADS_LOCK:
+            _VOICE_THREADS.add(t)
         t.start()
 
     except Exception as e:
         logger.info(f"Error performing voice alert: {e}")
+
+
+def shutdown_voice_alerts(timeout=2.0):
+    """Stop active voice playback and wait briefly for playback threads."""
+    _VOICE_STOP_EVENT.set()
+
+    try:
+        if pygame.mixer.get_init():
+            pygame.mixer.music.stop()
+    except Exception:
+        pass
+
+    with _VOICE_THREADS_LOCK:
+        threads = list(_VOICE_THREADS)
+
+    for thread in threads:
+        thread.join(timeout=timeout)
+
+
+def reset_voice_alert_shutdown():
+    """Allow voice playback after the detection service is restarted."""
+    _VOICE_STOP_EVENT.clear()
 
 def get_model_configurations(logger):
     """Get model configurations from Firestore"""

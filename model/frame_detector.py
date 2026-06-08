@@ -574,6 +574,7 @@ def detector_worker(frame_queue, output_queue=None):
     except Exception as e:
         logger.info(f"Detection process error: {e}", exc_info=True)
     finally:
+        utils.shutdown_voice_alerts()
         logger.info("Object detection process stopped")
 
 
@@ -584,6 +585,7 @@ class DetectorProcess:
         self.thread = None
         self.process = None
         self.output_queue = None
+        self._stopped = False
 
         if self._use_process:
             context = multiprocessing.get_context("spawn")
@@ -640,27 +642,54 @@ class DetectorProcess:
             pass
 
     def stop(self):
+        if self._stopped:
+            return
+        self._stopped = True
+
         # Force None into queue by clearing it first
         while not self.frame_queue.empty():
             try:
                 self.frame_queue.get_nowait()
-            except:
+            except queue.Empty:
                 break
         
         try:
-            self.frame_queue.put(None, timeout=2)  # blocking put, guarantees delivery
-        except:
+            self.frame_queue.put(None, timeout=1)
+        except queue.Full:
             pass
         
         if self._use_process:
-            self.process.join(timeout=5)
-            if self.process.is_alive():
-                logger.warning("Object detector subprocess did not stop; terminating it")
-                self.process.terminate()
-                self.process.join(timeout=2)
-            logger.info("Object detector subprocess stopped with exit code %s", self.process.exitcode)
-            self.frame_queue.close()
-            self.output_queue.close()
+            try:
+                self.process.join(timeout=4)
+                if self.process.is_alive():
+                    logger.warning("Object detector subprocess did not stop; terminating it")
+                    self.process.terminate()
+                    self.process.join(timeout=2)
+                if self.process.is_alive():
+                    logger.warning("Object detector subprocess ignored terminate; killing it")
+                    self.process.kill()
+                    self.process.join(timeout=2)
+
+                logger.info(
+                    "Object detector subprocess stopped with exit code %s",
+                    self.process.exitcode,
+                )
+            finally:
+                for process_queue in (self.frame_queue, self.output_queue):
+                    if process_queue is None:
+                        continue
+                    try:
+                        process_queue.close()
+                        process_queue.join_thread()
+                    except Exception:
+                        logger.exception("Failed to clean up object detector queue")
+
+                if self.process is not None and not self.process.is_alive():
+                    self.process.close()
+                self.process = None
+                self.frame_queue = None
+                self.output_queue = None
         else:
             self.thread.join(timeout=5)
             logger.info("Object detector thread stopped")
+            self.thread = None
