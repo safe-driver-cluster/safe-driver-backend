@@ -52,6 +52,21 @@ BUZZER_ALERT_CONSECUTIVE_EVENT_THRESH = 3  # Number of consecutive events to tri
 MAXIMUM_BUZZER_ALERTS_PER_TYPE = 2  # Maximum number of buzzer alerts per type to prevent spamming (first 3 alerts will be buzzered)
 MAXIMUM_VOICE_ALERTS_PER_TYPE = 3  # Maximum number of voice alerts per type to prevent spamming (next 2 alerts will be voiced after buzzer limit is reached)
 
+# Vibration Motor Alert Settings
+ENABLE_VIBRATION_ALERTS = True
+VIBRATION_GPIO_PIN = 18  # BCM GPIO18, connected to the vibration motor module IN pin.
+VIBRATION_LEVEL_1 = 1
+VIBRATION_LEVEL_2 = 2
+VIBRATION_LEVEL_3 = 3
+VIBRATION_LEVEL_4 = 4
+VIBRATION_PATTERNS = {
+    VIBRATION_LEVEL_1: (0.3, 1.5),   # Gentle pulse: 300 ms ON, 1500 ms OFF.
+    VIBRATION_LEVEL_2: (0.5, 0.5),   # Moderate pulse: 500 ms ON, 500 ms OFF.
+    VIBRATION_LEVEL_3: (1.0, 0.3),   # Strong pulse: 1000 ms ON, 300 ms OFF.
+    VIBRATION_LEVEL_4: (None, None), # Emergency: continuous ON until stopped.
+}
+VIBRATION_WORKER_JOIN_TIMEOUT_SEC = 1.0
+
 # -------------------------------------------------------------------------------------
 # Object Detection Settings
 # -------------------------------------------------------------------------------------
