@@ -12,6 +12,8 @@ protobuf>=4.25.3,<5
 pydantic==2.13.4
 pyfingerprint==1.5
 pygame==2.6.1
+pyinstaller==6.16.0
+pyinstaller-hooks-contrib==2025.9
 pynmea2==1.19.0
 pyserial==3.5
 pytest==9.0.3
