@@ -2,6 +2,7 @@ from collections import deque
 import cv2
 import logging
 import multiprocessing
+import os
 import platform
 import sys
 import time
@@ -118,6 +119,31 @@ def _forward_behavior_events(output_queue):
             break
 
 
+def _resolve_model_path(default_path, linux_path):
+    """Select an ARM-friendly model backend on Linux."""
+    if platform.system().lower() != "linux":
+        return util.resource_path(default_path)
+
+    resolved_linux_path = util.resource_path(linux_path)
+    if os.path.exists(resolved_linux_path):
+        return resolved_linux_path
+
+    if config.OBJECT_DETECTION_ALLOW_PYTORCH_FALLBACK_LINUX:
+        logger.warning(
+            "Linux model %s was not found; falling back to PyTorch model %s",
+            resolved_linux_path,
+            default_path,
+        )
+        return util.resource_path(default_path)
+
+    logger.error(
+        "Linux object model not found: %s. Export the .pt model to NCNN; "
+        "PyTorch fallback is disabled because it previously exited with SIGILL.",
+        resolved_linux_path,
+    )
+    return None
+
+
 def detector_worker(frame_queue, output_queue=None):
     try:
         if platform.system().lower() == "linux":
@@ -137,21 +163,50 @@ def detector_worker(frame_queue, output_queue=None):
 
         # Only load enabled models. Loading every model at once creates a large
         # memory spike on Raspberry Pi even when a detector is disabled.
-        detect_model = (
-            YOLO(util.resource_path("model/yolov8n.pt"))
+        detect_model_path = (
+            _resolve_model_path(
+                config.YOLO_MODEL_PHONE_BOTTLE_PERSON,
+                config.YOLO_MODEL_PHONE_BOTTLE_PERSON_LINUX,
+            )
             if config.ENABLE_PHONE_BOTTLE_PERSON_DETECTION
             else None
         )
-        cigarette_model = (
-            YOLO(util.resource_path("model/cigarette_model.pt"))
+        cigarette_model_path = (
+            _resolve_model_path(
+                config.YOLO_MODEL_CIGARETTE,
+                config.YOLO_MODEL_CIGARETTE_LINUX,
+            )
             if config.ENABLE_CIGARETTE_DETECTION
             else None
         )
-        glasses_model = (
-            YOLO(util.resource_path("model/glasses_model.pt"))
+        glasses_model_path = (
+            _resolve_model_path(
+                config.YOLO_MODEL_GLASSES,
+                config.YOLO_MODEL_GLASSES_LINUX,
+            )
             if config.ENABLE_GLASSES_DETECTION
             else None
         )
+
+        detect_model = (
+            YOLO(detect_model_path, task="detect")
+            if config.ENABLE_PHONE_BOTTLE_PERSON_DETECTION and detect_model_path
+            else None
+        )
+        cigarette_model = (
+            YOLO(cigarette_model_path, task="detect")
+            if config.ENABLE_CIGARETTE_DETECTION and cigarette_model_path
+            else None
+        )
+        glasses_model = (
+            YOLO(glasses_model_path, task="detect")
+            if config.ENABLE_GLASSES_DETECTION and glasses_model_path
+            else None
+        )
+
+        if detect_model is None and cigarette_model is None and glasses_model is None:
+            logger.error("No compatible object detection models are available; object worker is stopping")
+            return
 
         inference_size = (
             config.OBJECT_DETECTION_IMGSZ_LINUX
@@ -188,7 +243,7 @@ def detector_worker(frame_queue, output_queue=None):
                 # -------------------------------------------------------------------------------------
                 # 1. OBJECT DETECTION (phone, bottle)
                 # -------------------------------------------------------------------------------------
-                if config.ENABLE_PHONE_BOTTLE_PERSON_DETECTION and frame_count % config.DETECT_PHONE_BOTTLE_PERSON_FRAME == 0:
+                if detect_model is not None and frame_count % config.DETECT_PHONE_BOTTLE_PERSON_FRAME == 0:
                     detect_results = detect_model(
                         frame,
                         conf=config.YOLO_MODEL_PHONE_BOTTLE_PERSON_CONFIDENCE_THRESHOLD,
@@ -275,7 +330,7 @@ def detector_worker(frame_queue, output_queue=None):
                 # 2. CIGARETTE DETECTION
                 # -------------------------------------------------------------------------------------
 
-                if config.ENABLE_CIGARETTE_DETECTION and frame_count % config.DETECT_CIGARETTE_FRAME == 0:
+                if cigarette_model is not None and frame_count % config.DETECT_CIGARETTE_FRAME == 0:
                     results = cigarette_model(
                         frame,
                         conf=config.YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD,
@@ -329,7 +384,7 @@ def detector_worker(frame_queue, output_queue=None):
                 # -------------------------------
                 # 3. GLASSES DETECTION
                 # -------------------------------
-                if config.ENABLE_GLASSES_DETECTION and frame_count % config.DETECT_GLASSES_FRAME == 0:
+                if glasses_model is not None and frame_count % config.DETECT_GLASSES_FRAME == 0:
                     # -------------------------------
                     # 4. GLASSES DETECTION (IMPROVED)
                     # -------------------------------

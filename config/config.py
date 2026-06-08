@@ -82,6 +82,16 @@ OBJECT_DETECTION_IMGSZ = 416
 OBJECT_DETECTION_IMGSZ_LINUX = 320
 OBJECT_DETECTION_TORCH_THREADS_LINUX = 1
 
+# Raspberry Pi object detection backend. PyTorch .pt inference can terminate
+# with SIGILL on incompatible ARM wheels, so Linux uses exported NCNN models.
+OBJECT_DETECTION_ALLOW_PYTORCH_FALLBACK_LINUX = False
+YOLO_MODEL_PHONE_BOTTLE_PERSON = "model/yolov8n.pt"
+YOLO_MODEL_CIGARETTE = "model/cigarette_model.pt"
+YOLO_MODEL_GLASSES = "model/glasses_model.pt"
+YOLO_MODEL_PHONE_BOTTLE_PERSON_LINUX = "model/yolov8n_ncnn_model"
+YOLO_MODEL_CIGARETTE_LINUX = "model/cigarette_model_ncnn_model"
+YOLO_MODEL_GLASSES_LINUX = "model/glasses_model_ncnn_model"
+
 THRESHOLD_PHONE_COUNT = 3
 THRESHOLD_BOTTLE_COUNT = 3
 THRESHOLD_CIGARETTE_COUNT = 3
