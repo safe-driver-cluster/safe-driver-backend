@@ -1,6 +1,7 @@
 from collections import deque
 import cv2
 import logging
+import multiprocessing
 import platform
 import sys
 import time
@@ -12,6 +13,7 @@ import utils.utils as util
 
 import queue
 import threading
+from shared import behavior_queue
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -101,7 +103,22 @@ def _increment_detect_count(counter_key):
     LAST_COUNTER_EVENT_TIME[counter_key] = now_ts
     return new_value
     
-def detector_worker(frame_queue):
+def _forward_behavior_events(output_queue):
+    """Forward object alerts from a subprocess-local queue to its parent."""
+    if output_queue is None:
+        return
+
+    while True:
+        try:
+            output_queue.put_nowait(behavior_queue.get_nowait())
+        except queue.Empty:
+            break
+        except queue.Full:
+            logger.warning("Object behavior output queue is full; dropping alert")
+            break
+
+
+def detector_worker(frame_queue, output_queue=None):
     try:
         if platform.system().lower() == "linux":
             # PyTorch/OpenCV otherwise create several native worker threads.
@@ -404,6 +421,8 @@ def detector_worker(frame_queue):
 
             except Exception:
                 logger.exception("Object detection inference failed")
+            finally:
+                _forward_behavior_events(output_queue)
 
     except KeyboardInterrupt:         # ← catch the interrupt cleanly
         logger.info("Object detection process interrupted - shutting down cleanly")
@@ -416,20 +435,53 @@ def detector_worker(frame_queue):
 class DetectorProcess:
     def __init__(self):
         self.frame_queue = queue.Queue(maxsize=1)  # ← regular queue
-        self._stop = False
-        
-        self.thread = threading.Thread(
-            target=self._run,
-            daemon=True,
-            name="detector-thread"
-        )
-        self.thread.start()
+        self._use_process = platform.system().lower() == "linux"
+        self.thread = None
+        self.process = None
+        self.output_queue = None
+
+        if self._use_process:
+            context = multiprocessing.get_context("spawn")
+            self.frame_queue = context.Queue(maxsize=1)
+            self.output_queue = context.Queue(maxsize=20)
+            self.process = context.Process(
+                target=detector_worker,
+                args=(self.frame_queue, self.output_queue),
+                daemon=True,
+                name="object-detector-process",
+            )
+            self.process.start()
+            logger.info("Object detector subprocess started with PID %s", self.process.pid)
+        else:
+            self.thread = threading.Thread(
+                target=self._run,
+                daemon=True,
+                name="detector-thread"
+            )
+            self.thread.start()
 
     def _run(self):
         detector_worker(self.frame_queue)
 
     def is_alive(self):
-        return self.thread.is_alive()
+        if self._use_process:
+            return self.process is not None and self.process.is_alive()
+        return self.thread is not None and self.thread.is_alive()
+
+    def exit_code(self):
+        if self._use_process and self.process is not None:
+            return self.process.exitcode
+        return None
+
+    def drain_events(self):
+        if self.output_queue is None:
+            return
+
+        while True:
+            try:
+                behavior_queue.put(self.output_queue.get_nowait())
+            except queue.Empty:
+                break
 
     def submit_frame(self, frame):
         if self.frame_queue.full():
@@ -455,5 +507,15 @@ class DetectorProcess:
         except:
             pass
         
-        self.thread.join(timeout=5)
-        logger.info("Object detector thread stopped")
+        if self._use_process:
+            self.process.join(timeout=5)
+            if self.process.is_alive():
+                logger.warning("Object detector subprocess did not stop; terminating it")
+                self.process.terminate()
+                self.process.join(timeout=2)
+            logger.info("Object detector subprocess stopped with exit code %s", self.process.exitcode)
+            self.frame_queue.close()
+            self.output_queue.close()
+        else:
+            self.thread.join(timeout=5)
+            logger.info("Object detector thread stopped")

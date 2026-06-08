@@ -1145,8 +1145,16 @@ def run(model: str, num_faces: int,
 
             # ======================= OBJECT DETECTION (ASYNC) ============
             if config.ENABLE_OBJECT_DETECTION:
+                if object_detector is not None:
+                    object_detector.drain_events()
+
                 if object_detector is not None and not object_detector.is_alive():
-                    logger.error("Object detection worker stopped unexpectedly; continuing face detection only")
+                    logger.error(
+                        "Object detection worker stopped unexpectedly with exit code %s; continuing face detection only",
+                        object_detector.exit_code(),
+                    )
+                    object_detector.drain_events()
+                    object_detector.stop()
                     object_detector = None
                 elif object_detector is not None and frame_count % object_detection_frame_interval == 0:
                     small_frame = cv2.resize(
