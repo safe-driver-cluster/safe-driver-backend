@@ -4,6 +4,8 @@ import sys
 import time
 from typing import Any, Callable, Dict, Optional, TextIO
 
+import cv2
+
 import config.config as config
 import model.utilmethods as utils
 
@@ -159,6 +161,7 @@ class AlertManager:
         message: str = "",
         event_time: Optional[str] = None,
         behavior_data: Optional[Dict[str, Any]] = None,
+        evidence_jpeg: Optional[bytes] = None,
     ) -> None:
         """Send behavior data to parent process via stdout as JSON."""
         payload = {
@@ -169,6 +172,8 @@ class AlertManager:
             "data": behavior_data or {},
             "driver": "DRV003"
         }
+        if evidence_jpeg:
+            payload["_evidence_jpeg"] = evidence_jpeg
 
         try:
             # self.output_stream.write(f"BEHAVIOR_DATA:{json.dumps(payload)}\n")
@@ -195,6 +200,7 @@ class AlertManager:
         trigger_buzzer: bool = False,
         buzzer_message: Optional[str] = None,
         timeframe_count: Optional[int] = None,
+        evidence_frame: Any = None,
     ) -> None:
         """Common alert method with payload validation and channel routing."""
         if not self._validate_alert_request(tag, event_type, message, behavior_data, current_count, threshold):
@@ -247,12 +253,26 @@ class AlertManager:
                 )
 
         if send_cloud:
+            evidence_jpeg = None
+            if config.ENABLE_ALERT_EVIDENCE and evidence_frame is not None:
+                try:
+                    encoded, buffer = cv2.imencode(
+                        ".jpg",
+                        evidence_frame,
+                        [cv2.IMWRITE_JPEG_QUALITY, config.ALERT_EVIDENCE_JPEG_QUALITY],
+                    )
+                    if encoded:
+                        evidence_jpeg = buffer.tobytes()
+                except Exception:
+                    self.logger.exception("Failed to encode alert evidence frame")
+
             self.send_behavior_to_parent(
                 tag=tag,
                 event_type=event_type,
                 message=message,
                 event_time=event_time,
                 behavior_data=payload_data,
+                evidence_jpeg=evidence_jpeg,
             )
 
         if trigger_voice:

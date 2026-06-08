@@ -1,6 +1,8 @@
 import io
 import logging
 
+import numpy as np
+
 import config.config as config
 import model.alerts as alerts_module
 from model.alerts import AlertManager
@@ -126,3 +128,29 @@ def test_cloud_alerts_continue_until_timeframe_limit(monkeypatch):
     events = _drain_behavior_queue()
 
     assert [event["data"]["timeframe_count"] for event in events] == [7, 8, 9, 10]
+
+
+def test_cloud_alert_contains_encoded_evidence_frame(monkeypatch):
+    _drain_behavior_queue()
+    monkeypatch.setattr(config, "ENABLE_ALERT_EVIDENCE", True)
+    monkeypatch.setattr(config, "ALERT_EVIDENCE_JPEG_QUALITY", 80)
+
+    manager = AlertManager(
+        logger=logging.getLogger("test-alerts"),
+        now_provider=lambda: "now",
+        output_stream=io.StringIO(),
+    )
+    frame = np.zeros((24, 32, 3), dtype=np.uint8)
+
+    manager.check_and_send_threshold_alert(
+        tag="DROWSY_EVENT",
+        event_type=config.BEHAVIOR_MICROSLEEP,
+        message="Microsleep detected",
+        behavior_data={"duration": 1.5},
+        send_cloud=True,
+        evidence_frame=frame,
+    )
+
+    event = _drain_behavior_queue()[0]
+    assert event["_evidence_jpeg"].startswith(b"\xff\xd8")
+    assert "_evidence_jpeg" not in event["data"]

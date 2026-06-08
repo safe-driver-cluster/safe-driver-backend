@@ -469,7 +469,7 @@ def calculate_head_pose(face_landmarks, image_width, image_height):
     }
 
 
-def detect_head_turn_distraction(face_landmarks, image_width, image_height):
+def detect_head_turn_distraction(face_landmarks, image_width, image_height, current_frame=None):
     """Detect if driver is looking away based on head pose."""
     global HEAD_TURNED_START, HEAD_TURN_COUNTED, LAST_HEAD_POSE_STATE, NO_FACE_START, NO_FACE_COUNTED
     global HEAD_TURN_COUNT, FACE_MISSING_COUNT
@@ -522,6 +522,7 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                     current_count=face_missing_count,
                     threshold=config.FACE_MISSING_COUNT_THRESH,
                     send_cloud=True,
+                    evidence_frame=current_frame,
                     trigger_voice=True,
                     voice_message=config.VOICE_ALERT_DISTRACTION,
                     trigger_buzzer=True,
@@ -612,6 +613,7 @@ def detect_head_turn_distraction(face_landmarks, image_width, image_height):
                     current_count=head_turn_count,
                     threshold=config.HEAD_TURN_COUNT_THRESH,
                     send_cloud=True,
+                    evidence_frame=current_frame,
                     trigger_voice=True,
                     voice_message=config.VOICE_ALERT_HEAD_TURN,
                     trigger_buzzer=True,
@@ -738,6 +740,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 current_count=frequent_closures_count,
                 threshold=config.FREQUENT_CLOSURES_THRESH,
                 send_cloud=True,
+                evidence_frame=current_frame,
                 trigger_voice=True,
                 voice_message=config.VOICE_ALERT_DROWSY,
                 trigger_buzzer=True,
@@ -797,6 +800,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 current_count=microsleep_count,
                 threshold=config.MICROSLEEP_EVENT_COUNT_THRESH,
                 send_cloud=True,
+                evidence_frame=current_frame,
                 trigger_voice=True,
                 voice_message=config.VOICE_ALERT_MICROSLEEP,
                 trigger_buzzer=True,
@@ -841,6 +845,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                         current_count=yawn_count,
                         threshold=config.YAWN_EVENT_COUNT_THRESH,
                         send_cloud=True,
+                        evidence_frame=current_frame,
                         trigger_voice=True,
                         voice_message=config.VOICE_ALERT_YAWNING,
                         trigger_buzzer=True,
@@ -882,6 +887,7 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
                 current_count=drowsy_count,
                 threshold=config.DROWSY_EVENT_COUNT_THRESH,
                 send_cloud=True,
+                evidence_frame=current_frame,
                 trigger_voice=True,
                 voice_message=config.VOICE_ALERT_DROWSY,
                 trigger_buzzer=True,
@@ -911,7 +917,12 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
         
         # Add head pose detection
         if face_landmarks and image_width and image_height:
-            head_turn_data = detect_head_turn_distraction(face_landmarks, image_width, image_height)
+            head_turn_data = detect_head_turn_distraction(
+                face_landmarks,
+                image_width,
+                image_height,
+                current_frame,
+            )
             behavior_data['head_pose'] = head_turn_data
             behavior_data['distracted'] = head_turn_data['is_turned']
                 
@@ -919,7 +930,12 @@ def detect_driver_behavior(face_blendshapes: np.ndarray, height, current_frame, 
     else:
         # No face detected - still check for head turn/distraction
         if image_width and image_height:
-            head_turn_data = detect_head_turn_distraction(None, image_width, image_height)
+            head_turn_data = detect_head_turn_distraction(
+                None,
+                image_width,
+                image_height,
+                current_frame,
+            )
             
             return {
                 'drowsy': False,

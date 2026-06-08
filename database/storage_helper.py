@@ -1,6 +1,9 @@
 import logging
 import os
 import tempfile
+import time
+from urllib.parse import quote
+import uuid
 
 from firebase_admin import storage
 
@@ -9,6 +12,36 @@ import utils.utils as utils
 
 
 logger = logging.getLogger(__name__)
+
+
+def upload_alert_evidence(image_bytes, device_mac, event_type):
+    """Upload alert evidence JPEG and return its Firebase download URL."""
+    if not image_bytes:
+        return None
+
+    safe_mac = (device_mac or "unknown-device").replace(":", "-")
+    safe_event = "".join(
+        char if char.isalnum() or char in ("-", "_") else "-"
+        for char in (event_type or "alert")
+    )
+    token = str(uuid.uuid4())
+    object_name = (
+        f"{config.ALERT_EVIDENCE_STORAGE_PREFIX}/{safe_mac}/"
+        f"{safe_event}-{int(time.time() * 1000)}-{token}.jpg"
+    )
+
+    bucket = storage.bucket(config.FIREBASE_STORAGE_BUCKET)
+    blob = bucket.blob(object_name)
+    blob.metadata = {"firebaseStorageDownloadTokens": token}
+    blob.upload_from_string(image_bytes, content_type="image/jpeg")
+
+    encoded_name = quote(object_name, safe="")
+    url = (
+        f"https://firebasestorage.googleapis.com/v0/b/{bucket.name}/o/"
+        f"{encoded_name}?alt=media&token={token}"
+    )
+    logger.info("Alert evidence uploaded: %s", object_name)
+    return {"url": url, "path": object_name}
 
 
 def sync_voice_alerts_from_storage():

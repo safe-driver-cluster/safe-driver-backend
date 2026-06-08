@@ -232,13 +232,34 @@ async def read_behavior_queue():
             try:
                 payload = behavior_queue.get_nowait()
 
-                latest_behavior_data = payload
-
                 logger.info(f"Behavior Event: {payload.get('type')} - {payload.get('message')}")
 
                 if device_mac:
+                    evidence_jpeg = payload.pop("_evidence_jpeg", None)
+                    if evidence_jpeg:
+                        try:
+                            from database.storage_helper import upload_alert_evidence
+
+                            evidence = await asyncio.to_thread(
+                                upload_alert_evidence,
+                                evidence_jpeg,
+                                device_mac,
+                                payload.get("type"),
+                            )
+                            if evidence:
+                                payload["evidence"] = evidence["url"]
+                                payload["evidence_path"] = evidence["path"]
+                        except Exception:
+                            logger.exception(
+                                "Failed to upload alert evidence for %s",
+                                payload.get("type"),
+                            )
+
+                    latest_behavior_data = payload
                     db_helper.save_behavior_to_firebase(device_mac, payload)
                 else:
+                    payload.pop("_evidence_jpeg", None)
+                    latest_behavior_data = payload
                     logger.warning("Cannot save behavior - device MAC not available")
 
             except queue.Empty:
