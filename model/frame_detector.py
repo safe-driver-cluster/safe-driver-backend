@@ -103,6 +103,48 @@ def _increment_detect_count(counter_key):
     
     LAST_COUNTER_EVENT_TIME[counter_key] = now_ts
     return new_value
+
+
+def _cloud_status(timeframe_count, threshold):
+    if timeframe_count < threshold:
+        return "below_threshold"
+    if timeframe_count <= config.CLOUD_ALERT_TIMEFRAME_COUNT_LIMIT:
+        return "cloud_allowed"
+    return "cloud_limit_reached"
+
+
+def _log_object_detection_event(
+    *,
+    label,
+    event_type,
+    confidence,
+    event_count,
+    timeframe_count,
+    threshold,
+    bbox,
+    frame_count,
+    inference_size,
+):
+    if not config.ENABLE_LOGGING:
+        return
+
+    logger.info(
+        (
+            "Object detection event: label=%s event_type=%s confidence=%.2f "
+            "event_count=%s timeframe_count=%s/%s cloud_threshold=%s"
+        ),
+        label,
+        event_type,
+        confidence,
+        event_count,
+        timeframe_count,
+        config.CLOUD_ALERT_TIMEFRAME_COUNT_LIMIT,
+        threshold,
+        _cloud_status(timeframe_count, threshold),
+        frame_count,
+        inference_size,
+        bbox,
+    )
     
 def _forward_behavior_events(output_queue):
     """Forward object alerts from a subprocess-local queue to its parent."""
@@ -279,8 +321,17 @@ def detector_worker(frame_queue, output_queue=None):
                                         PHONE_EVENT_TIME_ARRAY_SEC.popleft()
                                     timeframe_count = len(PHONE_EVENT_TIME_ARRAY_SEC)
 
-                                    if config.ENABLE_LOGGING:
-                                        logger.info(f"{label} detected: {conf:.2f} timeframe_count: {timeframe_count}")
+                                    _log_object_detection_event(
+                                        label=label,
+                                        event_type=config.BEHAVIOR_MOBILE_USE,
+                                        confidence=conf,
+                                        event_count=phone_detect_count,
+                                        timeframe_count=timeframe_count,
+                                        threshold=config.THRESHOLD_PHONE_ALERT_TO_CLOUD,
+                                        bbox=(x1, y1, x2, y2),
+                                        frame_count=frame_count,
+                                        inference_size=inference_size,
+                                    )
 
                                     ALERT_MANAGER.check_and_send_threshold_alert(
                                         tag="DETECTION_EVENT",
@@ -307,8 +358,17 @@ def detector_worker(frame_queue, output_queue=None):
                                         BOTTLE_EVENT_TIME_ARRAY_SEC.popleft()
                                     timeframe_count = len(BOTTLE_EVENT_TIME_ARRAY_SEC)
 
-                                    if config.ENABLE_LOGGING:
-                                        logger.info(f"{label} detected: {conf:.2f} timeframe_count: {timeframe_count}")
+                                    _log_object_detection_event(
+                                        label=label,
+                                        event_type=config.BEHAVIOR_DRINKING,
+                                        confidence=conf,
+                                        event_count=bottle_detect_count,
+                                        timeframe_count=timeframe_count,
+                                        threshold=config.THRESHOLD_BOTTLE_ALERT_TO_CLOUD,
+                                        bbox=(x1, y1, x2, y2),
+                                        frame_count=frame_count,
+                                        inference_size=inference_size,
+                                    )
 
                                     ALERT_MANAGER.check_and_send_threshold_alert(
                                         tag="DETECTION_EVENT",
@@ -362,8 +422,17 @@ def detector_worker(frame_queue, output_queue=None):
                                     CIGARETTE_EVENT_TIME_ARRAY_SEC.popleft()
                                 timeframe_count = len(CIGARETTE_EVENT_TIME_ARRAY_SEC)
 
-                                if config.ENABLE_LOGGING:
-                                    logger.info(f"{label} detected: {conf:.2f} timeframe_count: {timeframe_count}")
+                                _log_object_detection_event(
+                                    label=label,
+                                    event_type=config.BEHAVIOR_SMOKING,
+                                    confidence=conf,
+                                    event_count=cigarette_detect_count,
+                                    timeframe_count=timeframe_count,
+                                    threshold=config.THRESHOLD_CIGARETTE_ALERT_TO_CLOUD,
+                                    bbox=(x1, y1, x2, y2),
+                                    frame_count=frame_count,
+                                    inference_size=inference_size,
+                                )
 
                                 ALERT_MANAGER.check_and_send_threshold_alert(
                                     tag="DETECTION_EVENT",
@@ -427,7 +496,18 @@ def detector_worker(frame_queue, output_queue=None):
                                                 cv2.FONT_HERSHEY_SIMPLEX,
                                                 0.5, (255,0,0), 2)
 
-                                logger.info("Glasses detected!")
+                                if config.ENABLE_LOGGING:
+                                    logger.info(
+                                        (
+                                            "Object detection event: label=%s event_type=glasses "
+                                            "confidence=%.2f frame_count=%s imgsz=%s bbox=%s cloud_status=disabled"
+                                        ),
+                                        label,
+                                        conf,
+                                        frame_count,
+                                        inference_size,
+                                        (x1, y1, x2, y2),
+                                    )
                                 detected = True
 
                     # 👉 If not detected → use center zoom (your idea 🔥)
@@ -466,7 +546,19 @@ def detector_worker(frame_queue, output_queue=None):
                                                     cv2.FONT_HERSHEY_SIMPLEX,
                                                     0.5, (255,0,0), 2)
 
-                                    logger.info("Glasses detected (zoom)!")
+                                    if config.ENABLE_LOGGING:
+                                        logger.info(
+                                            (
+                                                "Object detection event: label=%s event_type=glasses "
+                                                "confidence=%.2f frame_count=%s imgsz=%s bbox=%s "
+                                                "source=center_zoom cloud_status=disabled"
+                                            ),
+                                            label,
+                                            conf,
+                                            frame_count,
+                                            inference_size,
+                                            (x1, y1, x2, y2),
+                                        )
 
                 # -------------------------------------------------------------------------------------
                 # SHOW FRAME
