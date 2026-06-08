@@ -140,6 +140,61 @@ except Exception as e:
     print('Error:', e)
 ````
 
+# --------------------------------
+# GPS SIMULATOR
+# --------------------------------
+
+Use the simulator on Linux/Raspberry Pi to send the configured `GPS_SIGNALS`
+from `gps/gps_simulator.py` to the backend as real NMEA GPS signals.
+
+### Terminal 1 - Start the GPS simulator
+
+```bash
+cd ~/Desktop/safe-driver-backend
+source venv/bin/activate
+python gps/gps_simulator.py --pty --interval 5 --repeat
+```
+
+Keep Terminal 1 open. The simulator creates `/tmp/safe_driver_gps` and sends
+the 20 configured signals repeatedly, with a five-second interval. Press
+`Ctrl+C` when the simulation is finished.
+
+### Terminal 2 - Start the backend normally
+
+```bash
+cd ~/Desktop/safe-driver-backend
+source venv/bin/activate
+python run.py
+```
+
+When `/tmp/safe_driver_gps` exists, the system automatically uses the
+simulator instead of the real `/dev/ttyAMA5` GPS. Start the simulator before
+starting `run.py`.
+
+After stopping the simulator, `/tmp/safe_driver_gps` is removed. The next
+normal system startup automatically uses the real GPS again.
+
+### Useful simulator commands
+
+Send signals every second:
+
+```bash
+python gps/gps_simulator.py --pty --interval 1
+```
+
+Repeat all configured GPS signals continuously:
+
+```bash
+python gps/gps_simulator.py --pty --interval 5 --repeat
+```
+
+Print generated NMEA signals without connecting to the backend:
+
+```bash
+python gps/gps_simulator.py --dry-run
+```
+
+
 ## -------------------------------
 ## BUILD APPLICATION
 ## -------------------------------
