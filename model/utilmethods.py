@@ -107,12 +107,11 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
 
         def _play_sound(text_inner):
             try:
-                app_dir = utils.get_app_dir()
                 language = config.LANGUAGE if config.LANGUAGE in ("ENGLISH", "SINHALA", "TAMIL") else "ENGLISH"
                 lang_code = {"ENGLISH": "en", "SINHALA": "si", "TAMIL": "ta"}
 
                 # Build path: audio/ENGLISH/VOICE_ALERT_DISTRACTION_ENGLISH.mp3
-                filename = os.path.join(os.path.dirname(app_dir), "audio", language, f"{label}_{language}.mp3")
+                filename = os.path.join(utils.get_audio_dir(), language, f"{label}_{language}.mp3")
 
                 if not os.path.exists(filename):
                     logger.warning(f"[Sound] File not found: {filename}. Generating via TTS...")

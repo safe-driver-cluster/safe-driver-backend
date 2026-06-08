@@ -19,6 +19,16 @@ def get_app_dir():
         # Running as normal script - use script's directory
         return os.path.dirname(os.path.abspath(__file__))
 
+def get_project_dir():
+    """Return the writable application root for runtime files."""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def get_audio_dir():
+    """Return the local voice-alert audio directory."""
+    return os.path.join(get_project_dir(), "audio")
+
 def now():
     """Return current timestamp in Sri Lanka time in ISO 8601 format"""
     # Get Sri Lanka timezone

@@ -323,6 +323,20 @@ async def startup_event():
         })
         logger.info("Firebase Admin SDK initialized successfully")
 
+    if config.ENABLE_VOICE_ALERT_SYNC:
+        try:
+            from database.storage_helper import sync_voice_alerts_from_storage
+
+            logger.info("Synchronizing voice-alert audio from Firebase Storage...")
+            sync_result = await asyncio.to_thread(sync_voice_alerts_from_storage)
+            logger.info(
+                "Voice-alert audio synchronized: %s downloaded/replaced, %s failed",
+                sync_result["downloaded"],
+                sync_result["failed"],
+            )
+        except Exception:
+            logger.exception("Voice-alert audio sync failed; continuing with local audio files")
+
     logger.info("=" * 80)
     logger.info("SafeDriver Backend Starting...")
     logger.info("=" * 80)

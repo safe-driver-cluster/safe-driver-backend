@@ -16,6 +16,7 @@ firebase-admin-sdk/
 
 *.log
 *.mp3
+audio/**/.voice-alert-*.tmp
 
 # builds
 dist/

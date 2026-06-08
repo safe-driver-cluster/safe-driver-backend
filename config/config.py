@@ -119,6 +119,14 @@ SHOW_WARNINGS = True
 
 # Voice Alert Control
 ENABLE_VOICE_ALERTS = True
+ENABLE_VOICE_ALERT_SYNC = True
+FIREBASE_STORAGE_BUCKET = "safe-driver-system.firebasestorage.app"
+VOICE_ALERT_STORAGE_PREFIX = "voice_alerts"
+VOICE_ALERT_LANGUAGES = {
+    "english": "ENGLISH",
+    "sinhala": "SINHALA",
+    "tamil": "TAMIL",
+}
 
 # FPS Display
 FPS_FONT = cv2.FONT_HERSHEY_DUPLEX
