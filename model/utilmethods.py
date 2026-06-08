@@ -128,7 +128,7 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
                         tts = gTTS(text=text_inner, lang=lang_code[language])
                         tts.save(filename)
 
-                    logger.info("Voice playback started: %s", filename)
+                    logger.info("Voice playback started: %s", label)
                     pygame.mixer.music.load(filename)
                     pygame.mixer.music.play()
 
@@ -138,7 +138,7 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
                             break
                         pygame.time.Clock().tick(10)
 
-                    logger.info("Voice playback completed: %s", filename)
+                    logger.info("Voice playback completed: %s", label)
 
             except Exception as e:
                 if not _VOICE_STOP_EVENT.is_set():

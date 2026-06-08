@@ -41,6 +41,24 @@ GPS_SIGNALS = [
 logger = logging.getLogger(__name__)
 
 
+class _PtyWriter:
+    """Keep both PTY endpoints open until the backend connects."""
+
+    def __init__(self, master_fd, slave_fd):
+        self._master = os.fdopen(master_fd, "wb", buffering=0)
+        self._slave_fd = slave_fd
+
+    def write(self, data):
+        return self._master.write(data)
+
+    def flush(self):
+        self._master.flush()
+
+    def close(self):
+        self._master.close()
+        os.close(self._slave_fd)
+
+
 def _nmea_checksum(sentence_body):
     checksum = 0
     for char in sentence_body:
@@ -105,7 +123,6 @@ def _open_pty_writer(link_path):
 
     master_fd, slave_fd = pty.openpty()
     slave_path = os.ttyname(slave_fd)
-    os.close(slave_fd)
 
     if link_path:
         link_path = os.path.abspath(link_path)
@@ -113,12 +130,12 @@ def _open_pty_writer(link_path):
             os.remove(link_path)
         os.symlink(slave_path, link_path)
         logger.info("Virtual GPS port: %s -> %s", link_path, slave_path)
-        logger.info("Start backend with: GPS_SERIAL_PORT=%s", link_path)
+        logger.info("Start the backend normally with: python run.py")
     else:
         logger.info("Virtual GPS port: %s", slave_path)
         logger.info("Start backend with: GPS_SERIAL_PORT=%s", slave_path)
 
-    return os.fdopen(master_fd, "wb", buffering=0)
+    return _PtyWriter(master_fd, slave_fd)
 
 
 def run_simulator(port=None, baudrate=9600, interval=1.0, repeat=False, pty_mode=False, link_path=None, dry_run=False):
