@@ -251,7 +251,14 @@ ENABLE_GPS = True  # Set to False to disable GPS location retrieval
 # ======================================================
 
 DEVICE_ID = ""
-GPS_SERIAL_PORT = os.getenv("GPS_SERIAL_PORT", "/dev/ttyAMA5")
+REAL_GPS_SERIAL_PORT = "/dev/ttyAMA5"
+SIMULATED_GPS_SERIAL_PORT = "/tmp/safe_driver_gps"
+# Prefer an explicitly configured port, then an active simulator, then real GPS.
+GPS_SERIAL_PORT = os.getenv("GPS_SERIAL_PORT") or (
+    SIMULATED_GPS_SERIAL_PORT
+    if os.path.exists(SIMULATED_GPS_SERIAL_PORT)
+    else REAL_GPS_SERIAL_PORT
+)
 GPS_BAUDRATE = 9600
 GPS_RECONNECT_INTERVAL = 5
 # This is a driver-monitoring activation threshold, not an overspeed limit.
