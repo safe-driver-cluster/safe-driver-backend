@@ -233,13 +233,16 @@ CAMERA_ERROR_MSG = 'ERROR: Unable to read from webcam. Please verify your webcam
 ENABLE_WINDOW = True  # Set to False to disable cv2.imshow (for headless environments)
 ENABLE_DETECTION = True  # Set to False to disable all detection (for performance testing)
 ENABLE_FINGERPRINT = False  # Set to False to disable fingerprinting (for performance testing)
-ENABLE_GPS = False  # Set to False to disable GPS location retrieval (for performance testing)
+ENABLE_GPS = True  # Set to False to disable GPS location retrieval
 
 # ======================================================
 # GPS CONFIGURATIONS
 # ======================================================
 
 DEVICE_ID = ""
+GPS_SERIAL_PORT = "/dev/ttyAMA5"
+GPS_BAUDRATE = 9600
+GPS_RECONNECT_INTERVAL = 5
 SPEED_LIMIT = 20.0
 SPEED_THRESHOLD = 2.0
 PUSH_INTERVAL = 5          # push every 5 seconds minimum

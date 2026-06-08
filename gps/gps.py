@@ -1,79 +1,105 @@
-import serial
-import pynmea2
 import logging
 import time
-import config.config as config
-from service.model_service import (get_mac_address_alternative)
-from database.firestore_helper import FirestoreHelper
-from database import db_helper
-firestore_helper = FirestoreHelper()
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s'
-)
+import pynmea2
+import serial
+
+import config.config as config
+from database import db_helper
+from service.model_service import get_mac_address_alternative
+
 
 logger = logging.getLogger(__name__)
 
-gps = serial.Serial("/dev/ttyAMA5", baudrate=9600, timeout=1)
-logger.info("GPS started, connecting to Firebase...")
+DEFAULT_GPS_PORT = "/dev/ttyAMA5"
+DEFAULT_GPS_BAUDRATE = 9600
 
-last_push_time = 0
-last_speed = 0.0
 
-while True:
+def _parse_rmc_line(line: str):
+    if not line.startswith(("$GPRMC", "$GNRMC")):
+        return None
+
     try:
-        raw = gps.readline()
-        line = raw.decode('utf-8', errors='ignore').strip()
+        msg = pynmea2.parse(line)
+    except pynmea2.ParseError:
+        return None
 
-        if not line:
-            continue
+    if msg.status != "A":
+        return None
 
-        if line.startswith(("$GPRMC", "$GNRMC")):
-            try:
-                msg = pynmea2.parse(line)
-            except pynmea2.ParseError:
-                continue
+    speed_kmh = float(msg.spd_over_grnd) * 1.852 if msg.spd_over_grnd else 0.0
+    if speed_kmh < config.SPEED_THRESHOLD:
+        speed_kmh = 0.0
 
-            if msg.status != 'A':
-                continue
+    return {
+        "latitude": round(msg.latitude, 6),
+        "longitude": round(msg.longitude, 6),
+        "speed": round(speed_kmh, 2),
+        "active_speed": speed_kmh > config.SPEED_LIMIT,
+        "timestamp": int(time.time()),
+    }
 
-            lat = msg.latitude
-            lng = msg.longitude
-            speed_kmh = float(msg.spd_over_grnd) * 1.852 if msg.spd_over_grnd else 0.0
 
-            if speed_kmh < config.SPEED_THRESHOLD:
-                speed_kmh = 0.0
+def run_gps_loop(stop_event, device_mac=None, port=DEFAULT_GPS_PORT, baudrate=DEFAULT_GPS_BAUDRATE):
+    """Read GPS NMEA data and update Firebase at the configured interval."""
+    last_push_time = 0.0
+    device_mac = device_mac or get_mac_address_alternative()
 
-            active_speed = speed_kmh > config.SPEED_LIMIT
-            now = time.time()
+    while not stop_event.is_set():
+        gps_serial = None
+        try:
+            gps_serial = serial.Serial(port, baudrate=baudrate, timeout=1)
+            logger.info("GPS worker connected on %s at %s baud", port, baudrate)
 
-            # Push if: 5 seconds passed OR speed changed significantly
-            speed_changed = abs(speed_kmh - last_speed) >= config.SPEED_CHANGE_THRESHOLD
-            time_elapsed = (now - last_push_time) >= config.PUSH_INTERVAL
+            while not stop_event.is_set():
+                raw = gps_serial.readline()
+                line = raw.decode("utf-8", errors="ignore").strip()
+                if not line:
+                    continue
 
-            if time_elapsed or speed_changed:
-                data = {
-                    "latitude": round(lat, 6),
-                    "longitude": round(lng, 6),
-                    "speed": round(speed_kmh, 2),
-                    "active_speed": active_speed,
-                    "timestamp": int(now)
-                }
+                data = _parse_rmc_line(line)
+                if data is None:
+                    continue
 
-                config.CURRENT_SPEED = round(speed_kmh, 2)
-                db_helper.update_device_gps(get_mac_address_alternative(), data)
+                now = time.time()
+                time_elapsed = (now - last_push_time) >= config.PUSH_INTERVAL
 
-                last_push_time = now
-                last_speed = speed_kmh
+                if time_elapsed:
+                    last_push_time = now
+                    config.CURRENT_SPEED = data["speed"]
+                    result = db_helper.update_device_gps(device_mac, data)
 
-                if active_speed:
-                    logger.warning(f"⚠️  OVERSPEED: {round(speed_kmh, 2)} km/h")
-                else:
-                    logger.info(f"✅ Speed: {round(speed_kmh, 2)} km/h | Pushed to Firebase")
+                    if result.get("success"):
+                        if data["active_speed"]:
+                            logger.warning("GPS overspeed: %.2f km/h", data["speed"])
+                        else:
+                            logger.info("GPS pushed: %.2f km/h", data["speed"])
+                    else:
+                        logger.warning("GPS Firebase update failed: %s", result.get("message"))
 
-    except serial.SerialException as e:
-        logger.error(f"Serial error: {e}")
-        break
-    except Exception as e:
-        logger.exception(f"Unexpected error: {e}")
+        except serial.SerialException as e:
+            logger.error("GPS serial error on %s: %s", port, e)
+        except Exception:
+            logger.exception("GPS worker failed")
+        finally:
+            if gps_serial is not None:
+                try:
+                    gps_serial.close()
+                except Exception:
+                    pass
+
+        if not stop_event.is_set():
+            logger.info("GPS reconnecting in %s seconds", config.GPS_RECONNECT_INTERVAL)
+            stop_event.wait(config.GPS_RECONNECT_INTERVAL)
+
+    logger.info("GPS worker stopped")
+
+
+if __name__ == "__main__":
+    import threading
+
+    stop = threading.Event()
+    try:
+        run_gps_loop(stop)
+    except KeyboardInterrupt:
+        stop.set()

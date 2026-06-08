@@ -75,6 +75,8 @@ pyinstaller==6.16.0
 pyinstaller-hooks-contrib==2025.9
 PyJWT==2.10.1
 pyparsing==3.2.5
+pynmea2
+pyserial
 python-dateutil==2.9.0.post0
 pytz==2025.2
 pywin32-ctypes==0.2.3

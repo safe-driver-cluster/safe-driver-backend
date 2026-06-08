@@ -94,6 +94,8 @@ device_mac = None
 current_cap = None
 watchdog_task = None
 fingerprint_live = None
+gps_thread = None
+gps_stop_event = threading.Event()
 
 # Store latest behavior data in memory
 latest_behavior_data = {
@@ -293,7 +295,7 @@ async def read_detect_process_stderr():
 
 @app.on_event("startup")
 async def startup_event():
-    global detect_process, monitor_task, stderr_task, device_mac, watchdog_task, fingerprint_live
+    global detect_process, monitor_task, stderr_task, device_mac, watchdog_task, fingerprint_live, gps_thread
 
     utils.print_banner(logger)
     logger.info("=" * 80)
@@ -423,6 +425,27 @@ async def startup_event():
             )
             fingerprint_live.start()
             logger.info(f"Started fingerprint live thread: {fingerprint_live.name}")
+
+        if config.ENABLE_GPS and sys.platform.startswith("linux"):
+            try:
+                from gps.gps import run_gps_loop
+
+                gps_stop_event.clear()
+                gps_thread = threading.Thread(
+                    target=run_gps_loop,
+                    kwargs={
+                        "stop_event": gps_stop_event,
+                        "device_mac": device_mac,
+                        "port": config.GPS_SERIAL_PORT,
+                        "baudrate": config.GPS_BAUDRATE,
+                    },
+                    daemon=True,
+                    name="gps-thread",
+                )
+                gps_thread.start()
+                logger.info("Started GPS thread: %s", gps_thread.name)
+            except Exception:
+                logger.exception("Failed to start GPS worker; continuing without GPS")
         
     except Exception as e:
         logger.error(f"Failed to start detect.py: {e}", exc_info=True)
@@ -472,11 +495,12 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    global detect_process, monitor_task, device_mac, watchdog_task
+    global detect_process, monitor_task, device_mac, watchdog_task, gps_thread
 
     logger.info("Shutting down SafeDriver Backend")
 
     stop_event.set()
+    gps_stop_event.set()
 
         # Cancel watchdog first
     if watchdog_task:
@@ -507,6 +531,13 @@ async def shutdown_event():
                 logger.info("Detect thread stopped after force stop")
         else:
             logger.info("Detect thread stopped successfully")
+
+    if gps_thread and gps_thread.is_alive():
+        gps_thread.join(timeout=3)
+        if gps_thread.is_alive():
+            logger.warning("GPS thread did not stop before shutdown timeout")
+        else:
+            logger.info("GPS thread stopped successfully")
 
     if device_mac:
         try:
