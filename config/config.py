@@ -1,3 +1,5 @@
+import os
+
 import cv2
 
 # System Configuration
@@ -249,7 +251,7 @@ ENABLE_GPS = True  # Set to False to disable GPS location retrieval
 # ======================================================
 
 DEVICE_ID = ""
-GPS_SERIAL_PORT = "/dev/ttyAMA5"
+GPS_SERIAL_PORT = os.getenv("GPS_SERIAL_PORT", "/dev/ttyAMA5")
 GPS_BAUDRATE = 9600
 GPS_RECONNECT_INTERVAL = 5
 # This is a driver-monitoring activation threshold, not an overspeed limit.
