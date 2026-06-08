@@ -60,6 +60,130 @@
 ## rename the firebase-admin-sdk -> serviceAccountKey.json
 
 ## ------------------------------------
+## HARDWARE ARCHITECTURE
+## ------------------------------------
+
+SafeDriver runs on a Raspberry Pi 4 with camera-based driver monitoring, GPS,
+fingerprint authentication, audio buzzer alerts, text-to-speech voice alerts,
+Firebase cloud reporting, and haptic feedback.
+
+Hardware modules:
+
+- Raspberry Pi 4 Model B
+- Pi Camera Module v2 / NoIR Camera
+- NEO-6M GPS Module
+- AS608 Fingerprint Sensor
+- Audio Buzzer
+- 5V Vibration Motor Module
+
+The 5V vibration motor module provides haptic feedback for driver awareness.
+It is controlled by GPIO18 and operates alongside the buzzer and voice warning
+channels.
+
+## ------------------------------------
+## RASPBERRY PI WIRING DIAGRAM
+## ------------------------------------
+
+Vibration Motor Module:
+
+- GPIO18 -> IN
+- 5V -> VCC
+- GND -> GND
+
+The module contains its own transistor driver. GPIO18 only sends HIGH and LOW
+signals; no extra transistor control logic is required in software.
+
+## ------------------------------------
+## TECHNOLOGY STACK
+## ------------------------------------
+
+- OpenCV for camera frame processing
+- MediaPipe for face landmarks and blendshapes
+- TensorFlow Lite / YOLO for inference and object detection
+- Firebase Realtime Database and Firestore for cloud alerts
+- Text-to-speech for voice alerts
+- GPIO buzzer for audible warnings
+- 5V Vibration Motor Module for driver haptic alerting
+
+## ------------------------------------
+## ALERT ESCALATION SYSTEM
+## ------------------------------------
+
+SafeDriver uses a multi-level escalation model:
+
+- Level 1: Gentle vibration warning only. No cloud notification or emergency escalation.
+- Level 2: Vibration, buzzer, and voice warning.
+- Level 3: Strong vibration, buzzer, voice warning, cloud notification, dashboard update, and event logging.
+- Level 4: Continuous vibration, continuous buzzer, emergency voice warning, Firebase emergency alert, dashboard emergency notification, and SMS escalation if available.
+
+Vibration patterns:
+
+- Level 1: 300 ms ON, 1500 ms OFF, repeat.
+- Level 2: 500 ms ON, 500 ms OFF, repeat.
+- Level 3: 1000 ms ON, 300 ms OFF, repeat.
+- Level 4: Continuous ON until the driver acknowledges the alert or the unsafe condition is cleared.
+
+## ------------------------------------
+## VIBRATION MOTOR IMPLEMENTATION
+## ------------------------------------
+
+The vibration motor is implemented as an independent service in
+`service/vibration_service.py`. Detection code emits behavior events, the
+central `AlertManager` decides the alert level, and the vibration service runs
+the matching GPIO18 pattern in the background.
+
+Resource management strategy:
+
+- GPIO18 is configured as an output pin using BCM numbering.
+- The service lazily initializes Raspberry Pi GPIO so development machines can run without GPIO hardware.
+- Vibration patterns run on a daemon worker thread and never block camera capture, OpenCV, MediaPipe, TensorFlow, YOLO, or Firebase communication.
+- Only one vibration pattern runs at a time. When the alert level changes, the previous pattern is stopped before the next one starts.
+- Shutdown cleanup turns GPIO18 LOW and releases GPIO resources via `atexit`, including keyboard interrupts and normal application exits.
+
+Driver safety benefit:
+
+Haptic feedback provides an early physical cue even before audible or voice
+warnings are needed. This is useful when a driver is starting to become drowsy,
+is distracted, or when road noise reduces the effectiveness of audio alerts.
+
+## ------------------------------------
+## VIBRATION TESTING PROCEDURE
+## ------------------------------------
+
+1. Confirm wiring: GPIO18 -> IN, 5V -> VCC, GND -> GND.
+2. Activate the Raspberry Pi virtual environment.
+3. Run the normal backend test suite:
+
+```
+pytest
+```
+
+4. Start the application and trigger a drowsiness or distraction condition.
+5. Confirm Level 1 starts gentle vibration immediately.
+6. Confirm repeated events escalate to Level 2 and Level 3 patterns.
+7. Stop the application and confirm the motor turns off.
+
+## ------------------------------------
+## RASPBERRY PI DEPLOYMENT PROCEDURE
+## ------------------------------------
+
+1. Install Raspberry Pi dependencies:
+
+```
+pip install -r requirements_raspi.txt
+```
+
+2. Ensure `RPi.GPIO` is available in the Raspberry Pi environment.
+3. Wire the vibration motor module to GPIO18, 5V, and GND.
+4. Start the backend:
+
+```
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+5. Verify that alert escalation activates haptic feedback without blocking video processing.
+
+## ------------------------------------
 ## RUN SAFE DRIVER BACKEND APPLICATION
 ## ------------------------------------
 
@@ -163,7 +287,7 @@ Step 3 — Build the executable
 WINDOWS
 pyinstaller --onefile --name safedriverapp --add-data "config;config" --add-data "model;model" --add-data "service;service" --add-data "utils;utils" --add-data ".env;." --add-data "banner.txt;." --add-data "shared.py;shared.py" --add-data "database;database" --add-data "firebase-admin-sdk;firebase-admin-sdk" run.py
 
-pyinstaller --onefile --name safedriverapp --add-data "model/face_landmarker.task;model" --add-data "model/yolov8n.pt;model" --add-data "model/cigarette_model.pt;model" --add-data "model/glasses_model.pt;model" --add-data ".env;." --add-data "banner.txt;." --add-data "firebase-admin-sdk;firebase-admin-sdk" --hidden-import=dotenv run.py
+pyinstaller --onefile --name safedriverapp --add-data "model/face_landmarker.task;model" --add-data "model/yolov8n.pt;model" --add-data "model/cigarette_model.pt;model" --add-data "model/glasses_model.pt;model" --add-data "service;service" --add-data ".env;." --add-data "banner.txt;." --add-data "firebase-admin-sdk;firebase-admin-sdk" --hidden-import=dotenv run.py
 
 RASPBARRY
-pyinstaller --onefile --name safedriverapp --add-data "model/face_landmarker.task:model" --add-data "model/yolov8n.pt:model" --add-data "model/cigarette_model.pt:model" --add-data "model/glasses_model.pt:model" --add-data ".env:." --add-data "banner.txt:." --add-data "firebase-admin-sdk:firebase-admin-sdk" run.py
+pyinstaller --onefile --name safedriverapp --add-data "model/face_landmarker.task:model" --add-data "model/yolov8n.pt:model" --add-data "model/cigarette_model.pt:model" --add-data "model/glasses_model.pt:model" --add-data "service:service" --add-data ".env:." --add-data "banner.txt:." --add-data "firebase-admin-sdk:firebase-admin-sdk" run.py
