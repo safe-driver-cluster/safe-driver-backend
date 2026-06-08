@@ -207,16 +207,17 @@ class AlertManager:
         consecutive_count = self._update_event_activity(policy_key, now_ts)
 
         threshold_reached = True
-        threshold_key = None
+        cloud_alert_count = timeframe_count if timeframe_count is not None else current_count
 
         if threshold is not None:
-            threshold_reached = current_count >= threshold
-            threshold_key = f"{policy_key}:threshold"
+            threshold_reached = cloud_alert_count >= threshold
             payload_data = {
                 **payload_data,
                 "event_type": event_type,
                 "count": current_count,
                 "threshold": threshold,
+                "timeframe_count": timeframe_count,
+                "timeframe_count_limit": config.CLOUD_ALERT_TIMEFRAME_COUNT_LIMIT,
             }
 
         if send_cloud and threshold is not None:
@@ -224,18 +225,26 @@ class AlertManager:
                 self.logger.debug(
                     "Cloud alert suppressed for %s: count %s is below threshold %s",
                     policy_key,
-                    current_count,
+                    cloud_alert_count,
                     threshold,
                 )
                 send_cloud = False
-            elif self.threshold_alert_sent.get(threshold_key):
+            elif timeframe_count is not None and timeframe_count > config.CLOUD_ALERT_TIMEFRAME_COUNT_LIMIT:
                 self.logger.debug(
-                    "Cloud alert suppressed for %s: threshold alert already sent in current cycle",
+                    "Cloud alert suppressed for %s: timeframe_count %s exceeded limit %s",
                     policy_key,
+                    timeframe_count,
+                    config.CLOUD_ALERT_TIMEFRAME_COUNT_LIMIT,
                 )
                 send_cloud = False
             else:
-                self.threshold_alert_sent[threshold_key] = True
+                self.logger.info(
+                    "Cloud alert permitted: policy=%s timeframe_count=%s threshold=%s limit=%s",
+                    policy_key,
+                    timeframe_count,
+                    threshold,
+                    config.CLOUD_ALERT_TIMEFRAME_COUNT_LIMIT,
+                )
 
         if send_cloud:
             self.send_behavior_to_parent(
@@ -255,7 +264,7 @@ class AlertManager:
             buzzer_used = self.buzzer_alert_count_by_type.get(policy_key, 0)
             voice_used = self.voice_alert_count_by_type.get(policy_key, 0)
             last_voice = self.last_voice_alert_time_by_type.get(policy_key)
-            voice_cooldown_ok = last_voice is None or (now_ts - last_voice) < config.VOICE_ALERT_COOLDOWN_SEC
+            voice_cooldown_ok = last_voice is None or (now_ts - last_voice) >= config.VOICE_ALERT_COOLDOWN_SEC
 
             if buzzer_used >= config.MAXIMUM_BUZZER_ALERTS_PER_TYPE and allow_voice and voice_cooldown_ok and voice_used < config.MAXIMUM_VOICE_ALERTS_PER_TYPE:
                 
@@ -281,8 +290,24 @@ class AlertManager:
                     utils.perform_voice_alerts(voice_text, voice_label)
                     self.voice_alert_count_by_type[policy_key] = voice_used + 1
                     self.last_voice_alert_time_by_type[policy_key] = now_ts
+                    self.logger.info(
+                        "Voice alert emitted: policy=%s level=%s/%s consecutive=%s",
+                        policy_key,
+                        voice_used + 1,
+                        config.MAXIMUM_VOICE_ALERTS_PER_TYPE,
+                        consecutive_count,
+                    )
                 else:
                     self.logger.warning(f"Voice alert skipped due to empty message for event type: {event_type}")
+            elif voice_used < config.MAXIMUM_VOICE_ALERTS_PER_TYPE:
+                self.logger.debug(
+                    "Voice alert suppressed: policy=%s consecutive=%s buzzer_used=%s cooldown_ok=%s voice_used=%s",
+                    policy_key,
+                    consecutive_count,
+                    buzzer_used,
+                    voice_cooldown_ok,
+                    voice_used,
+                )
 
         if trigger_buzzer:
             if not self._channel_permits_emit("buzzer", cycle_id, policy_key):
@@ -302,6 +327,13 @@ class AlertManager:
                 self.buzzer_alert_count_by_type[policy_key] = buzzer_used + 1
                 self.last_buzzer_alert_time_by_type[policy_key] = now_ts
                 self._buzzer_cycle_state["emitted"] = True
+                self.logger.info(
+                    "Buzzer alert emitted: policy=%s alert=%s/%s consecutive=%s",
+                    policy_key,
+                    buzzer_used + 1,
+                    config.MAXIMUM_BUZZER_ALERTS_PER_TYPE,
+                    consecutive_count,
+                )
     
     def get_voice_msg_by_level(self, event_type: str, level: int) -> str:
         """Return appropriate voice message based on event type and severity level."""

@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 import pygame
 pygame.mixer.init()
 
+_VOICE_PLAYBACK_LOCK = threading.Lock()
+
 def now():
     """Return current UTC timestamp in ISO format"""
     sri_lanka_tz = pytz.timezone('Asia/Colombo')
@@ -106,27 +108,31 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
             return
 
         def _play_sound(text_inner):
-            try:
-                language = config.LANGUAGE if config.LANGUAGE in ("ENGLISH", "SINHALA", "TAMIL") else "ENGLISH"
-                lang_code = {"ENGLISH": "en", "SINHALA": "si", "TAMIL": "ta"}
+            with _VOICE_PLAYBACK_LOCK:
+                try:
+                    language = config.LANGUAGE if config.LANGUAGE in ("ENGLISH", "SINHALA", "TAMIL") else "ENGLISH"
+                    lang_code = {"ENGLISH": "en", "SINHALA": "si", "TAMIL": "ta"}
 
-                # Build path: audio/ENGLISH/VOICE_ALERT_DISTRACTION_ENGLISH.mp3
-                filename = os.path.join(utils.get_audio_dir(), language, f"{label}_{language}.mp3")
+                    # Build path: audio/ENGLISH/VOICE_ALERT_DISTRACTION_ENGLISH.mp3
+                    filename = os.path.join(utils.get_audio_dir(), language, f"{label}_{language}.mp3")
 
-                if not os.path.exists(filename):
-                    logger.warning(f"[Sound] File not found: {filename}. Generating via TTS...")
-                    os.makedirs(os.path.dirname(filename), exist_ok=True)
-                    tts = gTTS(text=text_inner, lang=lang_code[language])
-                    tts.save(filename)
+                    if not os.path.exists(filename):
+                        logger.warning(f"[Sound] File not found: {filename}. Generating via TTS...")
+                        os.makedirs(os.path.dirname(filename), exist_ok=True)
+                        tts = gTTS(text=text_inner, lang=lang_code[language])
+                        tts.save(filename)
 
-                pygame.mixer.music.load(filename)
-                pygame.mixer.music.play()
+                    logger.info("Voice playback started: %s", filename)
+                    pygame.mixer.music.load(filename)
+                    pygame.mixer.music.play()
 
-                while pygame.mixer.music.get_busy():
-                    pygame.time.Clock().tick(10)
+                    while pygame.mixer.music.get_busy():
+                        pygame.time.Clock().tick(10)
 
-            except Exception as e:
-                logger.info(f"[Sound Error] {e}")
+                    logger.info("Voice playback completed: %s", filename)
+
+                except Exception as e:
+                    logger.info(f"[Sound Error] {e}")
 
         t = threading.Thread(target=_play_sound, args=(message,))
         t.daemon = True
