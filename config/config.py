@@ -252,11 +252,15 @@ DEVICE_ID = ""
 GPS_SERIAL_PORT = "/dev/ttyAMA5"
 GPS_BAUDRATE = 9600
 GPS_RECONNECT_INTERVAL = 5
-SPEED_LIMIT = 20.0
+# This is a driver-monitoring activation threshold, not an overspeed limit.
+ENABLE_SPEED_GATED_DETECTION = True
+DETECTION_ENABLE_SPEED_KMPH = 20.0
+GPS_SPEED_STALE_SEC = 10.0
 SPEED_THRESHOLD = 2.0
 PUSH_INTERVAL = 5          # push every 5 seconds minimum
 SPEED_CHANGE_THRESHOLD = 3 # push immediately if speed changes by 3 km/h
 CURRENT_SPEED = 0.0
+CURRENT_SPEED_UPDATED_AT = 0.0
 
 # =================================================================================================================================
 # MULTILINGUAL CONFIGURATIONS

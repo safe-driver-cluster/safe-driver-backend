@@ -35,7 +35,7 @@ def _parse_rmc_line(line: str):
         "latitude": round(msg.latitude, 6),
         "longitude": round(msg.longitude, 6),
         "speed": round(speed_kmh, 2),
-        "active_speed": speed_kmh > config.SPEED_LIMIT,
+        "active_speed": speed_kmh > config.DETECTION_ENABLE_SPEED_KMPH,
         "timestamp": int(time.time()),
     }
 
@@ -61,19 +61,29 @@ def run_gps_loop(stop_event, device_mac=None, port=DEFAULT_GPS_PORT, baudrate=DE
                 if data is None:
                     continue
 
+                # Detection uses the latest valid GPS speed immediately. Firebase
+                # updates remain limited to PUSH_INTERVAL.
+                config.CURRENT_SPEED = data["speed"]
+                config.CURRENT_SPEED_UPDATED_AT = time.time()
+
                 now = time.time()
                 time_elapsed = (now - last_push_time) >= config.PUSH_INTERVAL
 
                 if time_elapsed:
                     last_push_time = now
-                    config.CURRENT_SPEED = data["speed"]
                     result = db_helper.update_device_gps(device_mac, data)
 
                     if result.get("success"):
                         if data["active_speed"]:
-                            logger.warning("GPS overspeed: %.2f km/h", data["speed"])
+                            logger.info(
+                                "GPS pushed: %.2f km/h, detection active",
+                                data["speed"],
+                            )
                         else:
-                            logger.info("GPS pushed: %.2f km/h", data["speed"])
+                            logger.info(
+                                "GPS pushed: %.2f km/h, detection paused",
+                                data["speed"],
+                            )
                     else:
                         logger.warning("GPS Firebase update failed: %s", result.get("message"))
 

@@ -986,6 +986,55 @@ def force_stop():
         current_cap.release()
         current_cap = None
 
+
+def _reset_transient_detection_state():
+    """Clear in-progress behavior state when monitoring is paused."""
+    global DETECTION_RESULT, EYE_CLOSED_START, YAWN_START, EYE_PARTIAL_CLOSURE_START
+    global HEAD_TURNED_START, NO_FACE_START, YAWN_COUNTED, MICROSLEEP_COUNTED
+    global DROWSY_COUNTED, FREQUENT_CLOSURES_COUNTED, HEAD_TURN_COUNTED
+    global FACE_MISSING_COUNTED, NO_FACE_COUNTED
+
+    DETECTION_RESULT = None
+    EYE_CLOSED_START = None
+    YAWN_START = None
+    EYE_PARTIAL_CLOSURE_START = None
+    HEAD_TURNED_START = None
+    NO_FACE_START = None
+    YAWN_COUNTED = False
+    MICROSLEEP_COUNTED = False
+    DROWSY_COUNTED = False
+    FREQUENT_CLOSURES_COUNTED = False
+    HEAD_TURN_COUNTED = False
+    FACE_MISSING_COUNTED = False
+    NO_FACE_COUNTED = False
+    PERCLOS_WIN.clear()
+    BLINK_TIMES.clear()
+    EYE_CLOSURE_EVENTS.clear()
+
+
+def _speed_monitoring_state():
+    """Return whether detection may run and a human-readable reason."""
+    if platform.system().lower() != "linux":
+        return True, "speed gate applies only on Linux"
+
+    if not config.ENABLE_SPEED_GATED_DETECTION or not config.ENABLE_GPS:
+        return True, "speed gate disabled"
+
+    speed_age = time.time() - config.CURRENT_SPEED_UPDATED_AT
+    if config.CURRENT_SPEED_UPDATED_AT <= 0 or speed_age > config.GPS_SPEED_STALE_SEC:
+        return False, "waiting for fresh GPS speed"
+
+    if config.CURRENT_SPEED <= config.DETECTION_ENABLE_SPEED_KMPH:
+        return False, (
+            f"speed {config.CURRENT_SPEED:.2f} km/h <= "
+            f"{config.DETECTION_ENABLE_SPEED_KMPH:.2f} km/h threshold"
+        )
+
+    return True, (
+        f"speed {config.CURRENT_SPEED:.2f} km/h > "
+        f"{config.DETECTION_ENABLE_SPEED_KMPH:.2f} km/h threshold"
+    )
+
 def run(model: str, num_faces: int,
         min_face_detection_confidence: float,
         min_face_presence_confidence: float, min_tracking_confidence: float,
@@ -1097,11 +1146,9 @@ def run(model: str, num_faces: int,
     
     object_detector = None
 
-    if config.ENABLE_OBJECT_DETECTION:
-        object_detector = frame_detect.DetectorProcess()   #create once
-
     frame_count = 0
     detection_failures = 0
+    monitoring_active = None
     object_detection_frame_interval = (
         config.OBJECT_DETECTION_FRAME_INTERVAL_LINUX
         if system == "linux"
@@ -1143,8 +1190,44 @@ def run(model: str, num_faces: int,
             # ======================= PREPROCESS ==========================
             image = cv2.flip(image, 1)
 
+            speed_monitoring_active, monitoring_reason = _speed_monitoring_state()
+            if speed_monitoring_active != monitoring_active:
+                monitoring_active = speed_monitoring_active
+                if monitoring_active:
+                    logger.info("Driver monitoring resumed: %s", monitoring_reason)
+                else:
+                    logger.info("Driver monitoring paused: %s", monitoring_reason)
+                    _reset_transient_detection_state()
+                    if object_detector is not None:
+                        object_detector.stop()
+                        object_detector = None
+                        logger.info("Object detection worker paused with driver monitoring")
+
+            if not monitoring_active:
+                if config.ENABLE_WINDOW:
+                    cv2.putText(
+                        image,
+                        "Monitoring paused - " + monitoring_reason,
+                        (20, 35),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.65,
+                        (0, 165, 255),
+                        2,
+                        cv2.LINE_AA,
+                    )
+                    cv2.imshow(config.WINDOW_NAME, image)
+
+                if cv2.waitKey(1) == 27:
+                    logger.info("ESC key pressed - Exiting...")
+                    break
+                continue
+
             # ======================= OBJECT DETECTION (ASYNC) ============
             if config.ENABLE_OBJECT_DETECTION:
+                if object_detector is None:
+                    object_detector = frame_detect.DetectorProcess()
+                    logger.info("Object detection enabled because bus exceeded speed threshold")
+
                 if object_detector is not None:
                     object_detector.drain_events()
 
