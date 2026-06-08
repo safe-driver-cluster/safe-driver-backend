@@ -131,7 +131,8 @@ def _log_object_detection_event(
     logger.info(
         (
             "Object detection event: label=%s event_type=%s confidence=%.2f "
-            "event_count=%s timeframe_count=%s/%s cloud_threshold=%s"
+            "event_count=%s timeframe_count=%s/%s cloud_threshold=%s "
+            "cloud_status=%s"
         ),
         label,
         event_type,
@@ -141,9 +142,6 @@ def _log_object_detection_event(
         config.CLOUD_ALERT_TIMEFRAME_COUNT_LIMIT,
         threshold,
         _cloud_status(timeframe_count, threshold),
-        frame_count,
-        inference_size,
-        bbox,
     )
     
 def _forward_behavior_events(output_queue):
