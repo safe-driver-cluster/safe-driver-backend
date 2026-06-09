@@ -157,7 +157,7 @@ python gps/gps_simulator.py --pty --interval 5 --repeat
 ```
 
 Keep Terminal 1 open. The simulator creates `/tmp/safe_driver_gps` and sends
-the 20 configured signals repeatedly, with a five-second interval. Press
+the configured route signals repeatedly, with a five-second interval. Press
 `Ctrl+C` when the simulation is finished.
 
 ### Terminal 2 - Start the backend normally
