@@ -274,6 +274,15 @@ PUSH_INTERVAL = 5          # push every 5 seconds minimum
 SPEED_CHANGE_THRESHOLD = 3 # push immediately if speed changes by 3 km/h
 CURRENT_SPEED = 0.0
 CURRENT_SPEED_UPDATED_AT = 0.0
+ENABLE_HAZARD_WARNINGS = True
+HAZARD_REFRESH_INTERVAL_SEC = 60
+HAZARD_EXIT_BUFFER_METERS = 20.0
+VOICE_ALERT_HAZARD_LABEL = "VOICE_ALERT_HAZARD"
+VOICE_ALERT_HAZARD = {
+    "ENGLISH": "Dangerous bend ahead. Please drive carefully.",
+    "SINHALA": "වැලමිටි වංගුවක් ඉදිරියෙන්. ප්‍රවේශමෙන් රිය පදවන්න.",
+    "TAMIL": "ஆபத்தான வளைவு முன்னால் உள்ளது. கவனமாக வாகனம் ஓட்டுங்கள்.",
+}
 
 # =================================================================================================================================
 # MULTILINGUAL CONFIGURATIONS

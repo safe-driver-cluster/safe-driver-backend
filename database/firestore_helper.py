@@ -122,6 +122,44 @@ class FirestoreHelper:
         except Exception as e:
             logger.error(f"Error retrieving model configurations from Firestore: {e}")
             return {}
+
+    def get_hazard_zones(self) -> Optional[List[Dict]]:
+        """Retrieve valid hazard zones from the top-level hazards collection."""
+        try:
+            self._ensure_db_initialized()
+            hazards = []
+
+            for document in self.db.collection("hazards").stream():
+                data = document.to_dict() or {}
+                try:
+                    latitude = float(data["latitude"])
+                    longitude = float(data["longitude"])
+                    radius = float(data["radius"])
+                except (KeyError, TypeError, ValueError):
+                    logger.warning("Skipped invalid hazard document: %s", document.id)
+                    continue
+
+                if radius <= 0:
+                    logger.warning(
+                        "Skipped hazard document with non-positive radius: %s",
+                        document.id,
+                    )
+                    continue
+
+                hazards.append(
+                    {
+                        "id": document.id,
+                        "latitude": latitude,
+                        "longitude": longitude,
+                        "radius": radius,
+                    }
+                )
+
+            logger.info("Retrieved %s hazard zones from Firestore", len(hazards))
+            return hazards
+        except Exception:
+            logger.exception("Failed to retrieve hazard zones from Firestore")
+            return None
     
     def update_specific_configuration_firestore(self, config_category: str, config_name: str, config_value: Any) -> Dict:
         """

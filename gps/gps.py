@@ -1,4 +1,5 @@
 import logging
+from math import atan2, cos, radians, sin, sqrt
 import time
 
 import pynmea2
@@ -6,6 +7,8 @@ import serial
 
 import config.config as config
 from database import db_helper
+from database.firestore_helper import firestore_helper
+import model.utilmethods as model_utils
 from service.model_service import get_mac_address_alternative
 
 
@@ -13,6 +16,89 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_GPS_PORT = "/dev/ttyAMA5"
 DEFAULT_GPS_BAUDRATE = 9600
+
+
+def distance_meters(latitude_a, longitude_a, latitude_b, longitude_b):
+    """Calculate great-circle distance between two coordinates in meters."""
+    earth_radius_meters = 6_371_000
+    lat_a = radians(latitude_a)
+    lat_b = radians(latitude_b)
+    delta_lat = radians(latitude_b - latitude_a)
+    delta_lon = radians(longitude_b - longitude_a)
+    value = (
+        sin(delta_lat / 2) ** 2
+        + cos(lat_a) * cos(lat_b) * sin(delta_lon / 2) ** 2
+    )
+    return earth_radius_meters * 2 * atan2(sqrt(value), sqrt(1 - value))
+
+
+class HazardZoneMonitor:
+    """Cache Firestore hazards and warn once whenever the bus enters a zone."""
+
+    def __init__(self, hazard_provider=None, voice_callback=None, time_provider=None):
+        self.hazard_provider = hazard_provider or firestore_helper.get_hazard_zones
+        self.voice_callback = voice_callback or model_utils.perform_voice_alerts
+        self.time_provider = time_provider or time.time
+        self.hazards = []
+        self.active_hazard_ids = set()
+        self.last_refresh_time = 0.0
+
+    def _refresh_if_due(self):
+        now = self.time_provider()
+        if (
+            self.last_refresh_time
+            and now - self.last_refresh_time < config.HAZARD_REFRESH_INTERVAL_SEC
+        ):
+            return
+
+        hazards = self.hazard_provider()
+        self.last_refresh_time = now
+        if hazards is not None:
+            self.hazards = hazards
+            valid_ids = {hazard["id"] for hazard in hazards}
+            self.active_hazard_ids.intersection_update(valid_ids)
+
+    def check_location(self, latitude, longitude):
+        if not config.ENABLE_HAZARD_WARNINGS:
+            return []
+
+        self._refresh_if_due()
+        entered = []
+
+        for hazard in self.hazards:
+            distance = distance_meters(
+                latitude,
+                longitude,
+                hazard["latitude"],
+                hazard["longitude"],
+            )
+            hazard_id = hazard["id"]
+
+            if distance <= hazard["radius"]:
+                if hazard_id not in self.active_hazard_ids:
+                    self.active_hazard_ids.add(hazard_id)
+                    entered.append(hazard_id)
+                    language = (
+                        config.LANGUAGE
+                        if config.LANGUAGE in config.VOICE_ALERT_HAZARD
+                        else "ENGLISH"
+                    )
+                    self.voice_callback(
+                        config.VOICE_ALERT_HAZARD[language],
+                        config.VOICE_ALERT_HAZARD_LABEL,
+                    )
+                    logger.warning(
+                        "Entered hazard zone: id=%s distance=%.1fm radius=%.1fm",
+                        hazard_id,
+                        distance,
+                        hazard["radius"],
+                    )
+            elif distance > hazard["radius"] + config.HAZARD_EXIT_BUFFER_METERS:
+                if hazard_id in self.active_hazard_ids:
+                    self.active_hazard_ids.remove(hazard_id)
+                    logger.info("Exited hazard zone: id=%s distance=%.1fm", hazard_id, distance)
+
+        return entered
 
 
 def _parse_rmc_line(line: str):
@@ -44,6 +130,7 @@ def run_gps_loop(stop_event, device_mac=None, port=DEFAULT_GPS_PORT, baudrate=DE
     """Read GPS NMEA data and update Firebase at the configured interval."""
     last_push_time = 0.0
     device_mac = device_mac or get_mac_address_alternative()
+    hazard_monitor = HazardZoneMonitor()
 
     while not stop_event.is_set():
         gps_serial = None
@@ -65,6 +152,7 @@ def run_gps_loop(stop_event, device_mac=None, port=DEFAULT_GPS_PORT, baudrate=DE
                 # updates remain limited to PUSH_INTERVAL.
                 config.CURRENT_SPEED = data["speed"]
                 config.CURRENT_SPEED_UPDATED_AT = time.time()
+                hazard_monitor.check_location(data["latitude"], data["longitude"])
 
                 now = time.time()
                 time_elapsed = (now - last_push_time) >= config.PUSH_INTERVAL
