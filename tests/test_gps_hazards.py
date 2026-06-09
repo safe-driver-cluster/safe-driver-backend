@@ -46,6 +46,58 @@ def test_hazard_warns_once_until_bus_exits_buffer(monkeypatch):
     assert played[0][1] == config.VOICE_ALERT_HAZARD_LABEL
 
 
+def test_hazard_uses_configured_alert_type(monkeypatch):
+    played = []
+    hazard = {
+        **HAZARD,
+        "type": "slippery_road",
+    }
+
+    monkeypatch.setattr(config, "ENABLE_HAZARD_WARNINGS", True)
+    monkeypatch.setattr(config, "LANGUAGE", "ENGLISH")
+
+    monitor = HazardZoneMonitor(
+        hazard_provider=lambda: [hazard],
+        voice_callback=lambda message, label: played.append((message, label)),
+        time_provider=lambda: 100.0,
+    )
+
+    monitor.check_location(hazard["latitude"], hazard["longitude"])
+
+    assert played == [
+        (
+            config.VOICE_ALERT_HAZARD_TYPES["slippery_road"]["messages"]["ENGLISH"],
+            config.VOICE_ALERT_HAZARD_TYPES["slippery_road"]["label"],
+        )
+    ]
+
+
+def test_unknown_hazard_type_uses_default_alert(monkeypatch):
+    played = []
+    hazard = {
+        **HAZARD,
+        "type": "unknown_hazard",
+    }
+
+    monkeypatch.setattr(config, "ENABLE_HAZARD_WARNINGS", True)
+    monkeypatch.setattr(config, "LANGUAGE", "ENGLISH")
+
+    monitor = HazardZoneMonitor(
+        hazard_provider=lambda: [hazard],
+        voice_callback=lambda message, label: played.append((message, label)),
+        time_provider=lambda: 100.0,
+    )
+
+    monitor.check_location(hazard["latitude"], hazard["longitude"])
+
+    assert played == [
+        (
+            config.VOICE_ALERT_HAZARD["ENGLISH"],
+            config.VOICE_ALERT_HAZARD_LABEL,
+        )
+    ]
+
+
 def test_hazard_cache_keeps_last_zones_when_refresh_fails(monkeypatch):
     now = [100.0]
     responses = iter(([HAZARD], None))

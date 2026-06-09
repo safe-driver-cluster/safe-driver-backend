@@ -43,6 +43,22 @@ class HazardZoneMonitor:
         self.active_hazard_ids = set()
         self.last_refresh_time = 0.0
 
+    @staticmethod
+    def _voice_for_hazard(hazard):
+        hazard_type = str(
+            hazard.get("type") or config.DEFAULT_HAZARD_ALERT_TYPE
+        ).strip().lower()
+        alert_config = config.VOICE_ALERT_HAZARD_TYPES.get(
+            hazard_type,
+            config.VOICE_ALERT_HAZARD_TYPES[config.DEFAULT_HAZARD_ALERT_TYPE],
+        )
+        language = (
+            config.LANGUAGE
+            if config.LANGUAGE in alert_config["messages"]
+            else "ENGLISH"
+        )
+        return alert_config["messages"][language], alert_config["label"], hazard_type
+
     def _refresh_if_due(self):
         now = self.time_provider()
         if (
@@ -78,18 +94,12 @@ class HazardZoneMonitor:
                 if hazard_id not in self.active_hazard_ids:
                     self.active_hazard_ids.add(hazard_id)
                     entered.append(hazard_id)
-                    language = (
-                        config.LANGUAGE
-                        if config.LANGUAGE in config.VOICE_ALERT_HAZARD
-                        else "ENGLISH"
-                    )
-                    self.voice_callback(
-                        config.VOICE_ALERT_HAZARD[language],
-                        config.VOICE_ALERT_HAZARD_LABEL,
-                    )
+                    message, label, hazard_type = self._voice_for_hazard(hazard)
+                    self.voice_callback(message, label)
                     logger.warning(
-                        "Entered hazard zone: id=%s distance=%.1fm radius=%.1fm",
+                        "Entered hazard zone: id=%s type=%s distance=%.1fm radius=%.1fm",
                         hazard_id,
+                        hazard_type,
                         distance,
                         hazard["radius"],
                     )

@@ -152,6 +152,9 @@ class FirestoreHelper:
                         "latitude": latitude,
                         "longitude": longitude,
                         "radius": radius,
+                        "type": data.get("type")
+                        or data.get("hazard_type")
+                        or config.DEFAULT_HAZARD_ALERT_TYPE,
                     }
                 )
 
