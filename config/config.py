@@ -10,7 +10,7 @@ VERSION_NO = "1.0.0"
 # 'en' for English
 # 'si' for Sinhala (සිංහල)
 # 'ta' for Tamil (தமிழ்)
-LANGUAGE = 'SINHALA'
+LANGUAGE = 'ENGLISH'
 SYSTEM = platform.system().lower()
 
 # Drowsiness Detection Thresholds
@@ -277,12 +277,72 @@ CURRENT_SPEED_UPDATED_AT = 0.0
 ENABLE_HAZARD_WARNINGS = True
 HAZARD_REFRESH_INTERVAL_SEC = 60
 HAZARD_EXIT_BUFFER_METERS = 20.0
-VOICE_ALERT_HAZARD_LABEL = "VOICE_ALERT_HAZARD"
-VOICE_ALERT_HAZARD = {
-    "ENGLISH": "Dangerous bend ahead. Please drive carefully.",
-    "SINHALA": "වැලමිටි වංගුවක් ඉදිරියෙන්. ප්‍රවේශමෙන් රිය පදවන්න.",
-    "TAMIL": "ஆபத்தான வளைவு முன்னால் உள்ளது. கவனமாக வாகனம் ஓட்டுங்கள்.",
+DEFAULT_HAZARD_ALERT_TYPE = "dangerous_bend"
+
+VOICE_ALERT_HAZARD_BEND_ENGLISH = "Dangerous bend ahead. Please drive carefully."
+VOICE_ALERT_HAZARD_BEND_SINHALA = "වැලමිටි වංගුවක් ඉදිරියෙන්. ප්‍රවේශමෙන් රිය පදවන්න."
+VOICE_ALERT_HAZARD_BEND_TAMIL = "ஆபத்தான வளைவு முன்னால் உள்ளது. கவனமாக வாகனம் ஓட்டுங்கள்."
+
+VOICE_ALERT_HAZARD_ACCIDENT_ENGLISH = "Accident-prone zone ahead. Please slow down and drive carefully."
+VOICE_ALERT_HAZARD_ACCIDENT_SINHALA = "අනතුරු බහුල ප්‍රදේශයක් ඉදිරියෙන්. කරුණාකර වේගය අඩු කර ප්‍රවේශමෙන් රිය පදවන්න."
+VOICE_ALERT_HAZARD_ACCIDENT_TAMIL = "விபத்து அதிகம் ஏற்படும் பகுதி முன்னால் உள்ளது. வேகத்தை குறைத்து கவனமாக ஓட்டுங்கள்."
+
+VOICE_ALERT_HAZARD_DESCENT_ENGLISH = "Steep downhill road ahead. Please control your speed."
+VOICE_ALERT_HAZARD_DESCENT_SINHALA = "කඳු පහළ බැසීමක් ඉදිරියෙන්. කරුණාකර ඔබේ වේගය පාලනය කරන්න."
+VOICE_ALERT_HAZARD_DESCENT_TAMIL = "கடுமையான இறக்கைச் சாலை முன்னால் உள்ளது. தயவுசெய்து வேகத்தை கட்டுப்படுத்துங்கள்."
+
+VOICE_ALERT_HAZARD_SLIPPERY_ENGLISH = "Slippery road ahead. Please drive carefully."
+VOICE_ALERT_HAZARD_SLIPPERY_SINHALA = "ලිස්සන මාර්ගයක් ඉදිරියෙන්. ප්‍රවේශමෙන් රිය පදවන්න."
+VOICE_ALERT_HAZARD_SLIPPERY_TAMIL = "வழுக்கும் சாலை முன்னால் உள்ளது. கவனமாக வாகனம் ஓட்டுங்கள்."
+
+VOICE_ALERT_HAZARD_NARROW_ENGLISH = "Narrow road ahead. Please slow down and keep left."
+VOICE_ALERT_HAZARD_NARROW_SINHALA = "පටු මාර්ගයක් ඉදිරියෙන්. කරුණාකර වේගය අඩු කර වමට වී රිය පදවන්න."
+VOICE_ALERT_HAZARD_NARROW_TAMIL = "குறுகிய சாலை முன்னால் உள்ளது. வேகத்தை குறைத்து இடப்புறமாக ஓட்டுங்கள்."
+
+VOICE_ALERT_HAZARD_TYPES = {
+    "dangerous_bend": {
+        "label": "VOICE_ALERT_HAZARD_DANGEROUS_BEND",
+        "messages": {
+            "ENGLISH": "Dangerous bend ahead. Please drive carefully.",
+            "SINHALA": "වැලමිටි වංගුවක් ඉදිරියෙන්. ප්‍රවේශමෙන් රිය පදවන්න.",
+            "TAMIL": "ஆபத்தான வளைவு முன்னால் உள்ளது. கவனமாக வாகனம் ஓட்டுங்கள்.",
+        },
+    },
+    "accident_prone_zone": {
+        "label": "VOICE_ALERT_HAZARD_ACCIDENT_PRONE_ZONE",
+        "messages": {
+            "ENGLISH": "Accident-prone zone ahead. Please slow down and drive carefully.",
+            "SINHALA": "අනතුරු බහුල ප්‍රදේශයක් ඉදිරියෙන්. කරුණාකර වේගය අඩු කර ප්‍රවේශමෙන් රිය පදවන්න.",
+            "TAMIL": "விபத்து அதிகம் ஏற்படும் பகுதி முன்னால் உள்ளது. வேகத்தை குறைத்து கவனமாக ஓட்டுங்கள்.",
+        },
+    },
+    "mountain_descent": {
+        "label": "VOICE_ALERT_HAZARD_MOUNTAIN_DESCENT",
+        "messages": {
+            "ENGLISH": "Steep downhill road ahead. Please control your speed.",
+            "SINHALA": "කඳු පහළ බැසීමක් ඉදිරියෙන්. කරුණාකර ඔබේ වේගය පාලනය කරන්න.",
+            "TAMIL": "கடுமையான இறக்கைச் சாலை முன்னால் உள்ளது. தயவுசெய்து வேகத்தை கட்டுப்படுத்துங்கள்.",
+        },
+    },
+    "slippery_road": {
+        "label": "VOICE_ALERT_HAZARD_SLIPPERY_ROAD",
+        "messages": {
+            "ENGLISH": "Slippery road ahead. Please drive carefully.",
+            "SINHALA": "ලිස්සන මාර්ගයක් ඉදිරියෙන්. ප්‍රවේශමෙන් රිය පදවන්න.",
+            "TAMIL": "வழுக்கும் சாலை முன்னால் உள்ளது. கவனமாக வாகனம் ஓட்டுங்கள்.",
+        },
+    },
+    "narrow_road": {
+        "label": "VOICE_ALERT_HAZARD_NARROW_ROAD",
+        "messages": {
+            "ENGLISH": "Narrow road ahead. Please slow down and keep left.",
+            "SINHALA": "පටු මාර්ගයක් ඉදිරියෙන්. කරුණාකර වේගය අඩු කර වමට වී රිය පදවන්න.",
+            "TAMIL": "குறுகிய சாலை முன்னால் உள்ளது. வேகத்தை குறைத்து இடப்புறமாக ஓட்டுங்கள்.",
+        },
+    },
 }
+VOICE_ALERT_HAZARD_LABEL = VOICE_ALERT_HAZARD_TYPES[DEFAULT_HAZARD_ALERT_TYPE]["label"]
+VOICE_ALERT_HAZARD = VOICE_ALERT_HAZARD_TYPES[DEFAULT_HAZARD_ALERT_TYPE]["messages"]
 
 # =================================================================================================================================
 # MULTILINGUAL CONFIGURATIONS
