@@ -13,6 +13,20 @@ VERSION_NO = "1.0.0"
 LANGUAGE = 'ENGLISH'
 SYSTEM = platform.system().lower()
 
+# Enable Disable Configurations
+ENABLE_DETECTION = True  # Set to False to disable all detection (for performance testing)
+ENABLE_OBJECT_DETECTION = True  # Set to False to disable object detection (for performance testing)
+ENABLE_CV2_WINDOW = False  # Set to False to disable cv2.imshow (for headless environments) [Object detect window]
+ENABLE_WINDOW = True  # Set to False to disable cv2.imshow (for headless environments) [Face Detect window]
+ENABLE_LOGGING = True  # Set to False to disable logging (for performance testing)
+ENABLE_VOICE_ALERTS = True
+ENABLE_VOICE_ALERT_SYNC = False
+ENABLE_ALERT_EVIDENCE = True
+ENABLE_FINGERPRINT = False  # Set to False to disable fingerprinting (for performance testing)
+ENABLE_GPS = True  # Set to False to disable GPS location retrieval
+ENABLE_HAZARD_WARNINGS = True
+
+
 # Drowsiness Detection Thresholds
 EYE_CLOSED_THRESH = 0.60
 EYE_PARTIAL_THRESH = 0.40
@@ -60,8 +74,6 @@ MAXIMUM_VOICE_ALERTS_PER_TYPE = 3  # Maximum number of voice alerts per type to 
 # Object Detection Settings
 # -------------------------------------------------------------------------------------
 
-ENABLE_OBJECT_DETECTION = True  # Set to False to disable object detection (for performance testing)
-
 YOLO_MODEL_PHONE_BOTTLE_PERSON_CONFIDENCE_THRESHOLD = 0.50
 YOLO_MODEL_CIGARETTE_CONFIDENCE_THRESHOLD = 0.75
 YOLO_MODEL_GLASSES_CONFIDENCE_THRESHOLD = 0.70
@@ -70,8 +82,6 @@ ENABLE_PHONE_BOTTLE_PERSON_DETECTION = True
 ENABLE_CIGARETTE_DETECTION = True
 ENABLE_GLASSES_DETECTION = False
 
-ENABLE_CV2_WINDOW = False  # Set to False to disable cv2.imshow (for headless environments)
-ENABLE_LOGGING = True  # Set to False to disable logging (for performance testing)
 
 DETECT_PHONE_BOTTLE_PERSON_FRAME = 1
 DETECT_CIGARETTE_FRAME = 1
@@ -122,11 +132,9 @@ SHOW_METRICS = True
 SHOW_WARNINGS = True
 
 # Voice Alert Control
-ENABLE_VOICE_ALERTS = True
-ENABLE_VOICE_ALERT_SYNC = False
+
 FIREBASE_STORAGE_BUCKET = "safe-driver-system.firebasestorage.app"
 VOICE_ALERT_STORAGE_PREFIX = "voice_alerts"
-ENABLE_ALERT_EVIDENCE = True
 ALERT_EVIDENCE_STORAGE_PREFIX = "evidence"
 ALERT_EVIDENCE_JPEG_QUALITY = 80
 VOICE_ALERT_LANGUAGES = {
@@ -245,11 +253,6 @@ HEAD_POSE_COLOR = [0, 0, 255]  # Color for head pose text (BGR)
 # Camera Error Message
 CAMERA_ERROR_MSG = 'ERROR: Unable to read from webcam. Please verify your webcam settings.'
 
-ENABLE_WINDOW = True  # Set to False to disable cv2.imshow (for headless environments)
-ENABLE_DETECTION = True  # Set to False to disable all detection (for performance testing)
-ENABLE_FINGERPRINT = False  # Set to False to disable fingerprinting (for performance testing)
-ENABLE_GPS = True  # Set to False to disable GPS location retrieval
-
 # ======================================================
 # GPS CONFIGURATIONS
 # ======================================================
@@ -274,30 +277,30 @@ PUSH_INTERVAL = 5          # push every 5 seconds minimum
 SPEED_CHANGE_THRESHOLD = 3 # push immediately if speed changes by 3 km/h
 CURRENT_SPEED = 0.0
 CURRENT_SPEED_UPDATED_AT = 0.0
-ENABLE_HAZARD_WARNINGS = True
+
 HAZARD_REFRESH_INTERVAL_SEC = 60
 HAZARD_EXIT_BUFFER_METERS = 20.0
 DEFAULT_HAZARD_ALERT_TYPE = "dangerous_bend"
 
-VOICE_ALERT_HAZARD_BEND_ENGLISH = "Dangerous bend ahead. Please drive carefully."
-VOICE_ALERT_HAZARD_BEND_SINHALA = "වැලමිටි වංගුවක් ඉදිරියෙන්. ප්‍රවේශමෙන් රිය පදවන්න."
-VOICE_ALERT_HAZARD_BEND_TAMIL = "ஆபத்தான வளைவு முன்னால் உள்ளது. கவனமாக வாகனம் ஓட்டுங்கள்."
+# VOICE_ALERT_HAZARD_DANGEROUS_BEND_ENGLISH = "Dangerous bend ahead. Please drive carefully."
+# VOICE_ALERT_HAZARD_DANGEROUS_BEND_SINHALA = "වැලමිටි වංගුවක් ඉදිරියෙන්. ප්‍රවේශමෙන් රිය පදවන්න."
+# VOICE_ALERT_HAZARD_DANGEROUS_BEND_TAMIL = "ஆபத்தான வளைவு முன்னால் உள்ளது. கவனமாக வாகனம் ஓட்டுங்கள்."
 
-VOICE_ALERT_HAZARD_ACCIDENT_ENGLISH = "Accident-prone zone ahead. Please slow down and drive carefully."
-VOICE_ALERT_HAZARD_ACCIDENT_SINHALA = "අනතුරු බහුල ප්‍රදේශයක් ඉදිරියෙන්. කරුණාකර වේගය අඩු කර ප්‍රවේශමෙන් රිය පදවන්න."
-VOICE_ALERT_HAZARD_ACCIDENT_TAMIL = "விபத்து அதிகம் ஏற்படும் பகுதி முன்னால் உள்ளது. வேகத்தை குறைத்து கவனமாக ஓட்டுங்கள்."
+# VOICE_ALERT_HAZARD_ACCIDENT_PRONE_ZONE_ENGLISH = "Accident-prone zone ahead. Please slow down and drive carefully."
+# VOICE_ALERT_HAZARD_ACCIDENT_PRONE_ZONE_SINHALA = "අනතුරු බහුල ප්‍රදේශයක් ඉදිරියෙන්. කරුණාකර වේගය අඩු කර ප්‍රවේශමෙන් රිය පදවන්න."
+# VOICE_ALERT_HAZARD_ACCIDENT_PRONE_ZONE_TAMIL = "விபத்து அதிகம் ஏற்படும் பகுதி முன்னால் உள்ளது. வேகத்தை குறைத்து கவனமாக ஓட்டுங்கள்."
 
-VOICE_ALERT_HAZARD_DESCENT_ENGLISH = "Steep downhill road ahead. Please control your speed."
-VOICE_ALERT_HAZARD_DESCENT_SINHALA = "කඳු පහළ බැසීමක් ඉදිරියෙන්. කරුණාකර ඔබේ වේගය පාලනය කරන්න."
-VOICE_ALERT_HAZARD_DESCENT_TAMIL = "கடுமையான இறக்கைச் சாலை முன்னால் உள்ளது. தயவுசெய்து வேகத்தை கட்டுப்படுத்துங்கள்."
+# VOICE_ALERT_HAZARD_MOUNTAIN_DESCENT_ENGLISH = "Steep downhill road ahead. Please control your speed."
+# VOICE_ALERT_HAZARD_MOUNTAIN_DESCENT_SINHALA = "කඳු පහළ බැසීමක් ඉදිරියෙන්. කරුණාකර ඔබේ වේගය පාලනය කරන්න."
+# VOICE_ALERT_HAZARD_MOUNTAIN_DESCENT_TAMIL = "கடுமையான இறக்கைச் சாலை முன்னால் உள்ளது. தயவுசெய்து வேகத்தை கட்டுப்படுத்துங்கள்."
 
-VOICE_ALERT_HAZARD_SLIPPERY_ENGLISH = "Slippery road ahead. Please drive carefully."
-VOICE_ALERT_HAZARD_SLIPPERY_SINHALA = "ලිස්සන මාර්ගයක් ඉදිරියෙන්. ප්‍රවේශමෙන් රිය පදවන්න."
-VOICE_ALERT_HAZARD_SLIPPERY_TAMIL = "வழுக்கும் சாலை முன்னால் உள்ளது. கவனமாக வாகனம் ஓட்டுங்கள்."
+# VOICE_ALERT_HAZARD_SLIPPERY_ROAD_ENGLISH = "Slippery road ahead. Please drive carefully."
+# VOICE_ALERT_HAZARD_SLIPPERY_ROAD_SINHALA = "ලිස්සන මාර්ගයක් ඉදිරියෙන්. ප්‍රවේශමෙන් රිය පදවන්න."
+# VOICE_ALERT_HAZARD_SLIPPERY_ROAD_TAMIL = "வழுக்கும் சாலை முன்னால் உள்ளது. கவனமாக வாகனம் ஓட்டுங்கள்."
 
-VOICE_ALERT_HAZARD_NARROW_ENGLISH = "Narrow road ahead. Please slow down and keep left."
-VOICE_ALERT_HAZARD_NARROW_SINHALA = "පටු මාර්ගයක් ඉදිරියෙන්. කරුණාකර වේගය අඩු කර වමට වී රිය පදවන්න."
-VOICE_ALERT_HAZARD_NARROW_TAMIL = "குறுகிய சாலை முன்னால் உள்ளது. வேகத்தை குறைத்து இடப்புறமாக ஓட்டுங்கள்."
+# VOICE_ALERT_HAZARD_NARROW_ROAD_ENGLISH = "Narrow road ahead. Please slow down and keep left."
+# VOICE_ALERT_HAZARD_NARROW_ROAD_SINHALA = "පටු මාර්ගයක් ඉදිරියෙන්. කරුණාකර වේගය අඩු කර වමට වී රිය පදවන්න."
+# VOICE_ALERT_HAZARD_NARROW_ROAD_TAMIL = "குறுகிய சாலை முன்னால் உள்ளது. வேகத்தை குறைத்து இடப்புறமாக ஓட்டுங்கள்."
 
 VOICE_ALERT_HAZARD_TYPES = {
     "dangerous_bend": {
