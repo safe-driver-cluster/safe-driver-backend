@@ -20,6 +20,7 @@ def test_hazard_warns_once_until_bus_exits_buffer(monkeypatch):
     now = [100.0]
 
     monkeypatch.setattr(config, "ENABLE_HAZARD_WARNINGS", True)
+    monkeypatch.setattr(config, "HAZARD_FETCH_ONCE", True)
     monkeypatch.setattr(config, "HAZARD_REFRESH_INTERVAL_SEC", 60)
     monkeypatch.setattr(config, "HAZARD_EXIT_BUFFER_METERS", 20.0)
     monkeypatch.setattr(config, "LANGUAGE", "SINHALA")
@@ -54,6 +55,7 @@ def test_hazard_uses_configured_alert_type(monkeypatch):
     }
 
     monkeypatch.setattr(config, "ENABLE_HAZARD_WARNINGS", True)
+    monkeypatch.setattr(config, "HAZARD_FETCH_ONCE", True)
     monkeypatch.setattr(config, "LANGUAGE", "ENGLISH")
 
     monitor = HazardZoneMonitor(
@@ -72,6 +74,33 @@ def test_hazard_uses_configured_alert_type(monkeypatch):
     ]
 
 
+def test_hazard_type_alias_uses_configured_alert(monkeypatch):
+    played = []
+    hazard = {
+        **HAZARD,
+        "type": "accident",
+    }
+
+    monkeypatch.setattr(config, "ENABLE_HAZARD_WARNINGS", True)
+    monkeypatch.setattr(config, "HAZARD_FETCH_ONCE", True)
+    monkeypatch.setattr(config, "LANGUAGE", "ENGLISH")
+
+    monitor = HazardZoneMonitor(
+        hazard_provider=lambda: [hazard],
+        voice_callback=lambda message, label: played.append((message, label)),
+        time_provider=lambda: 100.0,
+    )
+
+    monitor.check_location(hazard["latitude"], hazard["longitude"])
+
+    assert played == [
+        (
+            config.VOICE_ALERT_HAZARD_TYPES["accident_prone_zone"]["messages"]["ENGLISH"],
+            config.VOICE_ALERT_HAZARD_TYPES["accident_prone_zone"]["label"],
+        )
+    ]
+
+
 def test_unknown_hazard_type_uses_default_alert(monkeypatch):
     played = []
     hazard = {
@@ -80,6 +109,7 @@ def test_unknown_hazard_type_uses_default_alert(monkeypatch):
     }
 
     monkeypatch.setattr(config, "ENABLE_HAZARD_WARNINGS", True)
+    monkeypatch.setattr(config, "HAZARD_FETCH_ONCE", True)
     monkeypatch.setattr(config, "LANGUAGE", "ENGLISH")
 
     monitor = HazardZoneMonitor(
@@ -103,6 +133,7 @@ def test_hazard_cache_keeps_last_zones_when_refresh_fails(monkeypatch):
     responses = iter(([HAZARD], None))
 
     monkeypatch.setattr(config, "ENABLE_HAZARD_WARNINGS", True)
+    monkeypatch.setattr(config, "HAZARD_FETCH_ONCE", False)
     monkeypatch.setattr(config, "HAZARD_REFRESH_INTERVAL_SEC", 60)
 
     monitor = HazardZoneMonitor(
@@ -116,3 +147,21 @@ def test_hazard_cache_keeps_last_zones_when_refresh_fails(monkeypatch):
     monitor.check_location(HAZARD["latitude"], HAZARD["longitude"])
 
     assert monitor.hazards == [HAZARD]
+
+
+def test_hazard_fetch_once_loads_firestore_only_once(monkeypatch):
+    calls = []
+
+    monkeypatch.setattr(config, "ENABLE_HAZARD_WARNINGS", True)
+    monkeypatch.setattr(config, "HAZARD_FETCH_ONCE", True)
+
+    monitor = HazardZoneMonitor(
+        hazard_provider=lambda: calls.append(1) or [HAZARD],
+        voice_callback=lambda message, label: None,
+        time_provider=lambda: 100.0,
+    )
+
+    monitor.check_location(HAZARD["latitude"], HAZARD["longitude"])
+    monitor.check_location(HAZARD["latitude"], HAZARD["longitude"])
+
+    assert len(calls) == 1

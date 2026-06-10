@@ -60,12 +60,14 @@ class HazardZoneMonitor:
         self.hazards = []
         self.active_hazard_ids = set()
         self.last_refresh_time = 0.0
+        self.loaded_once = False
 
     @staticmethod
     def _voice_for_hazard(hazard):
         hazard_type = str(
             hazard.get("type") or config.DEFAULT_HAZARD_ALERT_TYPE
         ).strip().lower()
+        hazard_type = config.HAZARD_TYPE_ALIASES.get(hazard_type, hazard_type)
         alert_config = config.VOICE_ALERT_HAZARD_TYPES.get(
             hazard_type,
             config.VOICE_ALERT_HAZARD_TYPES[config.DEFAULT_HAZARD_ALERT_TYPE],
@@ -78,8 +80,13 @@ class HazardZoneMonitor:
         return alert_config["messages"][language], alert_config["label"], hazard_type
 
     def _refresh_if_due(self):
+        if config.HAZARD_FETCH_ONCE and self.loaded_once:
+            return
+
         now = self.time_provider()
         if (
+            not config.HAZARD_FETCH_ONCE
+            and
             self.last_refresh_time
             and now - self.last_refresh_time < config.HAZARD_REFRESH_INTERVAL_SEC
         ):
@@ -89,8 +96,10 @@ class HazardZoneMonitor:
         self.last_refresh_time = now
         if hazards is not None:
             self.hazards = hazards
+            self.loaded_once = True
             valid_ids = {hazard["id"] for hazard in hazards}
             self.active_hazard_ids.intersection_update(valid_ids)
+            logger.info("Hazard monitor loaded %s zones", len(hazards))
 
     def check_location(self, latitude, longitude):
         if not config.ENABLE_HAZARD_WARNINGS:

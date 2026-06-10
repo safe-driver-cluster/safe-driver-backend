@@ -298,8 +298,19 @@ CURRENT_SPEED = 0.0
 CURRENT_SPEED_UPDATED_AT = 0.0
 
 HAZARD_REFRESH_INTERVAL_SEC = 60
+HAZARD_FETCH_ONCE = True
 HAZARD_EXIT_BUFFER_METERS = 20.0
 DEFAULT_HAZARD_ALERT_TYPE = "dangerous_bend"
+HAZARD_TYPE_ALIASES = {
+    "accident": "accident_prone_zone",
+    "accident_zone": "accident_prone_zone",
+    "bend": "dangerous_bend",
+    "dangerous_curve": "dangerous_bend",
+    "downhill": "mountain_descent",
+    "mountain_down": "mountain_descent",
+    "slippery": "slippery_road",
+    "narrow": "narrow_road",
+}
 
 # VOICE_ALERT_HAZARD_DANGEROUS_BEND_ENGLISH = "Dangerous bend ahead. Please drive carefully."
 # VOICE_ALERT_HAZARD_DANGEROUS_BEND_SINHALA = "වැලමිටි වංගුවක් ඉදිරියෙන්. ප්‍රවේශමෙන් රිය පදවන්න."
