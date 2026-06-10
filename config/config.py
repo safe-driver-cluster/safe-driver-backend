@@ -80,6 +80,37 @@ VOICE_ALERT_FINGERPRINT_REQUIRED_LABEL = "VOICE_ALERT_FINGERPRINT_REQUIRED"
 VOICE_ALERT_FINGERPRINT_REQUIRED = "Please verify your fingerprint before driving."
 VOICE_ALERT_FINGERPRINT_VERIFIED_LABEL = "VOICE_ALERT_FINGERPRINT_VERIFIED"
 VOICE_ALERT_FINGERPRINT_VERIFIED = "Driver fingerprint verified successfully."
+VOICE_ALERT_FINGERPRINT_SIGNOFF_INSTRUCTION_LABEL = "VOICE_ALERT_FINGERPRINT_SIGNOFF_INSTRUCTION"
+VOICE_ALERT_FINGERPRINT_SIGNOFF_INSTRUCTION = {
+    "ENGLISH": "When your duty is finished, please place your finger again to sign off from this device.",
+    "SINHALA": "ඔබගේ සේවා වාරය අවසන් වූ විට, මෙම උපාංගයෙන් ඉවත් වීමට නැවත ඇඟිල්ල තබන්න.",
+    "TAMIL": "உங்கள் பணி முடிந்ததும், இந்த சாதனத்திலிருந்து வெளியேற மீண்டும் விரலை வையுங்கள்.",
+}
+VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS_LABEL = "VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS"
+VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS = {
+    "ENGLISH": "Driver signed off successfully.",
+    "SINHALA": "රියදුරු සාර්ථකව ඉවත් විය.",
+    "TAMIL": "ஓட்டுநர் வெற்றிகரமாக வெளியேறினார்.",
+}
+VOICE_ALERT_FINGERPRINT_SIGNOFF_WRONG_DRIVER_LABEL = "VOICE_ALERT_FINGERPRINT_SIGNOFF_WRONG_DRIVER"
+VOICE_ALERT_FINGERPRINT_SIGNOFF_WRONG_DRIVER = {
+    "ENGLISH": "Only the verified driver can sign off from this device.",
+    "SINHALA": "මෙම උපාංගයෙන් ඉවත් විය හැක්කේ තහවුරු කළ රියදුරුට පමණි.",
+    "TAMIL": "சரிபார்க்கப்பட்ட ஓட்டுநர் மட்டுமே இந்த சாதனத்திலிருந்து வெளியேற முடியும்.",
+}
+
+# VOICE_ALERT_FINGERPRINT_SIGNOFF_INSTRUCTION_ENGLISH = "When your duty is finished, please place your finger again to sign off from this device."
+# VOICE_ALERT_FINGERPRINT_SIGNOFF_INSTRUCTION_SINHALA = "ඔබගේ සේවා වාරය අවසන් වූ විට, මෙම උපාංගයෙන් ඉවත් වීමට නැවත ඇඟිල්ල තබන්න."
+# VOICE_ALERT_FINGERPRINT_SIGNOFF_INSTRUCTION_TAMIL = "உங்கள் பணி முடிந்ததும், இந்த சாதனத்திலிருந்து வெளியேற மீண்டும் விரலை வையுங்கள்."
+
+# VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS_ENGLISH = "Driver signed off successfully."
+# VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS_SINHALA = "රියදුරු සාර්ථකව ඉවත් විය."
+# VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS_TAMIL = "ஓட்டுநர் வெற்றிகரமாக வெளியேறினார்."
+
+# VOICE_ALERT_FINGERPRINT_SIGNOFF_WRONG_DRIVER_ENGLISH = "Only the verified driver can sign off from this device."
+# VOICE_ALERT_FINGERPRINT_SIGNOFF_WRONG_DRIVER_SINHALA = "මෙම උපාංගයෙන් ඉවත් විය හැක්කේ තහවුරු කළ රියදුරුට පමණි."
+# VOICE_ALERT_FINGERPRINT_SIGNOFF_WRONG_DRIVER_TAMIL = "சரிபார்க்கப்பட்ட ஓட்டுநர் மட்டுமே இந்த சாதனத்திலிருந்து வெளியேற முடியும்."
+
 VOICE_ALERT_UNAUTHORIZED_DRIVER_LABEL = "VOICE_ALERT_UNAUTHORIZED_DRIVER"
 VOICE_ALERT_UNAUTHORIZED_DRIVER = "Unauthorized driver detected. Please use a registered fingerprint."
 CONSOLE_UNAUTHORIZED_DRIVER = "Unauthorized fingerprint attempts exceeded the configured limit"

@@ -492,13 +492,14 @@ class FirestoreHelper:
         scanner_id: str,
         template_position: int,
         accuracy: int,
+        operation: str = "driver_verification",
     ) -> Dict:
-        """Record a successful fingerprint verification for a driver."""
+        """Record a fingerprint verification/sign-off operation for a driver."""
         try:
             self._ensure_db_initialized()
             operation_time = utils.now()
-            operation = {
-                "operation": "driver_verification",
+            operation_data = {
+                "operation": operation,
                 "verified_at": operation_time,
                 "device_mac": device_mac,
                 "scanner_id": scanner_id,
@@ -509,19 +510,22 @@ class FirestoreHelper:
             driver_ref = self.db.collection("drivers").document(driver_id)
             driver_ref.set(
                 {
-                    "last_fingerprint_verified_at": operation_time,
+                    "last_fingerprint_operation": operation,
+                    "last_fingerprint_operation_at": operation_time,
+                    "last_fingerprint_verified_at": operation_time if operation == "driver_verification" else None,
+                    "last_fingerprint_signed_off_at": operation_time if operation == "driver_sign_off" else None,
                     "last_fingerprint_device_mac": device_mac,
                 },
                 merge=True,
             )
-            driver_ref.collection("fingerprint_operations").document().set(operation)
+            driver_ref.collection("fingerprint_operations").document().set(operation_data)
 
             logger.info(
                 "Recorded fingerprint verification operation: driver_id=%s device_mac=%s",
                 driver_id,
                 device_mac,
             )
-            return {"success": True, "driver_id": driver_id, **operation}
+            return {"success": True, "driver_id": driver_id, **operation_data}
         except Exception as e:
             logger.error(
                 "Failed to record fingerprint operation for driver %s: %s",

@@ -58,6 +58,12 @@ class DriverAuthService:
         with self._lock:
             return self.verified_driver_id
 
+    @staticmethod
+    def _localized_message(messages):
+        if isinstance(messages, dict):
+            return messages.get(config.LANGUAGE) or messages.get("ENGLISH") or next(iter(messages.values()))
+        return messages
+
     def request_verification_if_due(self):
         if self.is_verified():
             return False
@@ -87,7 +93,35 @@ class DriverAuthService:
             config.VOICE_ALERT_FINGERPRINT_VERIFIED_LABEL,
             language_dependent=False,
         )
+        model_utils.perform_voice_alerts(
+            self._localized_message(config.VOICE_ALERT_FINGERPRINT_SIGNOFF_INSTRUCTION),
+            config.VOICE_ALERT_FINGERPRINT_SIGNOFF_INSTRUCTION_LABEL,
+            language_dependent=True,
+        )
         logger.info("Driver fingerprint verified: driver_id=%s", driver_id)
+
+    def mark_signed_off(self):
+        with self._lock:
+            signed_off_driver_id = self.verified_driver_id
+            self.verified_driver_id = None
+            self.unauthorized_attempts = 0
+            self.unauthorized_cloud_sent = False
+            self.last_prompt_time = 0.0
+            self.unverified_movement_active = False
+        model_utils.perform_voice_alerts(
+            self._localized_message(config.VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS),
+            config.VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS_LABEL,
+            language_dependent=True,
+        )
+        logger.info("Driver fingerprint signed off: driver_id=%s", signed_off_driver_id)
+        return signed_off_driver_id
+
+    def warn_wrong_signoff_driver(self):
+        model_utils.perform_voice_alerts(
+            self._localized_message(config.VOICE_ALERT_FINGERPRINT_SIGNOFF_WRONG_DRIVER),
+            config.VOICE_ALERT_FINGERPRINT_SIGNOFF_WRONG_DRIVER_LABEL,
+            language_dependent=True,
+        )
 
     def record_unauthorized_attempt(self):
         with self._lock:

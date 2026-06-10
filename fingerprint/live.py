@@ -221,8 +221,10 @@ def match_fingerprint():
 
         logger.info("Fingerprint sensor connected successfully")
 
-        while not driver_auth_service.is_verified():
-            driver_auth_service.request_verification_if_due()
+        while not stop_event.is_set():
+            if not driver_auth_service.is_verified():
+                driver_auth_service.request_verification_if_due()
+
             if not sensor.readImage():
                 time.sleep(0.1)
                 continue
@@ -243,11 +245,38 @@ def match_fingerprint():
 
                 driver_id = firestore_helper.get_driver_by_fingerprint(scanner_id=scanner_id, template_position=position)
                 if driver_id:
+                    current_driver_id = driver_auth_service.verified_driver()
+                    device_mac = get_mac_address_alternative().upper()
+
+                    if current_driver_id:
+                        if driver_id == current_driver_id:
+                            db_helper.update_assigned_driver(None, device_mac)
+                            db_helper.update_device_verification(device_mac, False)
+                            driver_auth_service.mark_signed_off()
+                            firestore_helper.record_driver_fingerprint_operation(
+                                driver_id=driver_id,
+                                device_mac=device_mac,
+                                scanner_id=scanner_id,
+                                template_position=position,
+                                accuracy=accuracy,
+                                operation="driver_sign_off",
+                            )
+                            beep_success()
+                            logger.info("Registered driver signed off: driver_id=%s", driver_id)
+                        else:
+                            driver_auth_service.warn_wrong_signoff_driver()
+                            logger.warning(
+                                "Fingerprint sign-off rejected: verified_driver=%s scanned_driver=%s",
+                                current_driver_id,
+                                driver_id,
+                            )
+                        wait_for_finger_removal(sensor)
+                        continue
+
                     driver_obj = firestore_helper.get_driver(driver_id) or {}
                     driver_name = driver_obj.get('name', 'Unknown')
                     driver_language = driver_obj.get('language', 'ENGLISH')
 
-                    device_mac = get_mac_address_alternative().upper()
                     db_helper.update_assigned_driver(driver_id, device_mac)
                     db_helper.update_device_verification(device_mac, True)
                     driver_auth_service.mark_verified(driver_id, driver_language)
@@ -257,6 +286,7 @@ def match_fingerprint():
                         scanner_id=scanner_id,
                         template_position=position,
                         accuracy=accuracy,
+                        operation="driver_verification",
                     )
                     beep_success()
                     logger.info(
@@ -264,7 +294,8 @@ def match_fingerprint():
                         driver_id,
                         driver_name,
                     )
-                    return True
+                    wait_for_finger_removal(sensor)
+                    continue
                     
                 else:
                     driver_auth_service.record_unauthorized_attempt()
@@ -282,8 +313,7 @@ def match_fingerprint():
 
 
 def main():
-    while not stop_event.is_set() and not driver_auth_service.is_verified():
-        driver_auth_service.request_verification_if_due()
+    while not stop_event.is_set():
         if match_fingerprint():
             break
         logger.warning("Fingerprint verification worker retrying in 5 seconds")

@@ -81,8 +81,13 @@ def test_unverified_movement_alert_is_disabled_when_fingerprint_is_disabled(monk
 
 
 def test_verified_driver_bypasses_auth_gate(monkeypatch):
+    played = []
     monkeypatch.setattr(config, "ENABLE_FINGERPRINT", True)
-    monkeypatch.setattr(auth_module.model_utils, "perform_voice_alerts", lambda *args: None)
+    monkeypatch.setattr(
+        auth_module.model_utils,
+        "perform_voice_alerts",
+        lambda message, label, language_dependent=True: played.append((message, label, language_dependent)),
+    )
 
     service = DriverAuthService()
     assert service.is_verified() is False
@@ -91,6 +96,20 @@ def test_verified_driver_bypasses_auth_gate(monkeypatch):
 
     assert service.is_verified() is True
     assert service.verified_driver() == "driver-1"
+    assert played[-1][1] == config.VOICE_ALERT_FINGERPRINT_SIGNOFF_INSTRUCTION_LABEL
+    assert played[-1][2] is True
+
+
+def test_signed_off_driver_clears_verification(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_FINGERPRINT", True)
+    monkeypatch.setattr(auth_module.model_utils, "perform_voice_alerts", lambda *args, **kwargs: None)
+
+    service = DriverAuthService()
+    service.mark_verified("driver-1", "ENGLISH")
+
+    assert service.mark_signed_off() == "driver-1"
+    assert service.is_verified() is False
+    assert service.verified_driver() is None
 
 
 def test_security_alert_captures_camera_frame_when_cache_is_empty(monkeypatch):
