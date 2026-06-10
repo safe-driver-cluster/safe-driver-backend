@@ -449,23 +449,6 @@ async def startup_event():
         # )
         # logger.info(f"Started detect.py with PID: {detect_process.pid}")
 
-        if config.ENABLE_DETECTION:
-            detect_process = threading.Thread(
-                target=detect.main,
-                daemon=True,
-                name="detect-thread"
-            )
-            detect_process.start()
-            logger.info(f"Started detect thread: {detect_process.name}")
-        
-        # Start monitoring tasks
-        # monitor_task = asyncio.create_task(read_detect_process_output())
-        # stderr_task = asyncio.create_task(read_detect_process_stderr())
-
-        monitor_task = asyncio.create_task(read_behavior_queue())
-
-        logger.info("Started output monitoring tasks")
-
         # ── Start watchdog ──────────────────────────────────────────────
         # watchdog_task = asyncio.create_task(watchdog())
         # logger.info("Watchdog started")
@@ -506,6 +489,20 @@ async def startup_event():
                 logger.info("Started GPS thread: %s", gps_thread.name)
             except Exception:
                 logger.exception("Failed to start GPS worker; continuing without GPS")
+
+        # Start the queue consumer before detection so alerts are handled
+        # immediately when the final worker starts.
+        monitor_task = asyncio.create_task(read_behavior_queue())
+        logger.info("Started behavior queue monitor")
+
+        if config.ENABLE_DETECTION:
+            detect_process = threading.Thread(
+                target=detect.main,
+                daemon=True,
+                name="detect-thread"
+            )
+            detect_process.start()
+            logger.info(f"Started detect thread: {detect_process.name}")
         
     except Exception as e:
         logger.error(f"Failed to start detect.py: {e}", exc_info=True)
