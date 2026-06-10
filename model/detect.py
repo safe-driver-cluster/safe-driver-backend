@@ -7,7 +7,6 @@ import os
 import shutil
 import subprocess
 import platform
-from dotenv import load_dotenv
 
 import numpy as np
 from collections import deque
@@ -19,8 +18,11 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
 
-import model.utilmethods as utils
 import utils.utils as util
+
+util.load_runtime_env()
+
+import model.utilmethods as utils
 import config.config as config
 from model.alerts import AlertManager
 
@@ -47,9 +49,6 @@ mp_drawing_styles = mp.solutions.drawing_styles
 # ============================================================================
 # ENVIRONMENT VARIABLES
 # ============================================================================
-
-# Load environment variables from .env file
-load_dotenv(util.resource_path(".env"))
 
 # Get environment variables
 admin_sdk_path = os.getenv("ADMIN_SDK_PATH", "firebase-admin-sdk/serviceAccountKey.json")
@@ -282,14 +281,23 @@ def _configure_capture(cap, width: int, height: int):
 
 
 def _try_open_opencv_capture(camera_id: int, width: int, height: int):
-    targets = [
-        (camera_id, cv2.CAP_V4L2, f"opencv-v4l2:{camera_id}"),
-        (camera_id, cv2.CAP_ANY, f"opencv-any:{camera_id}"),
-        (f"/dev/video{camera_id}", cv2.CAP_V4L2, f"opencv-v4l2:/dev/video{camera_id}"),
-        (f"/dev/video{camera_id}", cv2.CAP_ANY, f"opencv-any:/dev/video{camera_id}"),
-    ]
+    system = platform.system().lower()
+    if system == "windows":
+        targets = []
+        if hasattr(cv2, "CAP_DSHOW"):
+            targets.append((camera_id, cv2.CAP_DSHOW, f"opencv-dshow:{camera_id}"))
+        if hasattr(cv2, "CAP_MSMF"):
+            targets.append((camera_id, cv2.CAP_MSMF, f"opencv-msmf:{camera_id}"))
+        targets.append((camera_id, cv2.CAP_ANY, f"opencv-any:{camera_id}"))
+    else:
+        targets = [
+            (camera_id, cv2.CAP_V4L2, f"opencv-v4l2:{camera_id}"),
+            (camera_id, cv2.CAP_ANY, f"opencv-any:{camera_id}"),
+            (f"/dev/video{camera_id}", cv2.CAP_V4L2, f"opencv-v4l2:/dev/video{camera_id}"),
+            (f"/dev/video{camera_id}", cv2.CAP_ANY, f"opencv-any:/dev/video{camera_id}"),
+        ]
 
-    if hasattr(cv2, "CAP_GSTREAMER"):
+    if system != "windows" and hasattr(cv2, "CAP_GSTREAMER"):
         gst = (
             f"libcamerasrc camera-name=/base/soc/i2c0mux/i2c@1/imx219@10 ! "
             f"video/x-raw,width={int(width)},height={int(height)},framerate=30/1 ! "
@@ -311,15 +319,18 @@ def _try_open_opencv_capture(camera_id: int, width: int, height: int):
         _configure_capture(cap, width, height)
         ok, _ = cap.read()
         if ok:
+            logger.info("Camera probe succeeded with %s", name)
             return cap, name
 
+        logger.debug("Camera probe opened but could not read frame: %s", name)
         cap.release()
 
     return None, None
 
 
 def create_camera_capture(camera_id: int, width: int, height: int):
-    preferred_ids = [camera_id] + [idx for idx in range(0, 10) if idx != camera_id]
+    preferred_ids = [camera_id] + [idx for idx in range(0, 11) if idx != camera_id]
+    system = platform.system().lower()
 
     for cid in preferred_ids:
         if CAMERA_BACKEND in ("auto", "opencv"):
@@ -327,7 +338,7 @@ def create_camera_capture(camera_id: int, width: int, height: int):
             if cap is not None:
                 return cap, cid, backend_name
 
-        if CAMERA_BACKEND in ("auto", "rpicam"):
+        if system != "windows" and CAMERA_BACKEND in ("auto", "rpicam"):
             rpi_cap = RpiCamVidCapture(cid, width=width, height=height, fps=30)
             if rpi_cap.open():
                 return rpi_cap, cid, f"rpicam-vid:{cid}"
@@ -1082,27 +1093,16 @@ def run(model: str, num_faces: int,
     config.SYSTEM = system
     logger.info(f"Detected OS: {system}")
 
-    if system == "windows":
-        # Initialize camera
-        logger.info(f"Initializing camera {camera_id} (backend={CAMERA_BACKEND})...")
-        cap = cv2.VideoCapture(camera_id)
+    logger.info(f"Initializing camera {camera_id} (backend={CAMERA_BACKEND})...")
+    cap, selected_camera_id, backend_name = create_camera_capture(camera_id, width, height)
 
-        if not cap.isOpened():
-            logger.error(f"Failed to open camera {camera_id}")
-            sys.exit(config.CAMERA_ERROR_MSG)
-    else:
-        # Linux / Raspberry Pi
-        # Initialize camera with Pi-safe fallback strategy.
-        logger.info(f"Initializing camera {camera_id} (backend={CAMERA_BACKEND})...")
-        cap, selected_camera_id, backend_name = create_camera_capture(camera_id, width, height)
+    if cap is None:
+        logger.error("Failed to open any camera. Tried requested camera and IDs 0-10.")
+        sys.exit(config.CAMERA_ERROR_MSG)
 
-        if cap is None:
-            logger.error("Failed to open any camera using OpenCV or rpicam-vid fallback. Exiting...")
-            sys.exit(config.CAMERA_ERROR_MSG)
-
-        logger.info(f"Camera opened with backend: {backend_name}")
-        if selected_camera_id != camera_id:
-            logger.info(f"Requested camera {camera_id} unavailable. Using camera {selected_camera_id}.")
+    logger.info(f"Camera opened with backend: {backend_name}")
+    if selected_camera_id != camera_id:
+        logger.info(f"Requested camera {camera_id} unavailable. Using camera {selected_camera_id}.")
 
     global current_cap
     current_cap = cap

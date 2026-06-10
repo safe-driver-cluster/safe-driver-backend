@@ -1,8 +1,8 @@
 import pytz
 from datetime import datetime
 import os
-import config.config as config
 import sys
+
 
 def resource_path(relative_path):
     """Get the correct path whether running as script or compiled exe."""
@@ -11,13 +11,12 @@ def resource_path(relative_path):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
 
+
 def get_app_dir():
     if getattr(sys, 'frozen', False):
         # Running as PyInstaller exe - use exe's directory
         return os.path.dirname(sys.executable)
-    else:
-        # Running as normal script - use script's directory
-        return os.path.dirname(os.path.abspath(__file__))
+    return get_project_dir()
 
 def get_project_dir():
     """Return the writable application root for runtime files."""
@@ -28,6 +27,25 @@ def get_project_dir():
 def get_audio_dir():
     """Return the local voice-alert audio directory."""
     return os.path.join(get_project_dir(), "audio")
+
+
+def load_runtime_env():
+    """Load bundled .env, then external .env beside the exe/project."""
+    from dotenv import load_dotenv
+
+    loaded_paths = []
+    bundled_env = resource_path(".env")
+    if os.path.exists(bundled_env):
+        load_dotenv(bundled_env, override=False)
+        loaded_paths.append(bundled_env)
+
+    external_env = os.path.join(get_app_dir(), ".env")
+    if os.path.exists(external_env) and os.path.abspath(external_env) != os.path.abspath(bundled_env):
+        load_dotenv(external_env, override=True)
+        loaded_paths.append(external_env)
+
+    return loaded_paths
+
 
 def now():
     """Return current timestamp in Sri Lanka time in ISO 8601 format"""
@@ -59,6 +77,8 @@ def print_banner(logger):
         logger.error(f"Error printing banner: {e}", exc_info=True)
 
     # Print version and copyright info
+    import config.config as config
+
     new_line1 = f"                   DRIVER MONITORING SYSTEM : Version : {config.VERSION_NO.strip()}"
     new_line2 = f"            POWERED BY CODE CRAFTERS | ALL RIGHTS RESEREVED © {datetime.now().year}"
     logger.info(new_line1)
@@ -75,6 +95,7 @@ def update_local_config_from_firestore(firestore_data: dict) -> dict:
         dict: Result with success status and updated configuration count
     """
     import logging
+    import config.config as config
     
     logger = logging.getLogger(__name__)
     
