@@ -116,8 +116,18 @@ class HazardZoneMonitor:
                 hazard["longitude"],
             )
             hazard_id = hazard["id"]
+            inside_zone = distance <= hazard["radius"]
 
-            if distance <= hazard["radius"]:
+            if config.ENABLE_HAZARD_STATUS_LOGGING:
+                logger.info(
+                    "Hazard zone status: id=%s status=%s distance=%.1fm radius=%.1fm",
+                    hazard_id,
+                    "inside" if inside_zone else "outside",
+                    distance,
+                    hazard["radius"],
+                )
+
+            if inside_zone:
                 if hazard_id not in self.active_hazard_ids:
                     self.active_hazard_ids.add(hazard_id)
                     entered.append(hazard_id)
