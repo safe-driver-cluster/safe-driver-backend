@@ -75,7 +75,7 @@ class FirestoreHelper:
                 'raw_configurations': config_vars,  # Also save raw config for completeness
                 'last_updated': firestore.SERVER_TIMESTAMP,
                 'created_at': firestore.SERVER_TIMESTAMP,
-                'version': config_vars.get('VERSION_NO', '1.0.0'),
+                'version': config_vars.get('VERSION_NO', config.VERSION_NO),
                 'total_config_count': len(config_vars)
             }
             
