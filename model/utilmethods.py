@@ -6,7 +6,6 @@ import threading
 import os
 # from playsound import playsound
 from gtts import gTTS
-from database.firestore_helper import firestore_helper
 import utils.utils as utils
 import logging
 logger = logging.getLogger(__name__)
@@ -193,16 +192,3 @@ def shutdown_voice_alerts(timeout=2.0):
 def reset_voice_alert_shutdown():
     """Allow voice playback after the detection service is restarted."""
     _VOICE_STOP_EVENT.clear()
-
-def get_model_configurations(logger):
-    """Get model configurations from Firestore"""
-    try:
-        result = firestore_helper.get_model_configurations_from_firestore()
-        if result:
-            # save to local config as well
-            utils.update_local_config_from_firestore(result)
-            logger.info("Configurations retrieved successfully...")
-        else:
-            logger.info("No configurations found!")
-    except Exception as e:
-        logger.error(f"Error in get configurations endpoint: {e}")

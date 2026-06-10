@@ -21,11 +21,6 @@ import threading
 from shared import behavior_queue, stop_event
 import model.detect as detect
 
-if(config.ENABLE_FINGERPRINT and config.SYSTEM != 'windows'):
-    import fingerprint.enroll as enroll
-    import fingerprint.remove as remove
-    from fingerprint.live import main as live_main
-
 # ============================================================================
 # LOGGING CONFIGURATION
 # ============================================================================
@@ -352,6 +347,26 @@ async def startup_event():
         })
         logger.info("Firebase Admin SDK initialized successfully")
 
+    logger.info("Loading model configurations from Firestore before starting services...")
+    try:
+        model_configurations = await asyncio.to_thread(
+            firestore_helper.get_model_configurations_from_firestore
+        )
+        if model_configurations:
+            update_result = utils.update_local_config_from_firestore(model_configurations)
+            logger.info(
+                "Model configurations loaded before service startup: %s updated",
+                update_result.get("updated_count", 0),
+            )
+        else:
+            logger.warning(
+                "No Firestore model configurations found; using local configurations"
+            )
+    except Exception:
+        logger.exception(
+            "Failed to load model configurations before startup; using local configurations"
+        )
+
     if config.ENABLE_VOICE_ALERT_SYNC:
         try:
             from database.storage_helper import sync_voice_alerts_from_storage
@@ -461,6 +476,8 @@ async def startup_event():
 
         # FINGERPRINT ENROLLMENT TEST
         if(config.ENABLE_FINGERPRINT and config.SYSTEM == 'linux'):
+            from fingerprint.live import main as live_main
+
             fingerprint_live = threading.Thread(
                 target=live_main,
                 daemon=True,
@@ -1102,6 +1119,8 @@ async def update_vehicle_registration_number(vehicle_reg_no: str):
 async def enroll_fingerprint_for_driver(driver_id: str):
     """Enroll a fingerprint for a specific driver."""
     try:
+        import fingerprint.enroll as enroll
+
         result = enroll.enroll_fingerprint_with_id(driver_id)
         return result
     except Exception as e:
@@ -1113,9 +1132,11 @@ async def enroll_fingerprint_for_driver(driver_id: str):
 
 # Calling for remove fingerprint when receive an external request
 @app.post("/fingerprint/remove")
-async def enroll_fingerprint_for_driver(driver_id: str | None = None, position:int | None = None, mac:str | None = None):
+async def remove_fingerprint_for_driver(driver_id: str | None = None, position:int | None = None, mac:str | None = None):
     """Remove a fingerprint for a specific driver."""
     try:
+        import fingerprint.remove as remove
+
         result = remove.delete_fingerprint(mac=mac, position=position, driver_id=driver_id)
         return result
     except Exception as e:

@@ -105,9 +105,6 @@ logger = logging.getLogger(__name__)
 # # GLOBAL VARIABLES AND CONSTANTS
 # # ============================================================================
 
-# # load configurations
-# utils.get_model_configurations(logger)
-
 # # Log configuration on startup
 # utils.log_config(logger)
 
@@ -1556,9 +1553,6 @@ def main():
     # ============================================================================
     # GLOBAL VARIABLES AND CONSTANTS
     # ============================================================================
-
-    # load configurations
-    utils.get_model_configurations(logger)
 
     # Log configuration on startup
     utils.log_config(logger)
