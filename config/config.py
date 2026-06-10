@@ -4,7 +4,7 @@ import platform
 import cv2
 
 # System Configuration
-VERSION_NO = "1.0.0"
+VERSION_NO = "2.4.11"
 
 # Language Settings
 # 'en' for English
