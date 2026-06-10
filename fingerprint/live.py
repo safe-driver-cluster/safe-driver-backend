@@ -251,6 +251,13 @@ def match_fingerprint():
                     db_helper.update_assigned_driver(driver_id, device_mac)
                     db_helper.update_device_verification(device_mac, True)
                     driver_auth_service.mark_verified(driver_id, driver_language)
+                    firestore_helper.record_driver_fingerprint_operation(
+                        driver_id=driver_id,
+                        device_mac=device_mac,
+                        scanner_id=scanner_id,
+                        template_position=position,
+                        accuracy=accuracy,
+                    )
                     beep_success()
                     logger.info(
                         "Registered driver authenticated: driver_id=%s name=%s",

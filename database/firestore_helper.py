@@ -233,6 +233,7 @@ class FirestoreHelper:
                 'time': behavior_data.get('time', utils.now()),
                 'number_plate':number_plate,
                 'driver': behavior_data.get('driver'),
+                'driver_id': behavior_data.get('driver_id') or behavior_data.get('driver'),
                 'evidence': behavior_data.get('evidence'),
                 'evidence_path': behavior_data.get('evidence_path'),
             }
@@ -484,6 +485,52 @@ class FirestoreHelper:
         except Exception as e:
             logger.error(f"Error retrieving driver by ID: {e}")
             return None
+
+    def record_driver_fingerprint_operation(
+        self,
+        driver_id: str,
+        device_mac: str,
+        scanner_id: str,
+        template_position: int,
+        accuracy: int,
+    ) -> Dict:
+        """Record a successful fingerprint verification for a driver."""
+        try:
+            self._ensure_db_initialized()
+            operation_time = utils.now()
+            operation = {
+                "operation": "driver_verification",
+                "verified_at": operation_time,
+                "device_mac": device_mac,
+                "scanner_id": scanner_id,
+                "template_position": int(template_position),
+                "accuracy": int(accuracy),
+            }
+
+            driver_ref = self.db.collection("drivers").document(driver_id)
+            driver_ref.set(
+                {
+                    "last_fingerprint_verified_at": operation_time,
+                    "last_fingerprint_device_mac": device_mac,
+                },
+                merge=True,
+            )
+            driver_ref.collection("fingerprint_operations").document().set(operation)
+
+            logger.info(
+                "Recorded fingerprint verification operation: driver_id=%s device_mac=%s",
+                driver_id,
+                device_mac,
+            )
+            return {"success": True, "driver_id": driver_id, **operation}
+        except Exception as e:
+            logger.error(
+                "Failed to record fingerprint operation for driver %s: %s",
+                driver_id,
+                e,
+                exc_info=True,
+            )
+            return {"success": False, "driver_id": driver_id, "message": str(e)}
 
 # Create a singleton instance
 firestore_helper = FirestoreHelper()

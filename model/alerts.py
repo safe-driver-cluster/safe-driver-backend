@@ -170,7 +170,8 @@ class AlertManager:
             "message": message,
             "time": event_time or self.now_provider(),
             "data": behavior_data or {},
-            "driver": "DRV003"
+            "driver": "",
+            "driver_id": "",
         }
         if evidence_jpeg:
             payload["_evidence_jpeg"] = evidence_jpeg

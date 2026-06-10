@@ -29,6 +29,25 @@ def _send_microsleep(manager, cycle_id):
     )
 
 
+def test_behavior_alert_does_not_use_hardcoded_driver():
+    _drain_behavior_queue()
+    manager = AlertManager(
+        logger=logging.getLogger("test-alerts"),
+        now_provider=lambda: "now",
+        output_stream=io.StringIO(),
+    )
+
+    manager.send_behavior_to_parent(
+        event_type="test",
+        message="test",
+        behavior_data={"value": 1},
+    )
+
+    payload = behavior_queue.get_nowait()
+    assert payload["driver"] == ""
+    assert payload["driver_id"] == ""
+
+
 def test_microsleep_emits_three_spaced_voice_levels(monkeypatch):
     now = [0.0]
     played = []

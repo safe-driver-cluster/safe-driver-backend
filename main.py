@@ -228,6 +228,13 @@ async def read_behavior_queue():
             try:
                 payload = behavior_queue.get_nowait()
 
+                from service.driver_auth_service import driver_auth_service
+
+                verified_driver_id = driver_auth_service.verified_driver()
+                if verified_driver_id:
+                    payload["driver"] = verified_driver_id
+                    payload["driver_id"] = verified_driver_id
+
                 logger.info(f"Behavior Event: {payload.get('type')} - {payload.get('message')}")
 
                 if device_mac:
