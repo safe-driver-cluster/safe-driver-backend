@@ -70,6 +70,16 @@ def test_unverified_movement_alerts_once_until_bus_stops(monkeypatch):
     ]
 
 
+def test_unverified_movement_alert_is_disabled_when_fingerprint_is_disabled(monkeypatch):
+    _drain_behavior_queue()
+    monkeypatch.setattr(config, "ENABLE_FINGERPRINT", False)
+
+    service = DriverAuthService()
+
+    assert service.report_speed(25.0) is False
+    assert _drain_behavior_queue() == []
+
+
 def test_verified_driver_bypasses_auth_gate(monkeypatch):
     monkeypatch.setattr(config, "ENABLE_FINGERPRINT", True)
     monkeypatch.setattr(auth_module.model_utils, "perform_voice_alerts", lambda *args: None)

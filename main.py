@@ -367,6 +367,13 @@ async def startup_event():
             "Failed to load model configurations before startup; using local configurations"
         )
 
+    logger.info(
+        "Effective driver-security configuration: fingerprint=%s, movement_threshold=%.2f km/h, evidence=%s",
+        config.ENABLE_FINGERPRINT,
+        config.DETECTION_ENABLE_SPEED_KMPH,
+        config.ENABLE_ALERT_EVIDENCE,
+    )
+
     if config.ENABLE_VOICE_ALERT_SYNC:
         try:
             from database.storage_helper import sync_voice_alerts_from_storage

@@ -46,6 +46,7 @@ class DriverAuthService:
             self.last_prompt_time = 0.0
             self.last_unverified_movement_alert_time = 0.0
             self.unverified_movement_active = False
+            self.fingerprint_disabled_movement_logged = False
 
     def is_verified(self):
         if not config.ENABLE_FINGERPRINT:
@@ -110,6 +111,16 @@ class DriverAuthService:
         return attempt
 
     def report_speed(self, speed_kmh):
+        if not config.ENABLE_FINGERPRINT:
+            with self._lock:
+                should_log = not self.fingerprint_disabled_movement_logged
+                self.fingerprint_disabled_movement_logged = True
+            if should_log:
+                logger.warning(
+                    "Unverified-driver movement alerts are disabled because ENABLE_FINGERPRINT=False"
+                )
+            return False
+
         if self.is_verified():
             return False
         if speed_kmh <= config.DETECTION_ENABLE_SPEED_KMPH:
@@ -122,6 +133,12 @@ class DriverAuthService:
             should_alert = not self.unverified_movement_active or cooldown_ok
             self.unverified_movement_active = True
         if should_alert:
+            logger.warning(
+                "%s: speed=%.2f km/h threshold=%.2f km/h",
+                config.CONSOLE_UNVERIFIED_DRIVER_MOVEMENT,
+                speed_kmh,
+                config.DETECTION_ENABLE_SPEED_KMPH,
+            )
             emitted = self._emit_security_alert(
                 config.BEHAVIOR_UNVERIFIED_DRIVER_MOVEMENT,
                 config.CONSOLE_UNVERIFIED_DRIVER_MOVEMENT,
@@ -131,6 +148,9 @@ class DriverAuthService:
                 with self._lock:
                     self.last_unverified_movement_alert_time = now
                 return True
+            logger.warning(
+                "Unverified-driver movement alert will retry because it was not emitted"
+            )
         return False
 
     @staticmethod
