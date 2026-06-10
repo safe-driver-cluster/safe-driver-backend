@@ -13,6 +13,8 @@ from database.firestore_helper import FirestoreHelper
 from database import db_helper
 from service.model_service import (get_mac_address_alternative)
 import config.config as config
+from service.driver_auth_service import driver_auth_service
+from shared import stop_event
 
 firestore_helper = FirestoreHelper()
 logger = logging.getLogger(__name__)
@@ -177,6 +179,12 @@ def wait_for_finger(sensor, timeout=10):
     return False
 
 
+def wait_for_finger_removal(sensor):
+    """Prevent one physical finger placement from counting multiple times."""
+    while sensor.readImage() and not stop_event.is_set():
+        time.sleep(0.1)
+
+
 def get_scanner_id():
     """Return stable scanner identifier used to build template IDs."""
     env_scanner = os.getenv('SCANNER_ID')
@@ -211,13 +219,13 @@ def match_fingerprint():
             announce('Wrong password for fingerprint sensor.')
             return False
 
-        announce('Fingerprint Sensor connected successfully!', speak=True, beep=False)
-        announce('Place finger for driver verification.')
+        logger.info("Fingerprint sensor connected successfully")
 
-        while True:
-            if not wait_for_finger(sensor, timeout=0):
-                announce('Timeout. Finger not placed.')
-                return False
+        while not driver_auth_service.is_verified():
+            driver_auth_service.request_verification_if_due()
+            if not sensor.readImage():
+                time.sleep(0.1)
+                continue
 
             sensor.convertImage(0x01)
             result = sensor.searchTemplate()
@@ -233,62 +241,51 @@ def match_fingerprint():
                     f'FINGERPRINT_MATCH: scanner_id= {scanner_id} | template_position= {position} | accuracy= {accuracy} | template_id= {template_fingerprint_id}'
                 )
 
-                beep_success()
-                announce(
-                    f'Fingerprint matched successfully.'
-                )
-
                 driver_id = firestore_helper.get_driver_by_fingerprint(scanner_id=scanner_id, template_position=position)
                 if driver_id:
-                    driver_obj = firestore_helper.get_driver(driver_id)
+                    driver_obj = firestore_helper.get_driver(driver_id) or {}
                     driver_name = driver_obj.get('name', 'Unknown')
                     driver_language = driver_obj.get('language', 'ENGLISH')
 
-                    # update configuration LANGUAGE
-                    config.LANGUAGE = driver_language
-
-                    # check driver already assigend
-                    current_driver = db_helper.get_assigned_driver(get_mac_address_alternative().upper())
-                    if current_driver and current_driver != driver_id:
-                        announce(f"Device currently assigned to driver {current_driver}. Reassigning to {driver_id}.")
-                    
-                        # update assigned driver
-                        db_helper.update_assigned_driver(driver_id, get_mac_address_alternative().upper())
-                        logger.info(f'Updated assigned driver to {driver_id} for device {get_mac_address_alternative().upper()}')
-                    elif current_driver == driver_id:
-                        announce(f"Good Bye {driver_name}! You are unassigned from the device.")
-                        # update assigned driver
-                        db_helper.update_assigned_driver(None, get_mac_address_alternative().upper())
-                        logger.info(f'Updated assigned driver to {None} for device {get_mac_address_alternative().upper()}')
-                    elif not current_driver:
-                        # update assigned driver
-                        db_helper.update_assigned_driver(driver_id, get_mac_address_alternative().upper())
-                        logger.info(f'Updated assigned driver to {driver_id} for device {get_mac_address_alternative().upper()}')
-                    
-                        announce(f'Welcome back, driver {driver_name}!')
+                    device_mac = get_mac_address_alternative().upper()
+                    db_helper.update_assigned_driver(driver_id, device_mac)
+                    db_helper.update_device_verification(device_mac, True)
+                    driver_auth_service.mark_verified(driver_id, driver_language)
+                    beep_success()
+                    logger.info(
+                        "Registered driver authenticated: driver_id=%s name=%s",
+                        driver_id,
+                        driver_name,
+                    )
+                    return True
                     
                 else:
-                    announce('Fingerprint matched but no associated driver found. Please try again.')
+                    driver_auth_service.record_unauthorized_attempt()
+                    wait_for_finger_removal(sensor)
 
-                continue
             else:
-                announce('No match found. Please try again.')
-                continue
+                driver_auth_service.record_unauthorized_attempt()
+                wait_for_finger_removal(sensor)
             
+        return True
 
     except Exception as e:
-        announce('Fingerprint matching failed.')
-        print('Exception:', e)
-        _speak_message(f'Fingerprint matching failed. {e}')
+        logger.exception("Fingerprint matching failed")
         return False
 
 
 def main():
-    success = match_fingerprint()
-    if success:
-        announce('Fingerprint verification completed successfully.')
-    else:
-        announce('Fingerprint verification failed or dismissed.')
+    while not stop_event.is_set() and not driver_auth_service.is_verified():
+        driver_auth_service.request_verification_if_due()
+        if match_fingerprint():
+            break
+        logger.warning("Fingerprint verification worker retrying in 5 seconds")
+        stop_event.wait(5)
+
+    logger.info(
+        "Fingerprint verification worker stopped: verified=%s",
+        driver_auth_service.is_verified(),
+    )
 
 if __name__ == '__main__':
     main()

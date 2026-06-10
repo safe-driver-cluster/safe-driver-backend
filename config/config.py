@@ -70,6 +70,21 @@ BUZZER_ALERT_CONSECUTIVE_EVENT_THRESH = 2  # Number of consecutive events to tri
 MAXIMUM_BUZZER_ALERTS_PER_TYPE = 2  # Maximum number of buzzer alerts per type to prevent spamming (first 3 alerts will be buzzered)
 MAXIMUM_VOICE_ALERTS_PER_TYPE = 3  # Maximum number of voice alerts per type to prevent spamming (next 2 alerts will be voiced after buzzer limit is reached)
 
+# Driver fingerprint authentication
+FINGERPRINT_VERIFICATION_PROMPT_INTERVAL_SEC = 15.0
+UNAUTHORIZED_FINGERPRINT_WARNING_LIMIT = 3
+UNVERIFIED_MOVEMENT_ALERT_COOLDOWN_SEC = 300.0
+BEHAVIOR_UNAUTHORIZED_DRIVER = "unauthorized_driver"
+BEHAVIOR_UNVERIFIED_DRIVER_MOVEMENT = "unverified_driver_movement"
+VOICE_ALERT_FINGERPRINT_REQUIRED_LABEL = "VOICE_ALERT_FINGERPRINT_REQUIRED"
+VOICE_ALERT_FINGERPRINT_REQUIRED = "Please verify your fingerprint before driving."
+VOICE_ALERT_FINGERPRINT_VERIFIED_LABEL = "VOICE_ALERT_FINGERPRINT_VERIFIED"
+VOICE_ALERT_FINGERPRINT_VERIFIED = "Driver fingerprint verified successfully."
+VOICE_ALERT_UNAUTHORIZED_DRIVER_LABEL = "VOICE_ALERT_UNAUTHORIZED_DRIVER"
+VOICE_ALERT_UNAUTHORIZED_DRIVER = "Unauthorized driver detected. Please use a registered fingerprint."
+CONSOLE_UNAUTHORIZED_DRIVER = "Unauthorized fingerprint attempts exceeded the configured limit"
+CONSOLE_UNVERIFIED_DRIVER_MOVEMENT = "Bus is moving without a verified driver"
+
 # -------------------------------------------------------------------------------------
 # Object Detection Settings
 # -------------------------------------------------------------------------------------

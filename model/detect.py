@@ -29,7 +29,8 @@ from firebase_admin import credentials, db
 
 import model.frame_detector as frame_detect
 
-from shared import stop_event
+from shared import stop_event, update_latest_camera_frame
+from service.driver_auth_service import driver_auth_service
 
 import warnings
 
@@ -1029,6 +1030,9 @@ def _reset_transient_detection_state():
 
 def _speed_monitoring_state():
     """Return whether detection may run and a human-readable reason."""
+    if config.ENABLE_FINGERPRINT and not driver_auth_service.is_verified():
+        return False, "waiting for registered driver fingerprint verification"
+
     if platform.system().lower() != "linux":
         return True, "speed gate applies only on Linux"
 
@@ -1205,6 +1209,7 @@ def run(model: str, num_faces: int,
 
             # ======================= PREPROCESS ==========================
             image = cv2.flip(image, 1)
+            update_latest_camera_frame(image)
 
             speed_monitoring_active, monitoring_reason = _speed_monitoring_state()
             if speed_monitoring_active != monitoring_active:

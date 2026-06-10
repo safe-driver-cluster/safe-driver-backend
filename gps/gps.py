@@ -10,6 +10,7 @@ from database import db_helper
 from database.firestore_helper import firestore_helper
 import model.utilmethods as model_utils
 from service.model_service import get_mac_address_alternative
+from service.driver_auth_service import driver_auth_service
 
 
 logger = logging.getLogger(__name__)
@@ -162,6 +163,7 @@ def run_gps_loop(stop_event, device_mac=None, port=DEFAULT_GPS_PORT, baudrate=DE
                 # updates remain limited to PUSH_INTERVAL.
                 config.CURRENT_SPEED = data["speed"]
                 config.CURRENT_SPEED_UPDATED_AT = time.time()
+                driver_auth_service.report_speed(data["speed"])
                 hazard_monitor.check_location(data["latitude"], data["longitude"])
 
                 now = time.time()

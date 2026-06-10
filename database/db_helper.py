@@ -403,6 +403,22 @@ def update_assigned_driver(driver_id: str, device_mac: str) -> dict:
             'success': False,
             'message': str(e)
         }
+
+
+def update_device_verification(device_mac: str, is_verified: bool) -> dict:
+    """Update the device's current fingerprint-verification state."""
+    try:
+        ref = db.reference(f"devices/{device_mac}")
+        ref.update(
+            {
+                "is_verified": bool(is_verified),
+                "verified_date_time": utils.now() if is_verified else None,
+            }
+        )
+        return {"success": True, "is_verified": bool(is_verified)}
+    except Exception as e:
+        logger.error("Failed to update verification state for %s: %s", device_mac, e)
+        return {"success": False, "message": str(e)}
     
 # update vehicle_reg_no in realtime database/devices/{device_mac}/vehicle_reg_no
 def update_vehicle_reg_no(device_mac: str, vehicle_reg_no: str) -> dict:

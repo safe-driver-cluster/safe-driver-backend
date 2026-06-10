@@ -460,6 +460,11 @@ async def startup_event():
         # FINGERPRINT ENROLLMENT TEST
         if(config.ENABLE_FINGERPRINT and config.SYSTEM == 'linux'):
             from fingerprint.live import main as live_main
+            from service.driver_auth_service import driver_auth_service
+
+            driver_auth_service.reset()
+            if device_mac:
+                db_helper.update_device_verification(device_mac, False)
 
             fingerprint_live = threading.Thread(
                 target=live_main,
@@ -599,6 +604,8 @@ async def shutdown_event():
 
     if device_mac:
         try:
+            if config.ENABLE_FINGERPRINT:
+                db_helper.update_device_verification(device_mac, False)
             model_service.update_device_status(status="offline")
             logger.info("Device status updated to offline")
         except Exception as e:
