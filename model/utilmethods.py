@@ -115,7 +115,7 @@ def log_config(logger):
 #     except Exception as e:
 #         logger.info(f"Error performing voice alert: {e}")
 
-def perform_voice_alerts(message, label="VOICE_ALERT"):
+def perform_voice_alerts(message, label="VOICE_ALERT", language_dependent=True):
     try:
         if not config.ENABLE_VOICE_ALERTS or _VOICE_STOP_EVENT.is_set():
             return
@@ -126,8 +126,12 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
                     if _VOICE_STOP_EVENT.is_set():
                         return
 
-                    language = config.LANGUAGE if config.LANGUAGE in ("ENGLISH", "SINHALA", "TAMIL") else "ENGLISH"
-                    lang_code = {"ENGLISH": "en", "SINHALA": "si", "TAMIL": "ta"}
+                    if language_dependent:
+                        language = config.LANGUAGE if config.LANGUAGE in ("ENGLISH", "SINHALA", "TAMIL") else "ENGLISH"
+                        lang_code = {"ENGLISH": "en", "SINHALA": "si", "TAMIL": "ta"}
+                    else:
+                        language = "ENGLISH"
+                        lang_code = {"ENGLISH": "en"}
 
                     filename = get_voice_alert_file(label, language)
 

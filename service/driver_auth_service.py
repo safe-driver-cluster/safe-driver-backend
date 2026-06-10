@@ -69,6 +69,7 @@ class DriverAuthService:
         model_utils.perform_voice_alerts(
             config.VOICE_ALERT_FINGERPRINT_REQUIRED,
             config.VOICE_ALERT_FINGERPRINT_REQUIRED_LABEL,
+            language_dependent=False,
         )
         logger.info("Requested driver fingerprint verification")
         return True
@@ -84,6 +85,7 @@ class DriverAuthService:
         model_utils.perform_voice_alerts(
             config.VOICE_ALERT_FINGERPRINT_VERIFIED,
             config.VOICE_ALERT_FINGERPRINT_VERIFIED_LABEL,
+            language_dependent=False,
         )
         logger.info("Driver fingerprint verified: driver_id=%s", driver_id)
 
@@ -97,6 +99,7 @@ class DriverAuthService:
             model_utils.perform_voice_alerts(
                 config.VOICE_ALERT_UNAUTHORIZED_DRIVER,
                 config.VOICE_ALERT_UNAUTHORIZED_DRIVER_LABEL,
+                language_dependent=False,
             )
             logger.warning("Unauthorized fingerprint attempt: %s/%s", attempt, config.UNAUTHORIZED_FINGERPRINT_WARNING_LIMIT)
         elif should_cloud:
