@@ -94,6 +94,26 @@ def update_local_config_from_firestore(firestore_data: dict) -> dict:
         # Update each configuration variable in the config module
         for config_name, config_value in raw_configs.items():
             try:
+                if config_name == "GPS_SERIAL_PORT":
+                    env_port = os.getenv("GPS_SERIAL_PORT")
+                    simulator_port = getattr(config, "SIMULATED_GPS_SERIAL_PORT", "")
+                    simulator_active = bool(
+                        simulator_port and os.path.exists(simulator_port)
+                    )
+                    if env_port or simulator_active:
+                        reason = (
+                            "GPS_SERIAL_PORT environment variable"
+                            if env_port
+                            else f"active GPS simulator at {simulator_port}"
+                        )
+                        logger.info(
+                            "Keeping runtime GPS_SERIAL_PORT=%s; ignoring Firestore value %s because of %s",
+                            getattr(config, config_name, None),
+                            config_value,
+                            reason,
+                        )
+                        continue
+
                 # Check if the configuration exists in the local config module
                 if hasattr(config, config_name):
                     # Get the current local value for comparison

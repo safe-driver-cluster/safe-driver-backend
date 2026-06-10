@@ -1,5 +1,6 @@
 import logging
 from math import atan2, cos, radians, sin, sqrt
+import os
 import time
 
 import pynmea2
@@ -17,6 +18,22 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_GPS_PORT = "/dev/ttyAMA5"
 DEFAULT_GPS_BAUDRATE = 9600
+
+
+def resolve_gps_port(configured_port=None):
+    """Select the currently available GPS port without requiring a restart."""
+    environment_port = os.getenv("GPS_SERIAL_PORT")
+    if environment_port:
+        return environment_port
+
+    simulator_port = config.SIMULATED_GPS_SERIAL_PORT
+    if simulator_port and os.path.exists(simulator_port):
+        return simulator_port
+
+    if configured_port and configured_port != simulator_port:
+        return configured_port
+
+    return config.REAL_GPS_SERIAL_PORT
 
 
 def distance_meters(latitude_a, longitude_a, latitude_b, longitude_b):
@@ -138,19 +155,29 @@ def _parse_rmc_line(line: str):
 
 
 def run_gps_loop(stop_event, device_mac=None, port=DEFAULT_GPS_PORT, baudrate=DEFAULT_GPS_BAUDRATE):
-    """Read GPS NMEA data and update Firebase at the configured interval."""
+    """Read GPS NMEA data and switch between simulator and real GPS as needed."""
     last_push_time = 0.0
     device_mac = device_mac or get_mac_address_alternative()
     hazard_monitor = HazardZoneMonitor()
 
     while not stop_event.is_set():
         gps_serial = None
+        active_port = resolve_gps_port(port)
         try:
-            gps_serial = serial.Serial(port, baudrate=baudrate, timeout=1)
-            logger.info("GPS worker connected on %s at %s baud", port, baudrate)
+            gps_serial = serial.Serial(active_port, baudrate=baudrate, timeout=1)
+            logger.info("GPS worker connected on %s at %s baud", active_port, baudrate)
 
             while not stop_event.is_set():
                 raw = gps_serial.readline()
+                preferred_port = resolve_gps_port(port)
+                if preferred_port != active_port:
+                    logger.info(
+                        "GPS source changed: %s -> %s; reconnecting",
+                        active_port,
+                        preferred_port,
+                    )
+                    break
+
                 line = raw.decode("utf-8", errors="ignore").strip()
                 if not line:
                     continue
@@ -188,7 +215,7 @@ def run_gps_loop(stop_event, device_mac=None, port=DEFAULT_GPS_PORT, baudrate=DE
                         logger.warning("GPS Firebase update failed: %s", result.get("message"))
 
         except serial.SerialException as e:
-            logger.error("GPS serial error on %s: %s", port, e)
+            logger.error("GPS serial error on %s: %s", active_port, e)
         except Exception:
             logger.exception("GPS worker failed")
         finally:
