@@ -81,3 +81,60 @@ def test_verified_driver_bypasses_auth_gate(monkeypatch):
 
     assert service.is_verified() is True
     assert service.verified_driver() == "driver-1"
+
+
+def test_security_alert_captures_camera_frame_when_cache_is_empty(monkeypatch):
+    _drain_behavior_queue()
+    frame = np.zeros((24, 32, 3), dtype=np.uint8)
+
+    class FakeCapture:
+        def __init__(self):
+            self.released = False
+
+        def isOpened(self):
+            return True
+
+        def read(self):
+            return True, frame
+
+        def release(self):
+            self.released = True
+
+    capture = FakeCapture()
+    monkeypatch.setattr(config, "ENABLE_ALERT_EVIDENCE", True)
+    monkeypatch.setattr(auth_module, "get_latest_camera_frame", lambda: None)
+    monkeypatch.setattr(auth_module.cv2, "VideoCapture", lambda camera_id: capture)
+
+    service = DriverAuthService()
+    assert service._emit_security_alert("security_test", "Security test", {}) is True
+
+    event = behavior_queue.get_nowait()
+    assert event["_evidence_jpeg"].startswith(b"\xff\xd8")
+    assert capture.released is True
+
+
+def test_linux_security_snapshot_uses_pi_safe_camera_strategy(monkeypatch):
+    frame = np.zeros((24, 32, 3), dtype=np.uint8)
+
+    class FakeCapture:
+        def isOpened(self):
+            return True
+
+        def read(self):
+            return True, frame
+
+        def release(self):
+            pass
+
+    capture = FakeCapture()
+    monkeypatch.setattr(auth_module.platform, "system", lambda: "Linux")
+    monkeypatch.setattr(
+        "model.detect.create_camera_capture",
+        lambda camera_id, width, height: (capture, camera_id, "rpicam-vid:0"),
+    )
+
+    opened_capture, camera_id, backend = auth_module._open_evidence_camera(0)
+
+    assert opened_capture is capture
+    assert camera_id == 0
+    assert backend == "rpicam-vid:0"

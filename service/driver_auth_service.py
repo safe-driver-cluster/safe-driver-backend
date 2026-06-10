@@ -1,4 +1,5 @@
 import logging
+import platform
 import threading
 import time
 
@@ -10,6 +11,24 @@ from shared import behavior_queue, get_latest_camera_frame
 
 
 logger = logging.getLogger(__name__)
+
+
+def _open_evidence_camera(camera_id):
+    """Open the configured camera using the platform's supported strategy."""
+    if platform.system().lower() == "linux":
+        # Lazy import avoids a module cycle because detect.py also uses the
+        # driver-auth service.
+        from model.detect import create_camera_capture
+
+        capture, selected_camera_id, backend_name = create_camera_capture(
+            camera_id,
+            config.ALERT_EVIDENCE_SNAPSHOT_WIDTH,
+            config.ALERT_EVIDENCE_SNAPSHOT_HEIGHT,
+        )
+        return capture, selected_camera_id, backend_name
+
+    capture = cv2.VideoCapture(camera_id)
+    return capture, camera_id, f"opencv:{camera_id}"
 
 
 class DriverAuthService:
@@ -114,6 +133,45 @@ class DriverAuthService:
                 return True
         return False
 
+    @staticmethod
+    def _capture_evidence_snapshot():
+        """Briefly open the camera and capture evidence when no cached frame exists."""
+        camera_id = config.ALERT_EVIDENCE_SNAPSHOT_CAMERA_ID
+        capture = None
+        try:
+            capture, selected_camera_id, backend_name = _open_evidence_camera(camera_id)
+            if capture is None or not capture.isOpened():
+                logger.warning(
+                    "Could not open camera %s for security-alert evidence",
+                    camera_id,
+                )
+                return None
+
+            for _ in range(config.ALERT_EVIDENCE_SNAPSHOT_READ_ATTEMPTS):
+                success, frame = capture.read()
+                if success and frame is not None:
+                    logger.info(
+                        "Captured security-alert evidence from camera %s using %s",
+                        selected_camera_id,
+                        backend_name,
+                    )
+                    return frame
+
+            logger.warning(
+                "Camera %s opened but did not return a security-alert evidence frame",
+                selected_camera_id,
+            )
+            return None
+        except Exception:
+            logger.exception(
+                "Failed to capture security-alert evidence from camera %s",
+                camera_id,
+            )
+            return None
+        finally:
+            if capture is not None:
+                capture.release()
+
     def _emit_security_alert(self, event_type, message, data):
         payload = {
             "tag": "DRIVER_SECURITY_EVENT",
@@ -125,11 +183,17 @@ class DriverAuthService:
         }
         frame = get_latest_camera_frame()
         if config.ENABLE_ALERT_EVIDENCE and frame is None:
-            logger.warning(
-                "Security alert deferred until camera evidence is available: type=%s",
+            logger.info(
+                "No cached camera frame for security alert; capturing one now: type=%s",
                 event_type,
             )
-            return False
+            frame = self._capture_evidence_snapshot()
+            if frame is None:
+                logger.warning(
+                    "Security alert deferred because camera evidence is unavailable: type=%s",
+                    event_type,
+                )
+                return False
         if config.ENABLE_ALERT_EVIDENCE:
             encoded, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, config.ALERT_EVIDENCE_JPEG_QUALITY])
             if not encoded:
