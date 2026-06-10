@@ -20,6 +20,17 @@ _VOICE_THREADS_LOCK = threading.Lock()
 _VOICE_THREADS = set()
 _VOICE_STOP_EVENT = threading.Event()
 
+
+def get_voice_alert_file(label, language=None):
+    """Return the expected local MP3 path for a voice-alert label and language."""
+    selected_language = language or config.LANGUAGE
+    if selected_language not in ("ENGLISH", "SINHALA", "TAMIL"):
+        selected_language = "ENGLISH"
+
+    filename = f"{label}_{selected_language}.mp3"
+    return os.path.join(utils.get_audio_dir(), selected_language, filename)
+
+
 def now():
     """Return current UTC timestamp in ISO format"""
     sri_lanka_tz = pytz.timezone('Asia/Colombo')
@@ -119,11 +130,16 @@ def perform_voice_alerts(message, label="VOICE_ALERT"):
                     language = config.LANGUAGE if config.LANGUAGE in ("ENGLISH", "SINHALA", "TAMIL") else "ENGLISH"
                     lang_code = {"ENGLISH": "en", "SINHALA": "si", "TAMIL": "ta"}
 
-                    # Build path: audio/ENGLISH/VOICE_ALERT_DISTRACTION_ENGLISH.mp3
-                    filename = os.path.join(utils.get_audio_dir(), language, f"{label}_{language}.mp3")
+                    filename = get_voice_alert_file(label, language)
 
                     if not os.path.exists(filename):
-                        logger.warning(f"[Sound] File not found: {filename}. Generating via TTS...")
+                        logger.warning(
+                            "[Sound] Voice MP3 not found for label=%s language=%s. "
+                            "Generating with gTTS: %s",
+                            label,
+                            language,
+                            filename,
+                        )
                         os.makedirs(os.path.dirname(filename), exist_ok=True)
                         tts = gTTS(text=text_inner, lang=lang_code[language])
                         tts.save(filename)
