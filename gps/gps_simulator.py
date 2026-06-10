@@ -16,7 +16,8 @@ import time
 
 GPS_SIGNALS = [
     # Brief departure sequence, followed by a long period above 20 km/h.
-    {"latitude": 7.2352210809659345, "longitude": 80.31033758898538, "speed_kmh": 0.0},
+    {"latitude": 7.235866206694628, "longitude": 80.30873860669969, "speed_kmh": 0.0},
+    {"latitude": 7.2352210809659345, "longitude": 80.31033758898538, "speed_kmh": 6.0},
     {"latitude": 7.235189234916461, "longitude": 80.31042319341408, "speed_kmh": 12.0},
     {"latitude": 7.23515208118923, "longitude": 80.31052484867315, "speed_kmh": 20.0},
     {"latitude": 7.235104312106877, "longitude": 80.31062115365542, "speed_kmh": 24.0},
@@ -46,6 +47,7 @@ GPS_SIGNALS = [
     {"latitude": 7.234993168781508, "longitude": 80.31297918670803, "speed_kmh": 34.0},
     {"latitude": 7.23501977731205, "longitude": 80.31306501740002, "speed_kmh": 32.0},
     {"latitude": 7.2350410641353555, "longitude": 80.31315084809202, "speed_kmh": 30.0},
+    {"latitude": 7.236052215733889, "longitude": 80.31526437503916, "speed_kmh": 35.0},
 ]
 
 
