@@ -203,7 +203,6 @@ class DriverAuthService:
             "time": model_utils.now(),
             "data": data,
             "driver": self.verified_driver() or "",
-            "driver_id": self.verified_driver() or "",
         }
         frame = get_latest_camera_frame()
         if config.ENABLE_ALERT_EVIDENCE and frame is None:

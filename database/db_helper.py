@@ -348,7 +348,6 @@ def save_behavior_to_firebase(mac: str, behavior_data: dict):
             'time': behavior_data.get('time', utils.now()),
             'number_plate': number_plate,
             'driver': behavior_data.get('driver', ''),
-            'driver_id': behavior_data.get('driver_id') or behavior_data.get('driver', ''),
             'evidence': behavior_data.get('evidence'),
             'evidence_path': behavior_data.get('evidence_path'),
         }

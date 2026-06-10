@@ -45,7 +45,7 @@ def test_behavior_alert_does_not_use_hardcoded_driver():
 
     payload = behavior_queue.get_nowait()
     assert payload["driver"] == ""
-    assert payload["driver_id"] == ""
+    assert "driver_id" not in payload
 
 
 def test_microsleep_emits_three_spaced_voice_levels(monkeypatch):

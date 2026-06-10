@@ -233,7 +233,6 @@ async def read_behavior_queue():
                 verified_driver_id = driver_auth_service.verified_driver()
                 if verified_driver_id:
                     payload["driver"] = verified_driver_id
-                    payload["driver_id"] = verified_driver_id
 
                 logger.info(f"Behavior Event: {payload.get('type')} - {payload.get('message')}")
 
