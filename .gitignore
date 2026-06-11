@@ -1,6 +1,8 @@
 # Environments
 .env
+central-api.env
 .venv
+central-venv/
 env/
 venv/
 ENV/

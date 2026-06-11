@@ -3,6 +3,9 @@
 # SAFE DRIVER MONITORING SYSTEM - BACKEND GUIDELINES
 # ---------------------------------------------------
 
+The Raspberry Pi hardware API and cloud-hosted central API are separate
+applications. See `CENTRAL_API_DEPLOYMENT.md` for central API deployment.
+
 ### install python version 3.10.9
         https://www.python.org/downloads/release/python-3109/
 
