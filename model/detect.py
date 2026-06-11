@@ -33,7 +33,7 @@ from firebase_admin import credentials, db
 
 import model.frame_detector as frame_detect
 
-from shared import stop_event, update_latest_camera_frame
+from shared import register_behavior_reset_callback, stop_event, update_latest_camera_frame
 from service.driver_auth_service import driver_auth_service
 
 import warnings
@@ -409,6 +409,65 @@ def _increment_event_counter(counter_key: str) -> int:
 
     LAST_COUNTER_EVENT_TIME[counter_key] = now_ts
     return new_value
+
+
+def reset_behavior_counters(reason="driver_changed") -> None:
+    """Clear all face-behavior state so a new driver starts fresh."""
+    global EYE_CLOSED_START, YAWN_START, EYE_PARTIAL_CLOSURE_START
+    global HEAD_TURNED_START, LAST_HEAD_POSE_STATE, NO_FACE_START, NO_FACE_COUNTED
+    global YAWN_COUNT, DROWSY_COUNT, MICROSLEEP_COUNT, HEAD_TURN_COUNT
+    global FACE_MISSING_COUNT, FREQUENT_CLOSURES_COUNT
+    global YAWN_COUNTED, MICROSLEEP_COUNTED, DROWSY_COUNTED
+    global FREQUENT_CLOSURES_COUNTED, HEAD_TURN_COUNTED, FACE_MISSING_COUNTED
+    global eye_closed_score, mouth_lower_down
+
+    EYE_CLOSED_START = None
+    YAWN_START = None
+    EYE_PARTIAL_CLOSURE_START = None
+    HEAD_TURNED_START = None
+    LAST_HEAD_POSE_STATE = "CENTER"
+    NO_FACE_START = None
+    NO_FACE_COUNTED = False
+
+    YAWN_COUNT = 0
+    DROWSY_COUNT = 0
+    MICROSLEEP_COUNT = 0
+    HEAD_TURN_COUNT = 0
+    FACE_MISSING_COUNT = 0
+    FREQUENT_CLOSURES_COUNT = 0
+
+    YAWN_COUNTED = False
+    MICROSLEEP_COUNTED = False
+    DROWSY_COUNTED = False
+    FREQUENT_CLOSURES_COUNTED = False
+    HEAD_TURN_COUNTED = False
+    FACE_MISSING_COUNTED = False
+
+    eye_closed_score = 0.0
+    mouth_lower_down = 0.0
+
+    for event_window in (
+        PERCLOS_WIN,
+        BLINK_TIMES,
+        EYE_CLOSURE_EVENTS,
+        DROWSY_EVENT_TIME_ARRAY_SEC,
+        DISTRACTION_EVENT_TIME_ARRAY_SEC,
+        HEADTURN_EVENT_TIME_ARRAY_SEC,
+        PERCLOSE_EVENT_TIME_ARRAY_SEC,
+        FREQUENTEYE_CLOSURES_EVENT_TIME_ARRAY_SEC,
+        YAWN_EVENT_TIME_ARRAY_SEC,
+        MICROSLEEP_EVENT_TIME_ARRAY_SEC,
+    ):
+        event_window.clear()
+
+    for counter_key in LAST_COUNTER_EVENT_TIME:
+        LAST_COUNTER_EVENT_TIME[counter_key] = None
+
+    ALERT_MANAGER.reset_all_state()
+    logger.info("Face behavior counters reset: reason=%s", reason)
+
+
+register_behavior_reset_callback(reset_behavior_counters)
 
 
 def calculate_head_pose(face_landmarks, image_width, image_height):

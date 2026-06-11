@@ -148,6 +148,18 @@ class AlertManager:
         self.voice_alert_count_by_type.pop(policy_key, None)
         self.buzzer_alert_count_by_type.pop(policy_key, None)
 
+    def reset_all_state(self) -> None:
+        """Clear all driver-specific alert counts, cooldowns, and cycle state."""
+        self.threshold_alert_sent.clear()
+        self.last_event_time_by_type.clear()
+        self.consecutive_count_by_type.clear()
+        self.last_voice_alert_time_by_type.clear()
+        self.last_buzzer_alert_time_by_type.clear()
+        self.voice_alert_count_by_type.clear()
+        self.buzzer_alert_count_by_type.clear()
+        self._voice_cycle_state = {"cycle_id": None, "priority": None, "emitted": False}
+        self._buzzer_cycle_state = {"cycle_id": None, "priority": None, "emitted": False}
+
     def _update_event_activity(self, policy_key: str, now_ts: float) -> int:
         """Track consecutive occurrences and reset state after inactivity window."""
         last_event_time = self.last_event_time_by_type.get(policy_key)

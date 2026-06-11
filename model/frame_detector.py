@@ -16,7 +16,7 @@ from vibrator import shutdown_vibrator
 
 import queue
 import threading
-from shared import behavior_queue
+from shared import behavior_queue, register_behavior_reset_callback, unregister_behavior_reset_callback
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -57,6 +57,7 @@ BOTTLE_EVENT_TIME_ARRAY_SEC = deque()
 CIGARETTE_EVENT_TIME_ARRAY_SEC = deque()
 
 frame_count = 0
+RESET_BEHAVIOR_COMMAND = "__RESET_BEHAVIOR_COUNTERS__"
 
 # ============================================================================
 # ALERT MANAGER
@@ -82,6 +83,31 @@ def _reset_detect_counts(counter_key):
 
     LAST_COUNTER_EVENT_TIME[counter_key] = None
     ALERT_MANAGER.reset_event_state(counter_key)
+
+
+def reset_behavior_counters(reason="driver_changed"):
+    """Clear all object-behavior counters in the current process."""
+    global DETECT_PHONE, DETECT_BOTTLE, DETECT_CIGARETTE, DETECT_GLASSES
+    global DETECT_PHONE_COUNT, DETECT_BOTTLE_COUNT, DETECT_CIGARETTE_COUNT, DETECT_GLASSES_COUNT
+
+    DETECT_PHONE = False
+    DETECT_BOTTLE = False
+    DETECT_CIGARETTE = False
+    DETECT_GLASSES = False
+    DETECT_PHONE_COUNT = 0
+    DETECT_BOTTLE_COUNT = 0
+    DETECT_CIGARETTE_COUNT = 0
+    DETECT_GLASSES_COUNT = 0
+
+    PHONE_EVENT_TIME_ARRAY_SEC.clear()
+    BOTTLE_EVENT_TIME_ARRAY_SEC.clear()
+    CIGARETTE_EVENT_TIME_ARRAY_SEC.clear()
+
+    for counter_key in LAST_COUNTER_EVENT_TIME:
+        LAST_COUNTER_EVENT_TIME[counter_key] = None
+
+    ALERT_MANAGER.reset_all_state()
+    logger.info("Object behavior counters reset: reason=%s", reason)
 
 def _increment_detect_count(counter_key):
     global DETECT_PHONE_COUNT, DETECT_BOTTLE_COUNT, DETECT_CIGARETTE_COUNT, DETECT_GLASSES_COUNT
@@ -278,6 +304,10 @@ def detector_worker(frame_queue, output_queue=None):
             if frame is None:
                 logger.info("Detection process stopping...")
                 break
+
+            if isinstance(frame, dict) and frame.get("command") == RESET_BEHAVIOR_COMMAND:
+                reset_behavior_counters(frame.get("reason", "driver_changed"))
+                continue
 
             frame_count += 1
 
@@ -593,6 +623,7 @@ class DetectorProcess:
         self.process = None
         self.output_queue = None
         self._stopped = False
+        register_behavior_reset_callback(self.reset_behavior_counters)
 
         if self._use_process:
             context = multiprocessing.get_context("spawn")
@@ -648,10 +679,33 @@ class DetectorProcess:
         except:
             pass
 
+    def reset_behavior_counters(self, reason="driver_changed"):
+        if self._stopped:
+            return
+
+        if not self._use_process:
+            reset_behavior_counters(reason)
+            return
+
+        while self.frame_queue.full():
+            try:
+                self.frame_queue.get_nowait()
+            except queue.Empty:
+                break
+
+        try:
+            self.frame_queue.put_nowait({
+                "command": RESET_BEHAVIOR_COMMAND,
+                "reason": reason,
+            })
+        except queue.Full:
+            logger.warning("Could not queue object behavior counter reset")
+
     def stop(self):
         if self._stopped:
             return
         self._stopped = True
+        unregister_behavior_reset_callback(self.reset_behavior_counters)
 
         # Force None into queue by clearing it first
         while not self.frame_queue.empty():

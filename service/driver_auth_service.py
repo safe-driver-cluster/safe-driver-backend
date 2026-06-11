@@ -7,7 +7,7 @@ import cv2
 
 import config.config as config
 import model.utilmethods as model_utils
-from shared import behavior_queue, get_latest_camera_frame
+from shared import behavior_queue, get_latest_camera_frame, reset_behavior_state
 
 
 logger = logging.getLogger(__name__)
@@ -82,10 +82,13 @@ class DriverAuthService:
 
     def mark_verified(self, driver_id, driver_language=None):
         with self._lock:
+            previous_driver_id = self.verified_driver_id
             self.verified_driver_id = driver_id
             self.unauthorized_attempts = 0
             self.unauthorized_cloud_sent = False
             self.unverified_movement_active = False
+        if previous_driver_id != driver_id:
+            reset_behavior_state(f"driver_verified:{driver_id}")
         if driver_language in ("ENGLISH", "SINHALA", "TAMIL"):
             config.LANGUAGE = driver_language
         model_utils.perform_voice_alerts(
@@ -108,6 +111,7 @@ class DriverAuthService:
             self.unauthorized_cloud_sent = False
             self.last_prompt_time = 0.0
             self.unverified_movement_active = False
+        reset_behavior_state(f"driver_signed_off:{signed_off_driver_id or 'unknown'}")
         model_utils.perform_voice_alerts(
             self._localized_message(config.VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS),
             config.VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS_LABEL,
