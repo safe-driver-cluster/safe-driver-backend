@@ -1,9 +1,11 @@
 import logging
 import math
+import os
 import shutil
 import struct
 import subprocess
 import tempfile
+import time
 import wave
 from pathlib import Path
 
@@ -11,6 +13,68 @@ import config.config as config
 
 
 logger = logging.getLogger(__name__)
+
+
+def _run_audio_command(command):
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=2,
+            check=False,
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
+def _set_system_volume_max():
+    """Raise the default speaker/Bluetooth output volume before the beep."""
+    if not config.SPEAKER_BEEP_AUTO_MAX_VOLUME:
+        return
+
+    volume_percent = max(0, min(100, int(config.SPEAKER_BEEP_VOLUME_PERCENT)))
+    volume_ratio = f"{volume_percent / 100:.2f}"
+    volume_percent_text = f"{volume_percent}%"
+    commands = []
+
+    if shutil.which("pactl") is not None:
+        commands.extend(
+            [
+                ["pactl", "set-sink-mute", "@DEFAULT_SINK@", "0"],
+                ["pactl", "set-sink-volume", "@DEFAULT_SINK@", volume_percent_text],
+            ]
+        )
+
+    if shutil.which("wpctl") is not None:
+        commands.extend(
+            [
+                ["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "0"],
+                ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", volume_ratio],
+            ]
+        )
+
+    if shutil.which("amixer") is not None:
+        commands.extend(
+            [
+                ["amixer", "-q", "sset", "Master", volume_percent_text, "unmute"],
+                ["amixer", "-q", "sset", "PCM", volume_percent_text, "unmute"],
+            ]
+        )
+
+    if not commands:
+        logger.debug("No system audio volume command is available")
+        return
+
+    volume_changed = False
+    for command in commands:
+        volume_changed = _run_audio_command(command) or volume_changed
+
+    if volume_changed:
+        logger.info("Speaker beep volume set to %s", volume_percent_text)
+    else:
+        logger.debug("Could not adjust speaker beep volume")
 
 
 def _create_beep_wav(file_path):
@@ -47,6 +111,38 @@ def _create_beep_wav(file_path):
             wav_file.writeframes(frames)
 
 
+def _play_with_pygame(file_path):
+    """Play through pygame so Bluetooth follows the same path as voice alerts."""
+    try:
+        # Let SDL choose the default audio device; this is usually the active
+        # Bluetooth sink when voice alerts are already audible there.
+        os.environ.setdefault("SDL_AUDIODRIVER", config.SPEAKER_BEEP_SDL_AUDIO_DRIVER)
+
+        import pygame
+
+        if not pygame.mixer.get_init():
+            pygame.mixer.init()
+
+        sound = pygame.mixer.Sound(str(file_path))
+        sound.set_volume(max(0.0, min(1.0, config.SPEAKER_BEEP_VOLUME)))
+        channel = sound.play()
+        if channel is None:
+            return False
+
+        started_at = time.time()
+        while channel.get_busy():
+            if time.time() - started_at >= config.SPEAKER_BEEP_TIMEOUT_SEC:
+                channel.stop()
+                return False
+            pygame.time.Clock().tick(20)
+
+        logger.info("Speaker beep fallback played using pygame")
+        return True
+    except Exception as exc:
+        logger.warning("pygame speaker beep failed: %s", exc)
+        return False
+
+
 def speaker_beep():
     """Play a high-frequency alert through the system speaker."""
     if not config.ENABLE_SPEAKER_BEEP_FALLBACK:
@@ -64,6 +160,10 @@ def speaker_beep():
             temp_path = Path(temp_file.name)
 
         _create_beep_wav(temp_path)
+        _set_system_volume_max()
+
+        if config.SPEAKER_BEEP_USE_PYGAME and _play_with_pygame(temp_path):
+            return True
 
         for executable, command in player_commands:
             if shutil.which(executable) is None:
