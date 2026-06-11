@@ -22,7 +22,7 @@ ENABLE_LOGGING = True  # Set to False to disable logging (for performance testin
 ENABLE_VOICE_ALERTS = True
 ENABLE_VOICE_ALERT_SYNC = False
 ENABLE_ALERT_EVIDENCE = True
-ENABLE_FINGERPRINT = False  # Set to False to disable fingerprinting (for performance testing)
+ENABLE_FINGERPRINT = SYSTEM == "linux"  # Set to False to disable fingerprinting (for performance testing)
 ENABLE_GPS = True  # Set to False to disable GPS location retrieval
 ENABLE_HAZARD_WARNINGS = True
 ENABLE_BUZZER_ALERTS = True
@@ -101,6 +101,17 @@ VIBRATOR_ACTIVE_HIGH = True
 VIBRATOR_DURATION_SEC = 2
 
 # Driver fingerprint authentication
+FINGERPRINT_SERIAL_PORT = "/dev/serial0"
+FINGERPRINT_FALLBACK_SERIAL_PORTS = (
+    "/dev/serial0",
+    "/dev/ttyS0",
+    "/dev/ttyAMA0",
+    "/dev/ttyUSB0",
+    "/dev/ttyACM0",
+)
+FINGERPRINT_BAUDRATE = 57600
+FINGERPRINT_ADDRESS = 0xFFFFFFFF
+FINGERPRINT_PASSWORD = 0x00000000
 FINGERPRINT_VERIFICATION_PROMPT_INTERVAL_SEC = 15.0
 UNAUTHORIZED_FINGERPRINT_WARNING_LIMIT = 3
 UNVERIFIED_MOVEMENT_ALERT_COOLDOWN_SEC = 300.0

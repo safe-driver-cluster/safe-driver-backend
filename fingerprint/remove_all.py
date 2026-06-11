@@ -1,5 +1,5 @@
-from pyfingerprint.pyfingerprint import PyFingerprint
-from utils import (
+from fingerprint.sensor import create_sensor
+from fingerprint.utils import (
     announce,
     get_scanner_id,
     build_fingerprint_template_id,
@@ -18,11 +18,7 @@ logger = logging.getLogger(__name__)
 
 def delete_all_fingerprints():
     try:
-        sensor = PyFingerprint('/dev/serial0', 57600, 0xFFFFFFFF, 0x00000000)
-
-        # if not sensor.verifyPassword():
-        #     logger.info('Wrong password.')
-        #     return False
+        sensor = create_sensor()
 
         sensor.clearDatabase()
 

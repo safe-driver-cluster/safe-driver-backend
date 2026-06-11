@@ -1,5 +1,4 @@
 import sys
-from pyfingerprint.pyfingerprint import PyFingerprint
 from fingerprint.utils import (
     announce,
     get_scanner_id,
@@ -7,6 +6,7 @@ from fingerprint.utils import (
     wait_for_finger,
     init_audio,
 )
+from fingerprint.sensor import create_sensor
 from database.firestore_helper import FirestoreHelper
 from service.model_service import (get_mac_address_alternative)
 
@@ -59,11 +59,7 @@ def delete_fingerprint(
     # ------------------------------------------------------------------ #
     sensor_deleted = False
     try:
-        sensor = PyFingerprint("/dev/serial0", 57600, 0xFFFFFFFF, 0x00000000)
-
-        if not sensor.verifyPassword():
-            announce("Sensor password verification failed.")
-            return False
+        sensor = create_sensor()
 
         if sensor.deleteTemplate(position):
             sensor_deleted = True

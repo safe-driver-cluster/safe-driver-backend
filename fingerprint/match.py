@@ -8,9 +8,9 @@ import hashlib
 import logging
 
 from pathlib import Path
-from pyfingerprint.pyfingerprint import PyFingerprint
 from time import sleep
 import fingerprint.utils as utils
+from fingerprint.sensor import create_sensor
 
 try:
     from gtts import gTTS
@@ -176,11 +176,7 @@ def wait_for_finger(sensor, timeout=10):
 
 def match_fingerprint():
     try:
-        sensor = PyFingerprint('/dev/serial0', 57600, 0xFFFFFFFF, 0x00000000)
-
-        if not sensor.verifyPassword():
-            announce('Wrong password for fingerprint sensor.')
-            return False
+        sensor = create_sensor()
 
         announce('Sensor connected successfully!', speak=False)
         announce('Place finger for verification.')

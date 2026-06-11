@@ -4,7 +4,7 @@ import shutil
 import tempfile
 import logging
 from pathlib import Path
-from pyfingerprint.pyfingerprint import PyFingerprint
+from fingerprint.sensor import create_sensor
 from time import sleep
 from database.firestore_helper import FirestoreHelper
 
@@ -168,24 +168,24 @@ def beep_success():
 # Initialize Fingerprint Sensor
 # -------------------------------
 try:
-    f = PyFingerprint('/dev/serial0', 57600, 0xFFFFFFFF, 0x00000000)
-
-    if f.verifyPassword():
-        announce('Sensor connected successfully!', speak=False)
-    else:
-        raise Exception('Wrong password!')
+    f = create_sensor()
+    announce('Sensor connected successfully!', speak=False)
 
 except Exception as e:
     announce('Sensor initialization failed!')
     print('Exception:', e)
     _speak_message(f'Sensor initialization failed. {e}')
-    # exit(1)
+    f = None
 
 # -------------------------------
 # Function to wait for finger
 # -------------------------------
 def wait_for_finger(timeout=5):
     """Wait for finger for `timeout` seconds."""
+    if f is None:
+        announce('Fingerprint sensor is not initialized.')
+        return False
+
     start_time = time.time()
     while (time.time() - start_time) < timeout:
         if f.readImage():
@@ -197,6 +197,10 @@ def wait_for_finger(timeout=5):
 # Function to enroll fingerprint
 # -------------------------------
 def enroll_fingerprint():
+    if f is None:
+        announce('Fingerprint sensor is not initialized.')
+        return False
+
     announce('Starting fingerprint enrollment...')
 
     # Step 1: Turn LED blue (ready)
@@ -245,6 +249,10 @@ def enroll_fingerprint():
 
 def enroll_fingerprint_with_id(driver_id: str):
     payload = None
+    if f is None:
+        announce('Fingerprint sensor is not initialized.')
+        return payload
+
     announce('Starting fingerprint enrollment...')
 
     # Step 1: Turn LED blue (ready)

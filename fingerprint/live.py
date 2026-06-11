@@ -7,12 +7,12 @@ import socket
 import hashlib
 import logging
 from pathlib import Path
-from pyfingerprint.pyfingerprint import PyFingerprint
 from time import sleep
 from database.firestore_helper import FirestoreHelper
 from database import db_helper
 from service.model_service import (get_mac_address_alternative)
 import config.config as config
+from fingerprint.sensor import create_sensor
 from service.driver_auth_service import driver_auth_service
 from shared import stop_event
 
@@ -213,13 +213,7 @@ def build_fingerprint_template_id(scanner_id, template_position):
 
 def match_fingerprint():
     try:
-        sensor = PyFingerprint('/dev/serial0', 57600, 0xFFFFFFFF, 0x00000000)
-
-        if not sensor.verifyPassword():
-            announce('Wrong password for fingerprint sensor.')
-            return False
-
-        logger.info("Fingerprint sensor connected successfully")
+        sensor = create_sensor()
 
         while not stop_event.is_set():
             if not driver_auth_service.is_verified():

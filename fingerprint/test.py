@@ -1,11 +1,14 @@
-from pyfingerprint.pyfingerprint import PyFingerprint
+import logging
+
+from fingerprint.sensor import create_sensor
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 try:
-    f = PyFingerprint('/dev/serial0', 57600, 0xFFFFFFFF, 0x00000000)
+    f = create_sensor()
 
-    if f.verifyPassword():
-        logger.info('Sensor connected successfully!')
-    else:
-        logger.info('Wrong password!')
+    logger.info('Sensor connected successfully!')
 except Exception as e:
     print('Error:', e)
