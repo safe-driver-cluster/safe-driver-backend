@@ -25,6 +25,8 @@ ENABLE_ALERT_EVIDENCE = True
 ENABLE_FINGERPRINT = False  # Set to False to disable fingerprinting (for performance testing)
 ENABLE_GPS = True  # Set to False to disable GPS location retrieval
 ENABLE_HAZARD_WARNINGS = True
+ENABLE_BUZZER_ALERTS = True
+ENABLE_SPEAKER_BEEP_FALLBACK = True
 ENABLE_VIBRATION_ALERTS = True
 
 
@@ -71,11 +73,28 @@ BUZZER_ALERT_CONSECUTIVE_EVENT_THRESH = 2  # Number of consecutive events to tri
 MAXIMUM_BUZZER_ALERTS_PER_TYPE = 2  # Maximum number of buzzer alerts per type to prevent spamming (first 3 alerts will be buzzered)
 MAXIMUM_VOICE_ALERTS_PER_TYPE = 3  # Maximum number of voice alerts per type to prevent spamming (next 2 alerts will be voiced after buzzer limit is reached)
 
+# Active Buzzer Alert Settings
+# Wiring: buzzer signal/IN -> physical pin 11 (GPIO17), GND -> any Pi GND pin
+BUZZER_GPIO_PIN = 17
+BUZZER_ACTIVE_HIGH = True
+BUZZER_ALERT_PATTERN = (
+    (0.45, 0.10),
+    (0.45, 0.10),
+    (0.60, 0.00),
+)
+
+# Speaker Beep Fallback Settings
+# Enable FORCE_SPEAKER_BEEP_FALLBACK when GPIO works in software but the physical buzzer is silent.
+FORCE_SPEAKER_BEEP_FALLBACK = False
+SPEAKER_BEEP_FREQUENCY_HZ = 2200
+SPEAKER_BEEP_VOLUME = 0.9
+SPEAKER_BEEP_TIMEOUT_SEC = 5.0
+
 # Vibration Motor Alert Settings
 # Wiring: VCC -> physical pin 4 (5V), GND -> physical pin 14, IN -> physical pin 37 (GPIO26)
 VIBRATOR_GPIO_PIN = 26
 VIBRATOR_ACTIVE_HIGH = True
-VIBRATOR_DURATION_SEC = 0.8
+VIBRATOR_DURATION_SEC = 2
 
 # Driver fingerprint authentication
 FINGERPRINT_VERIFICATION_PROMPT_INTERVAL_SEC = 15.0

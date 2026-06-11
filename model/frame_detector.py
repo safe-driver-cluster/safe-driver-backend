@@ -11,6 +11,7 @@ import config.config as config
 from model.alerts import AlertManager
 import model.utilmethods as utils
 import utils.utils as util
+from buzzer import shutdown_buzzer
 from vibrator import shutdown_vibrator
 
 import queue
@@ -579,6 +580,7 @@ def detector_worker(frame_queue, output_queue=None):
         logger.info(f"Detection process error: {e}", exc_info=True)
     finally:
         utils.shutdown_voice_alerts()
+        shutdown_buzzer()
         shutdown_vibrator()
         logger.info("Object detection process stopped")
 

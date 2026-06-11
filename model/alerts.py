@@ -8,6 +8,7 @@ import cv2
 
 import config.config as config
 import model.utilmethods as utils
+from buzzer import buzzer_alert, speaker_beep
 from vibrator import vibrate_alert
 
 from shared import behavior_queue
@@ -39,7 +40,7 @@ class AlertManager:
         self.now_provider = now_provider
         self.output_stream = output_stream
         self.threshold_alert_sent = threshold_defaults.copy() if threshold_defaults else {}
-        self.buzzer_callback = buzzer_callback
+        self.buzzer_callback = buzzer_callback or buzzer_alert
         self.vibrator_callback = vibrator_callback or vibrate_alert
         self.last_event_time_by_type: Dict[str, float] = {}
         self.consecutive_count_by_type: Dict[str, int] = {}
@@ -52,6 +53,19 @@ class AlertManager:
 
     def _play_buzzer_beep(self) -> None:
         """Play a strong buzzer alarm pattern without any spoken message."""
+        gpio_buzzer_played = False
+        if self.buzzer_callback:
+            try:
+                gpio_buzzer_played = self.buzzer_callback() is not False
+            except Exception as exc:
+                self.logger.warning("GPIO buzzer alert failed: %s", exc)
+
+        if gpio_buzzer_played and not config.FORCE_SPEAKER_BEEP_FALLBACK:
+            return
+
+        if speaker_beep():
+            return
+
         try:
             import winsound
 
@@ -354,10 +368,7 @@ class AlertManager:
             buzzer_cooldown_ok = last_buzzer is None or (now_ts - last_buzzer) >= config.BUZZER_ALERT_COOLDOWN_SEC
 
             if allow_buzzer and buzzer_cooldown_ok and buzzer_used < config.MAXIMUM_BUZZER_ALERTS_PER_TYPE:
-                if self.buzzer_callback:
-                    self.buzzer_callback()
-                else:
-                    self._play_buzzer_beep()
+                self._play_buzzer_beep()
                 self._run_vibrator()
                 self.buzzer_alert_count_by_type[policy_key] = buzzer_used + 1
                 self.last_buzzer_alert_time_by_type[policy_key] = now_ts
