@@ -12,6 +12,7 @@ from database.firestore_helper import FirestoreHelper
 from database import db_helper
 from service.model_service import (get_mac_address_alternative)
 import config.config as config
+from fingerprint.operation import fingerprint_pause_event, fingerprint_sensor_lock
 from fingerprint.sensor import close_sensor, create_sensor, is_packet_header_error
 from service.driver_auth_service import driver_auth_service
 from shared import stop_event
@@ -219,11 +220,34 @@ def build_fingerprint_template_id(scanner_id, template_position):
 
 def match_fingerprint():
     sensor = None
+    lock_acquired = False
     try:
+        fingerprint_sensor_lock.acquire()
+        lock_acquired = True
         sensor = create_sensor()
         packet_error_count = 0
 
         while not stop_event.is_set():
+            if fingerprint_pause_event.is_set():
+                logger.info("Fingerprint live verification paused for exclusive operation")
+                close_sensor(sensor)
+                sensor = None
+                fingerprint_sensor_lock.release()
+                lock_acquired = False
+
+                while fingerprint_pause_event.is_set() and not stop_event.is_set():
+                    stop_event.wait(0.2)
+
+                if stop_event.is_set():
+                    return True
+
+                fingerprint_sensor_lock.acquire()
+                lock_acquired = True
+                sensor = create_sensor()
+                packet_error_count = 0
+                logger.info("Fingerprint live verification resumed")
+                continue
+
             if not driver_auth_service.is_verified():
                 driver_auth_service.request_verification_if_due()
 
@@ -360,6 +384,8 @@ def match_fingerprint():
     finally:
         if sensor is not None:
             close_sensor(sensor)
+        if lock_acquired:
+            fingerprint_sensor_lock.release()
 
 
 def main():

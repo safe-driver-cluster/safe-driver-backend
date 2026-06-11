@@ -46,7 +46,11 @@ def close_sensor(sensor):
 
 
 def is_packet_header_error(exc):
-    return "valid header" in str(exc).lower()
+    message = str(exc).lower()
+    return (
+        "valid header" in message
+        or ("unsupported operand type" in message and "bytes" in message)
+    )
 
 
 def create_sensor(verify_password=True, exclude_ports=None):

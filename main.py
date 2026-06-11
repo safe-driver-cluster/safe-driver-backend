@@ -1139,7 +1139,7 @@ async def enroll_fingerprint_for_driver(driver_id: str):
     try:
         import fingerprint.enroll as enroll
 
-        result = enroll.enroll_fingerprint_with_id(driver_id)
+        result = await asyncio.to_thread(enroll.enroll_fingerprint_with_id, driver_id)
         return result
     except Exception as e:
         logger.error(f"Error enrolling fingerprint for driver {driver_id}: {e}")

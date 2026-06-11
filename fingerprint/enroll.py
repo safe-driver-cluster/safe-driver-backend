@@ -4,7 +4,8 @@ import shutil
 import tempfile
 import logging
 from pathlib import Path
-from fingerprint.sensor import create_sensor
+from fingerprint.operation import exclusive_fingerprint_operation
+from fingerprint.sensor import close_sensor, create_sensor
 from time import sleep
 from database.firestore_helper import FirestoreHelper
 
@@ -165,30 +166,17 @@ def beep_success():
         buzzer_device.off()
 
 # -------------------------------
-# Initialize Fingerprint Sensor
-# -------------------------------
-try:
-    f = create_sensor()
-    announce('Sensor connected successfully!', speak=False)
-
-except Exception as e:
-    announce('Sensor initialization failed!')
-    print('Exception:', e)
-    _speak_message(f'Sensor initialization failed. {e}')
-    f = None
-
-# -------------------------------
 # Function to wait for finger
 # -------------------------------
-def wait_for_finger(timeout=5):
+def wait_for_finger(sensor, timeout=5):
     """Wait for finger for `timeout` seconds."""
-    if f is None:
+    if sensor is None:
         announce('Fingerprint sensor is not initialized.')
         return False
 
     start_time = time.time()
     while (time.time() - start_time) < timeout:
-        if f.readImage():
+        if sensor.readImage():
             return True
         time.sleep(0.1)
     return False
@@ -197,10 +185,23 @@ def wait_for_finger(timeout=5):
 # Function to enroll fingerprint
 # -------------------------------
 def enroll_fingerprint():
-    if f is None:
-        announce('Fingerprint sensor is not initialized.')
-        return False
+    sensor = None
+    with exclusive_fingerprint_operation("enroll"):
+        try:
+            sensor = create_sensor()
+            announce('Sensor connected successfully!', speak=False)
+            return _enroll_fingerprint(sensor)
+        except Exception as e:
+            announce('Sensor initialization failed!')
+            print('Exception:', e)
+            _speak_message(f'Sensor initialization failed. {e}')
+            return False
+        finally:
+            if sensor is not None:
+                close_sensor(sensor)
 
+
+def _enroll_fingerprint(sensor):
     announce('Starting fingerprint enrollment...')
 
     # Step 1: Turn LED blue (ready)
@@ -209,12 +210,12 @@ def enroll_fingerprint():
     
     # Step 2: Wait for first finger
     announce('Place finger for first scan.')
-    if not wait_for_finger(5):
+    if not wait_for_finger(sensor, 5):
         announce('Timeout. Finger not placed.')
         return False
 
     # Step 3: Convert image to characteristics
-    f.convertImage(0x01)
+    sensor.convertImage(0x01)
     beep_success()
     announce('First scan successful!')
 
@@ -224,20 +225,20 @@ def enroll_fingerprint():
     announce('Second scan in progress.', speak=False)
     # If LED color command exists, implement here
 
-    if not wait_for_finger(5):
+    if not wait_for_finger(sensor, 5):
         announce('Timeout. Finger not placed.')
         return False
 
     # Step 6: Convert image to characteristics
-    f.convertImage(0x02)
+    sensor.convertImage(0x02)
 
     # Step 7: Compare characteristics
-    if f.compareCharacteristics() == 0:
+    if sensor.compareCharacteristics() == 0:
         announce('Fingerprints do not match. Operation dismissed.')
         return False
 
     # Step 8: Create template
-    positionNumber = f.storeTemplate()
+    positionNumber = sensor.storeTemplate()
     announce(f'Second scan successful. Fingerprint enrolled successfully! Template position: {positionNumber}')
     beep_success()
 
@@ -249,9 +250,24 @@ def enroll_fingerprint():
 
 def enroll_fingerprint_with_id(driver_id: str):
     payload = None
-    if f is None:
-        announce('Fingerprint sensor is not initialized.')
-        return payload
+    sensor = None
+    with exclusive_fingerprint_operation("enroll_with_id"):
+        try:
+            sensor = create_sensor()
+            announce('Sensor connected successfully!', speak=False)
+            return _enroll_fingerprint_with_id(sensor, driver_id)
+        except Exception as e:
+            announce('Sensor initialization failed!')
+            print('Exception:', e)
+            _speak_message(f'Sensor initialization failed. {e}')
+            return payload
+        finally:
+            if sensor is not None:
+                close_sensor(sensor)
+
+
+def _enroll_fingerprint_with_id(sensor, driver_id: str):
+    payload = None
 
     announce('Starting fingerprint enrollment...')
 
@@ -261,12 +277,12 @@ def enroll_fingerprint_with_id(driver_id: str):
     
     # Step 2: Wait for first finger
     announce('Place finger for first scan.')
-    if not wait_for_finger(10):
+    if not wait_for_finger(sensor, 10):
         announce('Timeout. Finger not placed.')
         return payload
 
     # Step 3: Convert image to characteristics
-    f.convertImage(0x01)
+    sensor.convertImage(0x01)
     beep_success()
     announce('First scan successful!')
 
@@ -276,20 +292,20 @@ def enroll_fingerprint_with_id(driver_id: str):
     announce('Second scan in progress.', speak=False)
     # If LED color command exists, implement here
 
-    if not wait_for_finger(10):
+    if not wait_for_finger(sensor, 10):
         announce('Timeout. Finger not placed.')
         return payload
 
     # Step 6: Convert image to characteristics
-    f.convertImage(0x02)
+    sensor.convertImage(0x02)
 
     # Step 7: Compare characteristics
-    if f.compareCharacteristics() == 0:
+    if sensor.compareCharacteristics() == 0:
         announce('Fingerprints do not match. Operation dismissed.')
         return payload
 
     # Step 8: Create template
-    positionNumber = f.storeTemplate()
+    positionNumber = sensor.storeTemplate()
     announce(f'Second scan successful. Fingerprint enrolled successfully! Template position: {positionNumber}')
     beep_success()
 
