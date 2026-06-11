@@ -1,6 +1,7 @@
 # Environments
-.env
+central-api.env
 .venv
+central-venv/
 env/
 venv/
 ENV/
@@ -27,3 +28,5 @@ venvfew/
 venvtest/
 venv311/
 venv310/
+config.bat
+node_modules

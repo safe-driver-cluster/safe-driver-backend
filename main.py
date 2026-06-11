@@ -99,6 +99,7 @@ watchdog_task = None
 fingerprint_live = None
 gps_thread = None
 gps_stop_event = threading.Event()
+device_command_task = None
 
 # Store latest behavior data in memory
 latest_behavior_data = {
@@ -324,9 +325,45 @@ async def read_detect_process_stderr():
         logger.info("Stopped monitoring detect.py stderr")
 
 
+async def handle_device_command(command):
+    """Execute a central-API command on this Raspberry Pi."""
+    command_type = command.get("type")
+    payload = command.get("payload") or {}
+
+    if command_type == "restart_detection":
+        result = await restart_detection_process()
+    elif command_type == "sync_config":
+        remote_config = await asyncio.to_thread(
+            firestore_helper.get_model_configurations_from_firestore
+        )
+        result = utils.update_local_config_from_firestore(remote_config)
+    elif command_type == "enroll_fingerprint":
+        driver_id = payload.get("driver_id")
+        if not driver_id:
+            raise ValueError("enroll_fingerprint requires payload.driver_id")
+        import fingerprint.enroll as enroll
+
+        result = await asyncio.to_thread(enroll.enroll_fingerprint_with_id, driver_id)
+    elif command_type == "remove_fingerprint":
+        import fingerprint.remove as remove
+
+        result = await asyncio.to_thread(
+            remove.delete_fingerprint,
+            mac=payload.get("mac"),
+            position=payload.get("position"),
+            driver_id=payload.get("driver_id"),
+        )
+    else:
+        raise ValueError(f"Unsupported command type: {command_type}")
+
+    if isinstance(result, dict) and result.get("success") is False:
+        raise RuntimeError(result.get("message", f"{command_type} failed"))
+    return result
+
+
 @app.on_event("startup")
 async def startup_event():
-    global detect_process, monitor_task, stderr_task, device_mac, watchdog_task, fingerprint_live, gps_thread
+    global detect_process, monitor_task, stderr_task, device_mac, watchdog_task, fingerprint_live, gps_thread, device_command_task
 
     utils.print_banner(logger)
     logger.info("=" * 80)
@@ -522,6 +559,14 @@ async def startup_event():
             )
             detect_process.start()
             logger.info(f"Started detect thread: {detect_process.name}")
+
+        if device_mac and os.getenv("ENABLE_DEVICE_COMMANDS", "true").lower() == "true":
+            from service.device_command_worker import run_device_command_worker
+
+            device_command_task = asyncio.create_task(
+                run_device_command_worker(device_mac, handle_device_command)
+            )
+            logger.info("Started cloud device command worker")
         
     except Exception as e:
         logger.error(f"Failed to start detect.py: {e}", exc_info=True)
@@ -571,14 +616,21 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    global detect_process, monitor_task, device_mac, watchdog_task, gps_thread
+    global detect_process, monitor_task, device_mac, watchdog_task, gps_thread, device_command_task
 
     logger.info("Shutting down SafeDriver Backend")
 
     stop_event.set()
     gps_stop_event.set()
 
-        # Cancel watchdog first
+    if device_command_task:
+        device_command_task.cancel()
+        try:
+            await device_command_task
+        except asyncio.CancelledError:
+            logger.info("Device command task cancelled")
+
+    # Cancel watchdog first
     if watchdog_task:
         watchdog_task.cancel()
         try:

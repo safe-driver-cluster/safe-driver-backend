@@ -1,0 +1,13 @@
+.git
+.env
+.pytest_cache
+__pycache__
+venv
+dist
+build
+backups
+firebase-admin-sdk
+model
+SafeDriverBackend_Deployment
+*.log
+*.mp3
