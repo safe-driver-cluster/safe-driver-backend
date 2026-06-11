@@ -12,7 +12,7 @@ from database.firestore_helper import FirestoreHelper
 from database import db_helper
 from service.model_service import (get_mac_address_alternative)
 import config.config as config
-from fingerprint.sensor import create_sensor
+from fingerprint.sensor import close_sensor, create_sensor, is_packet_header_error
 from service.driver_auth_service import driver_auth_service
 from shared import stop_event
 
@@ -181,7 +181,13 @@ def wait_for_finger(sensor, timeout=10):
 
 def wait_for_finger_removal(sensor):
     """Prevent one physical finger placement from counting multiple times."""
-    while sensor.readImage() and not stop_event.is_set():
+    while not stop_event.is_set():
+        try:
+            if not sensor.readImage():
+                return
+        except Exception as exc:
+            logger.warning("Fingerprint read failed while waiting for removal: %s", exc)
+            return
         time.sleep(0.1)
 
 
@@ -212,19 +218,66 @@ def build_fingerprint_template_id(scanner_id, template_position):
 
 
 def match_fingerprint():
+    sensor = None
     try:
         sensor = create_sensor()
+        packet_error_count = 0
 
         while not stop_event.is_set():
             if not driver_auth_service.is_verified():
                 driver_auth_service.request_verification_if_due()
 
-            if not sensor.readImage():
+            try:
+                has_image = sensor.readImage()
+            except Exception as exc:
+                if not is_packet_header_error(exc):
+                    raise
+
+                packet_error_count += 1
+                sensor_port = getattr(sensor, "safe_driver_port", "unknown")
+                logger.warning(
+                    (
+                        "Fingerprint serial packet error on %s (%s/%s): %s. "
+                        "This usually means serial console noise, wrong UART port, wrong baudrate, "
+                        "or another process is reading the sensor."
+                    ),
+                    sensor_port,
+                    packet_error_count,
+                    config.FINGERPRINT_PACKET_ERROR_REOPEN_THRESHOLD,
+                    exc,
+                )
+
+                if packet_error_count >= config.FINGERPRINT_PACKET_ERROR_REOPEN_THRESHOLD:
+                    close_sensor(sensor)
+                    stop_event.wait(config.FINGERPRINT_SENSOR_REOPEN_DELAY_SEC)
+                    try:
+                        sensor = create_sensor(exclude_ports={sensor_port})
+                    except Exception:
+                        logger.exception("Fingerprint sensor reopen on alternate port failed; retrying primary list")
+                        sensor = create_sensor()
+                    packet_error_count = 0
+
                 time.sleep(0.1)
                 continue
 
-            sensor.convertImage(0x01)
-            result = sensor.searchTemplate()
+            packet_error_count = 0
+
+            if not has_image:
+                time.sleep(0.1)
+                continue
+
+            try:
+                sensor.convertImage(0x01)
+                result = sensor.searchTemplate()
+            except Exception as exc:
+                if is_packet_header_error(exc):
+                    logger.warning("Fingerprint packet error during template search: %s", exc)
+                    close_sensor(sensor)
+                    stop_event.wait(config.FINGERPRINT_SENSOR_REOPEN_DELAY_SEC)
+                    sensor = create_sensor()
+                    continue
+                raise
+
             position = result[0]
             accuracy = result[1]
 
@@ -304,6 +357,9 @@ def match_fingerprint():
     except Exception as e:
         logger.exception("Fingerprint matching failed")
         return False
+    finally:
+        if sensor is not None:
+            close_sensor(sensor)
 
 
 def main():
