@@ -22,7 +22,7 @@ ENABLE_LOGGING = True  # Set to False to disable logging (for performance testin
 ENABLE_VOICE_ALERTS = True
 ENABLE_VOICE_ALERT_SYNC = False
 ENABLE_ALERT_EVIDENCE = True
-ENABLE_FINGERPRINT = SYSTEM == "linux"  # Set to False to disable fingerprinting (for performance testing)
+ENABLE_FINGERPRINT = True  # Set to False to disable fingerprinting (for performance testing)
 ENABLE_GPS = True  # Set to False to disable GPS location retrieval
 ENABLE_HAZARD_WARNINGS = True
 ENABLE_BUZZER_ALERTS = True
