@@ -25,6 +25,7 @@ util.load_runtime_env()
 import model.utilmethods as utils
 import config.config as config
 from model.alerts import AlertManager
+from vibrator import shutdown_vibrator
 
 import firebase_admin
 from firebase_admin import credentials, db
@@ -1516,6 +1517,7 @@ def run(model: str, num_faces: int,
                 logger.warning(f"Error stopping object detector: {e}")
 
         utils.shutdown_voice_alerts()
+        shutdown_vibrator()
         detector.close()
         cap.release()
         if config.ENABLE_WINDOW:

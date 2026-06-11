@@ -8,6 +8,7 @@ import cv2
 
 import config.config as config
 import model.utilmethods as utils
+from vibrator import vibrate_alert
 
 from shared import behavior_queue
 
@@ -32,12 +33,14 @@ class AlertManager:
         output_stream: TextIO,
         threshold_defaults: Optional[Dict[str, bool]] = None,
         buzzer_callback: Optional[Callable[[], None]] = None,
+        vibrator_callback: Optional[Callable[[], None]] = None,
     ):
         self.logger = logger
         self.now_provider = now_provider
         self.output_stream = output_stream
         self.threshold_alert_sent = threshold_defaults.copy() if threshold_defaults else {}
         self.buzzer_callback = buzzer_callback
+        self.vibrator_callback = vibrator_callback or vibrate_alert
         self.last_event_time_by_type: Dict[str, float] = {}
         self.consecutive_count_by_type: Dict[str, int] = {}
         self.last_voice_alert_time_by_type: Dict[str, float] = {}
@@ -68,6 +71,16 @@ class AlertManager:
                 sys.stderr.flush()
             except Exception as exc:
                 self.logger.warning(f"Buzzer beep fallback failed: {exc}")
+
+    def _run_vibrator(self) -> None:
+        """Trigger the vibration motor without interrupting alert flow."""
+        if not self.vibrator_callback:
+            return
+
+        try:
+            self.vibrator_callback()
+        except Exception as exc:
+            self.logger.warning("Vibration alert failed: %s", exc)
 
     def _validate_alert_request(
         self,
@@ -308,6 +321,7 @@ class AlertManager:
                         return
                     self._voice_cycle_state["emitted"] = True
                     utils.perform_voice_alerts(voice_text, voice_label)
+                    self._run_vibrator()
                     self.voice_alert_count_by_type[policy_key] = voice_used + 1
                     self.last_voice_alert_time_by_type[policy_key] = now_ts
                     self.logger.info(
@@ -344,6 +358,7 @@ class AlertManager:
                     self.buzzer_callback()
                 else:
                     self._play_buzzer_beep()
+                self._run_vibrator()
                 self.buzzer_alert_count_by_type[policy_key] = buzzer_used + 1
                 self.last_buzzer_alert_time_by_type[policy_key] = now_ts
                 self._buzzer_cycle_state["emitted"] = True

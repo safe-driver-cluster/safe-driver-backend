@@ -25,6 +25,7 @@ ENABLE_ALERT_EVIDENCE = True
 ENABLE_FINGERPRINT = False  # Set to False to disable fingerprinting (for performance testing)
 ENABLE_GPS = True  # Set to False to disable GPS location retrieval
 ENABLE_HAZARD_WARNINGS = True
+ENABLE_VIBRATION_ALERTS = True
 
 
 # Drowsiness Detection Thresholds
@@ -69,6 +70,12 @@ BUZZER_ALERT_COOLDOWN_SEC = 5.0  # Minimum seconds between buzzer alerts of the 
 BUZZER_ALERT_CONSECUTIVE_EVENT_THRESH = 2  # Number of consecutive events to trigger buzzer alert
 MAXIMUM_BUZZER_ALERTS_PER_TYPE = 2  # Maximum number of buzzer alerts per type to prevent spamming (first 3 alerts will be buzzered)
 MAXIMUM_VOICE_ALERTS_PER_TYPE = 3  # Maximum number of voice alerts per type to prevent spamming (next 2 alerts will be voiced after buzzer limit is reached)
+
+# Vibration Motor Alert Settings
+# Wiring: VCC -> physical pin 4 (5V), GND -> physical pin 14, IN -> physical pin 37 (GPIO26)
+VIBRATOR_GPIO_PIN = 26
+VIBRATOR_ACTIVE_HIGH = True
+VIBRATOR_DURATION_SEC = 0.8
 
 # Driver fingerprint authentication
 FINGERPRINT_VERIFICATION_PROMPT_INTERVAL_SEC = 15.0
