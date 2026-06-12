@@ -1,11 +1,11 @@
 import logging
-import platform
 import threading
 import time
 
 import cv2
 
 import config.config as config
+import config.settings as settings
 import model.utilmethods as model_utils
 from shared import behavior_queue, get_latest_camera_frame, reset_behavior_state
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def _open_evidence_camera(camera_id):
     """Open the configured camera using the platform's supported strategy."""
-    if platform.system().lower() == "linux":
+    if settings.SYSTEM == "linux":
         # Lazy import avoids a module cycle because detect.py also uses the
         # driver-auth service.
         from model.detect import create_camera_capture

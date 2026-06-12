@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException
 import subprocess
 import os
 import sys
-import platform
 import logging
 import asyncio
 import json
@@ -433,7 +432,6 @@ async def startup_event():
             else:
                 logger.warning("No Firestore device settings found; using local settings")
 
-            settings.SYSTEM = platform.system().lower()
             system_update_result = await asyncio.to_thread(
                 firestore_helper.update_device_setting_firestore,
                 device_mac,
@@ -519,7 +517,7 @@ async def startup_event():
             fingerprint_live.start()
             logger.info(f"Started fingerprint live thread: {fingerprint_live.name}")
 
-        if config.ENABLE_GPS and sys.platform.startswith("linux"):
+        if config.ENABLE_GPS and settings.SYSTEM == "linux":
             try:
                 from gps.gps import run_gps_loop
 

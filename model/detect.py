@@ -6,7 +6,6 @@ import json
 import os
 import shutil
 import subprocess
-import platform
 
 import numpy as np
 from collections import deque
@@ -284,8 +283,7 @@ def _configure_capture(cap, width: int, height: int):
 
 
 def _try_open_opencv_capture(camera_id: int, width: int, height: int):
-    system = platform.system().lower()
-    if system == "windows":
+    if settings.SYSTEM == "windows":
         targets = []
         if hasattr(cv2, "CAP_DSHOW"):
             targets.append((camera_id, cv2.CAP_DSHOW, f"opencv-dshow:{camera_id}"))
@@ -300,7 +298,7 @@ def _try_open_opencv_capture(camera_id: int, width: int, height: int):
             (f"/dev/video{camera_id}", cv2.CAP_ANY, f"opencv-any:/dev/video{camera_id}"),
         ]
 
-    if system != "windows" and hasattr(cv2, "CAP_GSTREAMER"):
+    if settings.SYSTEM != "windows" and hasattr(cv2, "CAP_GSTREAMER"):
         gst = (
             f"libcamerasrc camera-name=/base/soc/i2c0mux/i2c@1/imx219@10 ! "
             f"video/x-raw,width={int(width)},height={int(height)},framerate=30/1 ! "
@@ -333,7 +331,6 @@ def _try_open_opencv_capture(camera_id: int, width: int, height: int):
 
 def create_camera_capture(camera_id: int, width: int, height: int):
     preferred_ids = [camera_id] + [idx for idx in range(0, 11) if idx != camera_id]
-    system = platform.system().lower()
 
     for cid in preferred_ids:
         if CAMERA_BACKEND in ("auto", "opencv"):
@@ -341,7 +338,7 @@ def create_camera_capture(camera_id: int, width: int, height: int):
             if cap is not None:
                 return cap, cid, backend_name
 
-        if system != "windows" and CAMERA_BACKEND in ("auto", "rpicam"):
+        if settings.SYSTEM != "windows" and CAMERA_BACKEND in ("auto", "rpicam"):
             rpi_cap = RpiCamVidCapture(cid, width=width, height=height, fps=30)
             if rpi_cap.open():
                 return rpi_cap, cid, f"rpicam-vid:{cid}"
@@ -1106,7 +1103,7 @@ def _speed_monitoring_state():
     if config.ENABLE_FINGERPRINT and not driver_auth_service.is_verified():
         return False, "waiting for registered driver fingerprint verification"
 
-    if platform.system().lower() != "linux":
+    if settings.SYSTEM != "linux":
         return True, "speed gate applies only on Linux"
 
     if not config.ENABLE_SPEED_GATED_DETECTION or not config.ENABLE_GPS:
@@ -1231,12 +1228,12 @@ def run(model: str, num_faces: int,
     monitoring_active = None
     object_detection_frame_interval = (
         config.OBJECT_DETECTION_FRAME_INTERVAL_LINUX
-        if system == "linux"
+        if settings.SYSTEM == "linux"
         else config.OBJECT_DETECTION_FRAME_INTERVAL
     )
     object_detection_input_size = (
         config.OBJECT_DETECTION_IMGSZ_LINUX
-        if system == "linux"
+        if settings.SYSTEM == "linux"
         else config.OBJECT_DETECTION_IMGSZ
     )
     logger.info(

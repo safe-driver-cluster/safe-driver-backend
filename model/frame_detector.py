@@ -3,11 +3,11 @@ import cv2
 import logging
 import multiprocessing
 import os
-import platform
 import sys
 import time
 
 import config.config as config
+import config.settings as settings
 from model.alerts import AlertManager
 import model.utilmethods as utils
 import utils.utils as util
@@ -189,7 +189,7 @@ def _forward_behavior_events(output_queue):
 
 def _resolve_model_path(default_path, linux_path):
     """Select an ARM-friendly model backend on Linux."""
-    if platform.system().lower() != "linux":
+    if settings.SYSTEM != "linux":
         return util.resource_path(default_path)
 
     resolved_linux_path = util.resource_path(linux_path)
@@ -214,7 +214,7 @@ def _resolve_model_path(default_path, linux_path):
 
 def detector_worker(frame_queue, output_queue=None):
     try:
-        if platform.system().lower() == "linux":
+        if settings.SYSTEM == "linux":
             # PyTorch/OpenCV otherwise create several native worker threads.
             # On a Raspberry Pi this competes heavily with MediaPipe and can
             # trigger an OOM/native abort that produces no Python traceback.
@@ -278,7 +278,7 @@ def detector_worker(frame_queue, output_queue=None):
 
         inference_size = (
             config.OBJECT_DETECTION_IMGSZ_LINUX
-            if platform.system().lower() == "linux"
+            if settings.SYSTEM == "linux"
             else config.OBJECT_DETECTION_IMGSZ
         )
 
@@ -618,7 +618,7 @@ def detector_worker(frame_queue, output_queue=None):
 class DetectorProcess:
     def __init__(self):
         self.frame_queue = queue.Queue(maxsize=1)  # ← regular queue
-        self._use_process = platform.system().lower() == "linux"
+        self._use_process = settings.SYSTEM == "linux"
         self.thread = None
         self.process = None
         self.output_queue = None

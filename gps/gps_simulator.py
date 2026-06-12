@@ -10,8 +10,9 @@ import argparse
 from datetime import datetime, timezone
 import logging
 import os
-import platform
 import time
+
+import config.settings as settings
 
 
 GPS_SIGNALS = [
@@ -129,7 +130,7 @@ def _open_serial_writer(port, baudrate):
 
 
 def _open_pty_writer(link_path):
-    if platform.system().lower() == "windows":
+    if settings.SYSTEM == "windows":
         raise RuntimeError("--pty is only available on Linux/macOS")
 
     import pty
