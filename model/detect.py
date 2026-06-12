@@ -18,7 +18,13 @@ from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
 
 import utils.utils as util
-from utils.frame_transform import apply_camera_rotation, normalize_camera_rotation
+from utils.frame_transform import (
+    MAX_CAMERA_ZOOM,
+    apply_camera_rotation,
+    apply_camera_zoom,
+    normalize_camera_rotation,
+    normalize_camera_zoom,
+)
 
 util.load_runtime_env()
 
@@ -1247,7 +1253,20 @@ def run(model: str, num_faces: int,
             "Unsupported CAMERA_ROTATION=%s; using 0. Supported values are 0, 90, 180, 270.",
             settings.CAMERA_ROTATION,
         )
+    camera_zoom = normalize_camera_zoom(settings.CAMERA_ZOOM)
+    try:
+        raw_camera_zoom = float(settings.CAMERA_ZOOM)
+    except (TypeError, ValueError):
+        raw_camera_zoom = None
+    if raw_camera_zoom != camera_zoom:
+        logger.warning(
+            "Unsupported CAMERA_ZOOM=%s; using %s. Supported range is 1.0 to %.1f.",
+            settings.CAMERA_ZOOM,
+            camera_zoom,
+            MAX_CAMERA_ZOOM,
+        )
     logger.info("Camera rotation setting: %s degrees", camera_rotation)
+    logger.info("Camera zoom setting: %.2fx", camera_zoom)
     logger.info(
         "Object detection settings: every %s camera frames at %sx%s",
         object_detection_frame_interval,
@@ -1278,6 +1297,7 @@ def run(model: str, num_faces: int,
 
             # ======================= PREPROCESS ==========================
             image = apply_camera_rotation(image, camera_rotation)
+            image = apply_camera_zoom(image, camera_zoom)
             image = cv2.flip(image, 1)
             update_latest_camera_frame(image)
 
