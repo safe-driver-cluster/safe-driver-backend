@@ -182,3 +182,81 @@ def update_local_config_from_firestore(firestore_data: dict) -> dict:
             'message': f'Failed to update local configuration: {str(e)}',
             'updated_count': 0
         }
+
+
+def update_local_settings_from_firestore(firestore_data: dict) -> dict:
+    """
+    Update local device-specific settings from Firestore data.
+
+    Args:
+        firestore_data (dict): Settings document retrieved from settings/{device_mac}
+
+    Returns:
+        dict: Result with success status and updated settings count
+    """
+    import logging
+    import config.settings as settings
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        if not firestore_data:
+            logger.warning("No valid settings data found in Firestore response")
+            return {
+                'success': False,
+                'message': 'No valid settings data found',
+                'updated_count': 0
+            }
+
+        updated_count = 0
+        failed_updates = []
+
+        for setting_name, setting_value in firestore_data.items():
+            try:
+                if setting_name == "SYSTEM":
+                    logger.info("Keeping runtime SYSTEM=%s; ignoring Firestore value %s", settings.SYSTEM, setting_value)
+                    continue
+
+                if not setting_name.isupper():
+                    logger.debug("Skipping non-setting field from Firestore settings: %s", setting_name)
+                    continue
+
+                setting_exists = hasattr(settings, setting_name)
+                current_value = getattr(settings, setting_name, None)
+                if setting_exists and current_value == setting_value:
+                    logger.debug("Setting %s already up to date", setting_name)
+                    continue
+
+                setattr(settings, setting_name, setting_value)
+                updated_count += 1
+
+                if setting_exists:
+                    logger.info("Updated setting %s: %s -> %s", setting_name, current_value, setting_value)
+                else:
+                    logger.info("Added new setting %s: %s", setting_name, setting_value)
+
+            except Exception as e:
+                failed_updates.append(f"{setting_name}: {str(e)}")
+                logger.error("Failed to update setting %s: %s", setting_name, e)
+
+        if updated_count > 0:
+            logger.info("Successfully updated %s settings from Firestore", updated_count)
+
+        if failed_updates:
+            logger.warning("Failed to update %s settings: %s", len(failed_updates), failed_updates)
+
+        return {
+            'success': True,
+            'message': f'Updated {updated_count} settings successfully',
+            'updated_count': updated_count,
+            'total_settings': len(firestore_data),
+            'failed_updates': failed_updates
+        }
+
+    except Exception as e:
+        logger.error("Error updating local settings from Firestore: %s", e, exc_info=True)
+        return {
+            'success': False,
+            'message': f'Failed to update local settings: {str(e)}',
+            'updated_count': 0
+        }

@@ -1151,9 +1151,7 @@ def run(model: str, num_faces: int,
     logger.info(f"Tracking confidence: {min_tracking_confidence}")
     logger.info("=" * 80)
 
-    system = platform.system().lower()
-    settings.SYSTEM = system
-    logger.info(f"Detected OS: {system}")
+    logger.info(f"Detected OS: {settings.SYSTEM}")
 
     logger.info(f"Initializing camera {camera_id} (backend={CAMERA_BACKEND})...")
     cap, selected_camera_id, backend_name = create_camera_capture(camera_id, width, height)

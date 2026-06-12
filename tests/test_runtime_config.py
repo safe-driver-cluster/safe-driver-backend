@@ -1,4 +1,5 @@
 import config.config as config
+import config.settings as settings
 import utils.utils as utils
 
 
@@ -35,3 +36,25 @@ def test_explicit_gps_environment_port_is_not_replaced_by_firestore(monkeypatch)
     )
 
     assert config.GPS_SERIAL_PORT == explicit_port
+
+
+def test_device_settings_are_updated_from_firestore(monkeypatch):
+    monkeypatch.setattr(settings, "CAMERA_ROTATION", 0)
+    monkeypatch.setattr(settings, "CAMERA_ZOOM", 1)
+    monkeypatch.setattr(settings, "SYSTEM", "windows")
+
+    result = utils.update_local_settings_from_firestore(
+        {
+            "CAMERA_ROTATION": 180,
+            "CAMERA_ZOOM": 1,
+            "SYSTEM": "linux",
+            "last_updated": "ignored",
+        }
+    )
+
+    assert result["success"] is True
+    assert result["updated_count"] == 1
+    assert settings.CAMERA_ROTATION == 180
+    assert settings.CAMERA_ZOOM == 1
+    assert settings.SYSTEM == "windows"
+    assert not hasattr(settings, "last_updated")

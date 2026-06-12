@@ -123,6 +123,63 @@ class FirestoreHelper:
             logger.error(f"Error retrieving model configurations from Firestore: {e}")
             return {}
 
+    def get_device_settings_from_firestore(self, mac: str) -> Dict:
+        """
+        Retrieve device-specific settings from Firestore.
+
+        Args:
+            mac (str): Device MAC address used as the document ID in settings/{mac}
+
+        Returns:
+            dict: Device settings data or empty dict if not found
+        """
+        try:
+            self._ensure_db_initialized()
+            doc_ref = self.db.collection('settings').document(mac)
+            doc = doc_ref.get()
+
+            if doc.exists:
+                logger.info("Successfully retrieved settings for device %s", mac)
+                return doc.to_dict() or {}
+
+            logger.warning("No settings found in Firestore for device %s", mac)
+            return {}
+
+        except Exception as e:
+            logger.error(f"Error retrieving settings for device {mac}: {e}")
+            return {}
+
+    def update_device_setting_firestore(self, mac: str, setting_name: str, setting_value: Any) -> Dict:
+        """
+        Update one device-specific setting in Firestore under settings/{mac}.
+        """
+        try:
+            self._ensure_db_initialized()
+            doc_ref = self.db.collection('settings').document(mac)
+            doc_ref.set(
+                {
+                    setting_name: setting_value,
+                    'last_updated': firestore.SERVER_TIMESTAMP,
+                },
+                merge=True,
+            )
+            logger.info("Updated setting %s for device %s: %s", setting_name, mac, setting_value)
+            return {
+                'success': True,
+                'mac': mac,
+                'setting_name': setting_name,
+                'setting_value': setting_value,
+            }
+
+        except Exception as e:
+            logger.error(f"Error updating setting {setting_name} for device {mac}: {e}")
+            return {
+                'success': False,
+                'message': str(e),
+                'mac': mac,
+                'setting_name': setting_name,
+            }
+
     def get_hazard_zones(self) -> Optional[List[Dict]]:
         """Retrieve valid hazard zones from the top-level hazards collection."""
         try:

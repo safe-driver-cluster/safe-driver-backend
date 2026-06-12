@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 import subprocess
 import os
 import sys
+import platform
 import logging
 import asyncio
 import json
@@ -417,6 +418,35 @@ async def startup_event():
             else:
                 model_service.update_device_status(status="starting")
                 logger.info("Device status updated to starting")
+
+            logger.info("Loading device settings from Firestore for %s...", device_mac)
+            device_settings = await asyncio.to_thread(
+                firestore_helper.get_device_settings_from_firestore,
+                device_mac,
+            )
+            if device_settings:
+                settings_update_result = utils.update_local_settings_from_firestore(device_settings)
+                logger.info(
+                    "Device settings loaded before service startup: %s updated",
+                    settings_update_result.get("updated_count", 0),
+                )
+            else:
+                logger.warning("No Firestore device settings found; using local settings")
+
+            settings.SYSTEM = platform.system().lower()
+            system_update_result = await asyncio.to_thread(
+                firestore_helper.update_device_setting_firestore,
+                device_mac,
+                "SYSTEM",
+                settings.SYSTEM,
+            )
+            if system_update_result.get("success"):
+                logger.info("Synced runtime SYSTEM setting to Firestore: %s", settings.SYSTEM)
+            else:
+                logger.warning(
+                    "Failed to sync runtime SYSTEM setting to Firestore: %s",
+                    system_update_result.get("message"),
+                )
 
             # Check if vehicle_reg_no is set for the device
             device_reg_no_check = model_service.check_vehicle_registration(device_mac)
