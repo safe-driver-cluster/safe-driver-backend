@@ -24,6 +24,7 @@ util.load_runtime_env()
 
 import model.utilmethods as utils
 import config.config as config
+import config.settings as settings
 from model.alerts import AlertManager
 from buzzer import shutdown_buzzer
 from vibrator import shutdown_vibrator
@@ -1151,7 +1152,7 @@ def run(model: str, num_faces: int,
     logger.info("=" * 80)
 
     system = platform.system().lower()
-    config.SYSTEM = system
+    settings.SYSTEM = system
     logger.info(f"Detected OS: {system}")
 
     logger.info(f"Initializing camera {camera_id} (backend={CAMERA_BACKEND})...")

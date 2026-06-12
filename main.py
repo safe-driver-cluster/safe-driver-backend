@@ -13,6 +13,7 @@ import service.model_service as model_service
 from database import db_helper
 from beans.bean import ApiResponse, ResponseData, BehaviorResponseData
 import config.config as config
+import config.settings as settings
 from service.model_service import (get_mac_address_alternative)
 
 import firebase_admin
@@ -472,7 +473,7 @@ async def startup_event():
         logger.info("Device status updated to online")
 
         # FINGERPRINT ENROLLMENT TEST
-        if(config.ENABLE_FINGERPRINT and config.SYSTEM == 'linux'):
+        if(config.ENABLE_FINGERPRINT and settings.SYSTEM == 'linux'):
             from fingerprint.live import main as live_main
             from service.driver_auth_service import driver_auth_service
 

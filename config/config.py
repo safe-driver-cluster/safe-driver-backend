@@ -1,5 +1,4 @@
 import os
-import platform
 
 import cv2
 
@@ -11,7 +10,6 @@ VERSION_NO = "2.4.11"
 # 'si' for Sinhala (සිංහල)
 # 'ta' for Tamil (தமிழ்)
 LANGUAGE = 'ENGLISH'
-SYSTEM = platform.system().lower()
 
 # Enable Disable Configurations
 ENABLE_DETECTION = True  # Set to False to disable all detection (for performance testing)
