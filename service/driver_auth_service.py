@@ -8,6 +8,7 @@ import config.config as config
 import config.settings as settings
 import model.utilmethods as model_utils
 from shared import behavior_queue, get_latest_camera_frame, reset_behavior_state
+from utils.frame_transform import apply_camera_rotation, normalize_camera_rotation
 
 
 logger = logging.getLogger(__name__)
@@ -211,6 +212,8 @@ class DriverAuthService:
             for _ in range(config.ALERT_EVIDENCE_SNAPSHOT_READ_ATTEMPTS):
                 success, frame = capture.read()
                 if success and frame is not None:
+                    camera_rotation = normalize_camera_rotation(settings.CAMERA_ROTATION)
+                    frame = apply_camera_rotation(frame, camera_rotation)
                     logger.info(
                         "Captured security-alert evidence from camera %s using %s",
                         selected_camera_id,

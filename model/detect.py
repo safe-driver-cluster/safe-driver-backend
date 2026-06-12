@@ -18,6 +18,7 @@ from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
 
 import utils.utils as util
+from utils.frame_transform import apply_camera_rotation, normalize_camera_rotation
 
 util.load_runtime_env()
 
@@ -1236,6 +1237,17 @@ def run(model: str, num_faces: int,
         if settings.SYSTEM == "linux"
         else config.OBJECT_DETECTION_IMGSZ
     )
+    camera_rotation = normalize_camera_rotation(settings.CAMERA_ROTATION)
+    try:
+        raw_camera_rotation = int(settings.CAMERA_ROTATION) % 360
+    except (TypeError, ValueError):
+        raw_camera_rotation = None
+    if raw_camera_rotation != camera_rotation:
+        logger.warning(
+            "Unsupported CAMERA_ROTATION=%s; using 0. Supported values are 0, 90, 180, 270.",
+            settings.CAMERA_ROTATION,
+        )
+    logger.info("Camera rotation setting: %s degrees", camera_rotation)
     logger.info(
         "Object detection settings: every %s camera frames at %sx%s",
         object_detection_frame_interval,
@@ -1265,6 +1277,7 @@ def run(model: str, num_faces: int,
             detection_failures = 0
 
             # ======================= PREPROCESS ==========================
+            image = apply_camera_rotation(image, camera_rotation)
             image = cv2.flip(image, 1)
             update_latest_camera_frame(image)
 
