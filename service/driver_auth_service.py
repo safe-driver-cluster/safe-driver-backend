@@ -8,6 +8,7 @@ import config.config as config
 import config.settings as settings
 import model.utilmethods as model_utils
 import utils.utils as util
+from database.firestore_helper import firestore_helper
 from shared import behavior_queue, get_latest_camera_frame, reset_behavior_state
 from utils.frame_transform import (
     apply_camera_rotation,
@@ -54,6 +55,8 @@ class DriverAuthService:
             self.last_unverified_movement_alert_time = 0.0
             self.unverified_movement_active = False
             self.fingerprint_disabled_movement_logged = False
+            self.attendance_date = None
+            self.attendance_document_id = None
 
     def is_verified(self):
         if not util.is_fingerprint_enabled():
@@ -96,6 +99,11 @@ class DriverAuthService:
             self.unverified_movement_active = False
         if previous_driver_id != driver_id:
             reset_behavior_state(f"driver_verified:{driver_id}")
+            attendance_result = firestore_helper.create_driver_attendance_signin(driver_id)
+            if attendance_result.get("success"):
+                with self._lock:
+                    self.attendance_date = attendance_result.get("date")
+                    self.attendance_document_id = attendance_result.get("document_id")
         if driver_language in ("ENGLISH", "SINHALA", "TAMIL"):
             config.LANGUAGE = driver_language
         model_utils.perform_voice_alerts(
@@ -113,12 +121,22 @@ class DriverAuthService:
     def mark_signed_off(self):
         with self._lock:
             signed_off_driver_id = self.verified_driver_id
+            attendance_date = self.attendance_date
+            attendance_document_id = self.attendance_document_id
             self.verified_driver_id = None
             self.unauthorized_attempts = 0
             self.unauthorized_cloud_sent = False
             self.last_prompt_time = 0.0
             self.unverified_movement_active = False
+            self.attendance_date = None
+            self.attendance_document_id = None
         reset_behavior_state(f"driver_signed_off:{signed_off_driver_id or 'unknown'}")
+        if signed_off_driver_id:
+            firestore_helper.update_driver_attendance_signoff(
+                signed_off_driver_id,
+                attendance_date=attendance_date,
+                attendance_document_id=attendance_document_id,
+            )
         model_utils.perform_voice_alerts(
             self._localized_message(config.VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS),
             config.VOICE_ALERT_FINGERPRINT_SIGNOFF_SUCCESS_LABEL,

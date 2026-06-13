@@ -557,6 +557,112 @@ class FirestoreHelper:
             logger.error(f"Error retrieving driver by ID: {e}")
             return None
 
+    def create_driver_attendance_signin(self, driver_id: str) -> Dict:
+        """Create a new attendance record for a driver sign-in."""
+        try:
+            self._ensure_db_initialized()
+            signin_time = utils.now()
+            date_str = signin_time.split("T")[0]
+
+            doc_ref = (
+                self.db.collection("attendance")
+                .document(driver_id)
+                .collection(date_str)
+                .document()
+            )
+            doc_ref.set(
+                {
+                    "signin": signin_time,
+                    "signoff": None,
+                }
+            )
+
+            logger.info(
+                "Created driver attendance sign-in: driver_id=%s date=%s document_id=%s",
+                driver_id,
+                date_str,
+                doc_ref.id,
+            )
+            return {
+                "success": True,
+                "driver_id": driver_id,
+                "date": date_str,
+                "document_id": doc_ref.id,
+                "signin": signin_time,
+            }
+        except Exception as e:
+            logger.error(
+                "Failed to create attendance sign-in for driver %s: %s",
+                driver_id,
+                e,
+                exc_info=True,
+            )
+            return {"success": False, "driver_id": driver_id, "message": str(e)}
+
+    def update_driver_attendance_signoff(
+        self,
+        driver_id: str,
+        attendance_date: Optional[str] = None,
+        attendance_document_id: Optional[str] = None,
+    ) -> Dict:
+        """Update the active attendance record with a driver sign-off time."""
+        try:
+            self._ensure_db_initialized()
+            signoff_time = utils.now()
+            date_str = attendance_date or signoff_time.split("T")[0]
+
+            if attendance_document_id:
+                doc_ref = (
+                    self.db.collection("attendance")
+                    .document(driver_id)
+                    .collection(date_str)
+                    .document(attendance_document_id)
+                )
+                doc_ref.set({"signoff": signoff_time}, merge=True)
+                document_id = attendance_document_id
+            else:
+                document_id = None
+                for doc in self.db.collection("attendance").document(driver_id).collection(date_str).stream():
+                    data = doc.to_dict() or {}
+                    if data.get("signoff") is None:
+                        document_id = doc.id
+                if document_id is None:
+                    return {
+                        "success": False,
+                        "driver_id": driver_id,
+                        "date": date_str,
+                        "message": "No open attendance record found",
+                    }
+                doc_ref = (
+                    self.db.collection("attendance")
+                    .document(driver_id)
+                    .collection(date_str)
+                    .document(document_id)
+                )
+                doc_ref.set({"signoff": signoff_time}, merge=True)
+
+            logger.info(
+                "Updated driver attendance sign-off: driver_id=%s date=%s document_id=%s",
+                driver_id,
+                date_str,
+                document_id,
+            )
+            return {
+                "success": True,
+                "driver_id": driver_id,
+                "date": date_str,
+                "document_id": document_id,
+                "signoff": signoff_time,
+            }
+        except Exception as e:
+            logger.error(
+                "Failed to update attendance sign-off for driver %s: %s",
+                driver_id,
+                e,
+                exc_info=True,
+            )
+            return {"success": False, "driver_id": driver_id, "message": str(e)}
+
     def record_driver_fingerprint_operation(
         self,
         driver_id: str,
