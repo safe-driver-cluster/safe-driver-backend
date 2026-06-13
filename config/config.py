@@ -94,6 +94,11 @@ SPEAKER_BEEP_SDL_AUDIO_DRIVER = "pulseaudio"
 SPEAKER_BEEP_AUTO_MAX_VOLUME = True
 SPEAKER_BEEP_VOLUME_PERCENT = 100
 
+# Voice Alert Audio Settings
+VOICE_ALERT_VOLUME = 1.0
+VOICE_ALERT_AUTO_MAX_VOLUME = True
+VOICE_ALERT_VOLUME_PERCENT = 100
+
 # Vibration Motor Alert Settings
 # Wiring: VCC -> physical pin 4 (5V), GND -> physical pin 14, IN -> physical pin 37 (GPIO26)
 VIBRATOR_GPIO_PIN = 26

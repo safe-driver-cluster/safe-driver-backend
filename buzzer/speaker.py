@@ -29,12 +29,9 @@ def _run_audio_command(command):
         return False
 
 
-def _set_system_volume_max():
-    """Raise the default speaker/Bluetooth output volume before the beep."""
-    if not config.SPEAKER_BEEP_AUTO_MAX_VOLUME:
-        return
-
-    volume_percent = max(0, min(100, int(config.SPEAKER_BEEP_VOLUME_PERCENT)))
+def set_system_volume(volume_percent, reason="audio"):
+    """Set the default speaker/Bluetooth output volume."""
+    volume_percent = max(0, min(100, int(volume_percent)))
     volume_ratio = f"{volume_percent / 100:.2f}"
     volume_percent_text = f"{volume_percent}%"
     commands = []
@@ -72,9 +69,17 @@ def _set_system_volume_max():
         volume_changed = _run_audio_command(command) or volume_changed
 
     if volume_changed:
-        logger.info("Speaker beep volume set to %s", volume_percent_text)
+        logger.info("%s volume set to %s", reason, volume_percent_text)
     else:
-        logger.debug("Could not adjust speaker beep volume")
+        logger.debug("Could not adjust %s volume", reason)
+
+
+def _set_system_volume_max():
+    """Raise the default speaker/Bluetooth output volume before the beep."""
+    if not config.SPEAKER_BEEP_AUTO_MAX_VOLUME:
+        return
+
+    set_system_volume(config.SPEAKER_BEEP_VOLUME_PERCENT, reason="Speaker beep")
 
 
 def _create_beep_wav(file_path):

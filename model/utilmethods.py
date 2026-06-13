@@ -10,6 +10,11 @@ import utils.utils as utils
 import logging
 logger = logging.getLogger(__name__)
 
+try:
+    from buzzer.speaker import set_system_volume
+except Exception:
+    set_system_volume = None
+
 
 import pygame
 pygame.mixer.init()
@@ -148,7 +153,15 @@ def perform_voice_alerts(message, label="VOICE_ALERT", language_dependent=True):
                         tts.save(filename)
 
                     logger.info("Voice playback started: %s", label)
+                    if config.VOICE_ALERT_AUTO_MAX_VOLUME and set_system_volume is not None:
+                        set_system_volume(
+                            config.VOICE_ALERT_VOLUME_PERCENT,
+                            reason="Voice alert",
+                        )
                     pygame.mixer.music.load(filename)
+                    pygame.mixer.music.set_volume(
+                        max(0.0, min(1.0, float(config.VOICE_ALERT_VOLUME)))
+                    )
                     pygame.mixer.music.play()
 
                     while pygame.mixer.music.get_busy():
