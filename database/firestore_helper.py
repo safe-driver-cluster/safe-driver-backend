@@ -36,6 +36,34 @@ class FirestoreHelper:
         """Build a deterministic 32-char ID for a scanner template slot."""
         normalized = f"{scanner_id.strip().lower()}:{int(template_position)}"
         return hashlib.md5(normalized.encode('utf-8')).hexdigest()
+
+    @staticmethod
+    def _firestore_safe_value(value: Any, inside_array: bool = False) -> Any:
+        """
+        Convert config values to Firestore-safe values.
+
+        Firestore rejects nested arrays, so a list/tuple inside another array is
+        stored as a small marker map and decoded again when configs are loaded.
+        """
+        if value is None or isinstance(value, (str, int, float, bool)):
+            return value
+
+        if isinstance(value, (list, tuple, set)):
+            items = [
+                FirestoreHelper._firestore_safe_value(item, inside_array=True)
+                for item in value
+            ]
+            if inside_array:
+                return {"sequence_values": items}
+            return items
+
+        if isinstance(value, dict):
+            return {
+                str(key): FirestoreHelper._firestore_safe_value(item)
+                for key, item in value.items()
+            }
+
+        return str(value)
         
     def save_model_configurations_to_firestore(self) -> Dict:
         """
@@ -54,20 +82,7 @@ class FirestoreHelper:
                 # Skip private attributes and functions
                 if not name.startswith('_') and not inspect.isfunction(getattr(config, name)) and not inspect.ismodule(getattr(config, name)):
                     value = getattr(config, name)
-                    
-                    # Convert non-serializable values to serializable format
-                    if isinstance(value, tuple):
-                        # Convert tuples to lists for JSON serialization
-                        config_vars[name] = list(value)
-                    elif hasattr(cv2, name.split('_')[0]) and str(type(value)).startswith("<class 'int'>"):
-                        # Handle OpenCV constants (they're integers)
-                        config_vars[name] = value
-                    elif isinstance(value, (str, int, float, bool, list, dict)):
-                        # Directly serializable types
-                        config_vars[name] = value
-                    else:
-                        # Convert other types to string representation
-                        config_vars[name] = str(value)
+                    config_vars[name] = self._firestore_safe_value(value)
                         
             # Prepare the document data with metadata
             document_data = {
@@ -240,7 +255,7 @@ class FirestoreHelper:
             # Update both organized and raw configurations
             update_data = {
                 # f'configurations.{config_category}.{config_name}': config_value,
-                f'raw_configurations.{config_name}': config_value,
+                f'raw_configurations.{config_name}': self._firestore_safe_value(config_value),
                 'last_updated': firestore.SERVER_TIMESTAMP
             }
             

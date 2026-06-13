@@ -98,6 +98,22 @@ def update_local_config_from_firestore(firestore_data: dict) -> dict:
     import config.config as config
     
     logger = logging.getLogger(__name__)
+
+    def _decode_firestore_config_value(value):
+        if isinstance(value, dict):
+            if set(value.keys()) == {"sequence_values"} and isinstance(value.get("sequence_values"), list):
+                return [_decode_firestore_config_value(item) for item in value["sequence_values"]]
+            if set(value.keys()) == {"__sequence__"} and isinstance(value.get("__sequence__"), list):
+                return [_decode_firestore_config_value(item) for item in value["__sequence__"]]
+            return {
+                key: _decode_firestore_config_value(item)
+                for key, item in value.items()
+            }
+
+        if isinstance(value, list):
+            return [_decode_firestore_config_value(item) for item in value]
+
+        return value
     
     try:
         if not firestore_data or 'raw_configurations' not in firestore_data:
@@ -115,6 +131,8 @@ def update_local_config_from_firestore(firestore_data: dict) -> dict:
         # Update each configuration variable in the config module
         for config_name, config_value in raw_configs.items():
             try:
+                config_value = _decode_firestore_config_value(config_value)
+
                 if config_name == "GPS_SERIAL_PORT":
                     env_port = os.getenv("GPS_SERIAL_PORT")
                     simulator_port = getattr(config, "SIMULATED_GPS_SERIAL_PORT", "")
