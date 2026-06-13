@@ -2,6 +2,7 @@ import multiprocessing
 multiprocessing.set_start_method('spawn', force=True)
 import sys
 import io
+import os
 
 # Force UTF-8 output on Windows
 if sys.platform == 'win32':
@@ -26,11 +27,12 @@ if __name__ == "__main__":
         else:
             # Running in dev mode - use string import so reload works
             import uvicorn
+            reload_enabled = os.getenv("SAFE_DRIVER_RELOAD", "true").lower() in ("1", "true", "yes")
             uvicorn.run(
                 "main:app",
                 host="0.0.0.0",
                 port=8000,
-                reload=True
+                reload=reload_enabled
             )
     except Exception as e:
         print(f"Error starting server: {e}")

@@ -1,0 +1,16 @@
+[Unit]
+Description=Safe Driver Backend
+After=network-online.target bluetooth.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/safedriver/Desktop/safe-driver-backend
+Environment=PYTHONUNBUFFERED=1
+Environment=SAFE_DRIVER_RELOAD=false
+ExecStart=/home/safedriver/Desktop/safe-driver-backend/venv/bin/python /home/safedriver/Desktop/safe-driver-backend/run.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
