@@ -7,6 +7,7 @@ import cv2
 import config.config as config
 import config.settings as settings
 import model.utilmethods as model_utils
+import utils.utils as util
 from shared import behavior_queue, get_latest_camera_frame, reset_behavior_state
 from utils.frame_transform import (
     apply_camera_rotation,
@@ -55,7 +56,7 @@ class DriverAuthService:
             self.fingerprint_disabled_movement_logged = False
 
     def is_verified(self):
-        if not config.ENABLE_FINGERPRINT:
+        if not util.is_fingerprint_enabled():
             return True
         with self._lock:
             return self.verified_driver_id is not None
@@ -158,13 +159,13 @@ class DriverAuthService:
         return attempt
 
     def report_speed(self, speed_kmh):
-        if not config.ENABLE_FINGERPRINT:
+        if not util.is_fingerprint_enabled():
             with self._lock:
                 should_log = not self.fingerprint_disabled_movement_logged
                 self.fingerprint_disabled_movement_logged = True
             if should_log:
                 logger.warning(
-                    "Unverified-driver movement alerts are disabled because ENABLE_FINGERPRINT=False"
+                    "Unverified-driver movement alerts are disabled because fingerprint auth is disabled"
                 )
             return False
 

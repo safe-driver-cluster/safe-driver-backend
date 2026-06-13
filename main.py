@@ -376,8 +376,17 @@ async def startup_event():
         )
 
     logger.info(
-        "Effective driver-security configuration: fingerprint=%s, movement_threshold=%.2f km/h, evidence=%s",
+        (
+            "Effective driver-security configuration: fingerprint=%s "
+            "(raw=%s windows=%s), gps=%s (raw=%s windows=%s), "
+            "movement_threshold=%.2f km/h, evidence=%s"
+        ),
+        utils.is_fingerprint_enabled(),
         config.ENABLE_FINGERPRINT,
+        config.ENABLE_FINGERPRINT_WINDOWS,
+        utils.is_gps_enabled(),
+        config.ENABLE_GPS,
+        config.ENABLE_GPS_WINDOWS,
         config.DETECTION_ENABLE_SPEED_KMPH,
         config.ENABLE_ALERT_EVIDENCE,
     )
@@ -501,7 +510,7 @@ async def startup_event():
         logger.info("Device status updated to online")
 
         # FINGERPRINT ENROLLMENT TEST
-        if(config.ENABLE_FINGERPRINT and settings.SYSTEM == 'linux'):
+        if utils.is_fingerprint_enabled():
             from fingerprint.live import main as live_main
             from service.driver_auth_service import driver_auth_service
 
@@ -517,7 +526,7 @@ async def startup_event():
             fingerprint_live.start()
             logger.info(f"Started fingerprint live thread: {fingerprint_live.name}")
 
-        if config.ENABLE_GPS and settings.SYSTEM == "linux":
+        if utils.is_gps_enabled():
             try:
                 from gps.gps import run_gps_loop
 
@@ -647,7 +656,7 @@ async def shutdown_event():
 
     if device_mac:
         try:
-            if config.ENABLE_FINGERPRINT:
+            if utils.is_fingerprint_enabled():
                 db_helper.update_device_verification(device_mac, False)
             model_service.update_device_status(status="offline")
             logger.info("Device status updated to offline")

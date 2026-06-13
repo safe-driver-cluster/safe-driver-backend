@@ -18,6 +18,7 @@ def test_unauthorized_attempts_warn_three_times_then_cloud_alert(monkeypatch):
     voices = []
 
     monkeypatch.setattr(config, "ENABLE_FINGERPRINT", True)
+    monkeypatch.setattr(config, "ENABLE_FINGERPRINT_WINDOWS", True)
     monkeypatch.setattr(config, "ENABLE_ALERT_EVIDENCE", True)
     monkeypatch.setattr(config, "UNAUTHORIZED_FINGERPRINT_WARNING_LIMIT", 3)
     monkeypatch.setattr(
@@ -47,6 +48,7 @@ def test_unverified_movement_alerts_once_until_bus_stops(monkeypatch):
     now = [1000.0]
 
     monkeypatch.setattr(config, "ENABLE_FINGERPRINT", True)
+    monkeypatch.setattr(config, "ENABLE_FINGERPRINT_WINDOWS", True)
     monkeypatch.setattr(config, "ENABLE_ALERT_EVIDENCE", True)
     monkeypatch.setattr(config, "DETECTION_ENABLE_SPEED_KMPH", 20.0)
     monkeypatch.setattr(config, "UNVERIFIED_MOVEMENT_ALERT_COOLDOWN_SEC", 300.0)
@@ -73,6 +75,7 @@ def test_unverified_movement_alerts_once_until_bus_stops(monkeypatch):
 def test_unverified_movement_alert_is_disabled_when_fingerprint_is_disabled(monkeypatch):
     _drain_behavior_queue()
     monkeypatch.setattr(config, "ENABLE_FINGERPRINT", False)
+    monkeypatch.setattr(config, "ENABLE_FINGERPRINT_WINDOWS", False)
 
     service = DriverAuthService()
 
@@ -83,6 +86,7 @@ def test_unverified_movement_alert_is_disabled_when_fingerprint_is_disabled(monk
 def test_verified_driver_bypasses_auth_gate(monkeypatch):
     played = []
     monkeypatch.setattr(config, "ENABLE_FINGERPRINT", True)
+    monkeypatch.setattr(config, "ENABLE_FINGERPRINT_WINDOWS", True)
     monkeypatch.setattr(
         auth_module.model_utils,
         "perform_voice_alerts",
@@ -102,6 +106,7 @@ def test_verified_driver_bypasses_auth_gate(monkeypatch):
 
 def test_signed_off_driver_clears_verification(monkeypatch):
     monkeypatch.setattr(config, "ENABLE_FINGERPRINT", True)
+    monkeypatch.setattr(config, "ENABLE_FINGERPRINT_WINDOWS", True)
     monkeypatch.setattr(auth_module.model_utils, "perform_voice_alerts", lambda *args, **kwargs: None)
 
     service = DriverAuthService()

@@ -1107,13 +1107,10 @@ def _reset_transient_detection_state():
 
 def _speed_monitoring_state():
     """Return whether detection may run and a human-readable reason."""
-    if config.ENABLE_FINGERPRINT and not driver_auth_service.is_verified():
+    if util.is_fingerprint_enabled() and not driver_auth_service.is_verified():
         return False, "waiting for registered driver fingerprint verification"
 
-    if settings.SYSTEM != "linux":
-        return True, "speed gate applies only on Linux"
-
-    if not config.ENABLE_SPEED_GATED_DETECTION or not config.ENABLE_GPS:
+    if not config.ENABLE_SPEED_GATED_DETECTION or not util.is_gps_enabled():
         return True, "speed gate disabled"
 
     speed_age = time.time() - config.CURRENT_SPEED_UPDATED_AT

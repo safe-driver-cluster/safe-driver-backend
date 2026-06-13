@@ -29,6 +29,24 @@ def get_audio_dir():
     return os.path.join(get_project_dir(), "audio")
 
 
+def is_fingerprint_enabled():
+    import config.settings as settings
+    import config.config as config
+
+    if settings.SYSTEM == "windows" and not config.ENABLE_FINGERPRINT_WINDOWS:
+        return False
+    return config.ENABLE_FINGERPRINT
+
+
+def is_gps_enabled():
+    import config.settings as settings
+    import config.config as config
+
+    if settings.SYSTEM == "windows" and not config.ENABLE_GPS_WINDOWS:
+        return False
+    return config.ENABLE_GPS
+
+
 def load_runtime_env():
     """Load bundled .env, then external .env beside the exe/project."""
     from dotenv import load_dotenv
