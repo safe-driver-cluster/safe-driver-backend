@@ -378,6 +378,7 @@ def detector_worker(frame_queue, output_queue=None):
                                         trigger_buzzer=True,
                                         buzzer_message=config.WARNING_MOBILE_USE,
                                         timeframe_count=timeframe_count,
+                                        trigger_vibrator=False,
                                     )
                                 elif label == "bottle":
                                     bottle_detect_count = _increment_detect_count("drinking")
@@ -416,6 +417,7 @@ def detector_worker(frame_queue, output_queue=None):
                                         trigger_buzzer=True,
                                         buzzer_message=config.WARNING_DRINKING,
                                         timeframe_count=timeframe_count,
+                                        trigger_vibrator=False,
                                     )
 
                 # -------------------------------------------------------------------------------------
@@ -481,6 +483,7 @@ def detector_worker(frame_queue, output_queue=None):
                                     trigger_buzzer=True,
                                     buzzer_message=config.WARNING_SMOKING,
                                     timeframe_count=timeframe_count,
+                                    trigger_vibrator=False,
                                 )
 
                 # -------------------------------

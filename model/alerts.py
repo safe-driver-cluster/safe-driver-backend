@@ -240,6 +240,7 @@ class AlertManager:
         buzzer_message: Optional[str] = None,
         timeframe_count: Optional[int] = None,
         evidence_frame: Any = None,
+        trigger_vibrator: bool = True,
     ) -> None:
         """Common alert method with payload validation and channel routing."""
         if not self._validate_alert_request(tag, event_type, message, behavior_data, current_count, threshold):
@@ -347,7 +348,8 @@ class AlertManager:
                         return
                     self._voice_cycle_state["emitted"] = True
                     utils.perform_voice_alerts(voice_text, voice_label)
-                    self._run_vibrator()
+                    if trigger_vibrator:
+                        self._run_vibrator()
                     self.voice_alert_count_by_type[policy_key] = voice_used + 1
                     self.last_voice_alert_time_by_type[policy_key] = now_ts
                     self.logger.info(
