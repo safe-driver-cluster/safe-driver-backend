@@ -212,8 +212,41 @@ def _resolve_model_path(default_path, linux_path):
     return None
 
 
+def _load_worker_model_configurations():
+    """Spawned object detector processes must load runtime config themselves."""
+    try:
+        util.load_runtime_env()
+
+        import firebase_admin
+        from firebase_admin import credentials
+
+        try:
+            firebase_admin.get_app()
+        except ValueError:
+            admin_sdk_path = os.getenv(
+                "ADMIN_SDK_PATH",
+                "firebase-admin-sdk/serviceAccountKey.json",
+            )
+            admin_sdk_path = (
+                admin_sdk_path
+                if os.path.isabs(admin_sdk_path)
+                else util.resource_path(admin_sdk_path)
+            )
+            cred = credentials.Certificate(admin_sdk_path)
+            firebase_admin.initialize_app(
+                cred,
+                {"databaseURL": "https://safe-driver-system-default-rtdb.firebaseio.com/"},
+            )
+
+        util.load_model_configurations_from_firestore(logger)
+    except Exception:
+        logger.exception("Object detector worker could not load Firestore config; using local config")
+
+
 def detector_worker(frame_queue, output_queue=None):
     try:
+        _load_worker_model_configurations()
+
         if settings.SYSTEM == "linux":
             # PyTorch/OpenCV otherwise create several native worker threads.
             # On a Raspberry Pi this competes heavily with MediaPipe and can

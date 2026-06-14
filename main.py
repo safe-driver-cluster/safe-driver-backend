@@ -357,19 +357,14 @@ async def startup_event():
 
     logger.info("Loading model configurations from Firestore before starting services...")
     try:
-        model_configurations = await asyncio.to_thread(
-            firestore_helper.get_model_configurations_from_firestore
+        update_result = await asyncio.to_thread(
+            utils.load_model_configurations_from_firestore,
+            logger,
         )
-        if model_configurations:
-            update_result = utils.update_local_config_from_firestore(model_configurations)
-            logger.info(
-                "Model configurations loaded before service startup: %s updated",
-                update_result.get("updated_count", 0),
-            )
-        else:
-            logger.warning(
-                "No Firestore model configurations found; using local configurations"
-            )
+        logger.info(
+            "Model configurations loaded before service startup: %s updated",
+            update_result.get("updated_count", 0),
+        )
     except Exception:
         logger.exception(
             "Failed to load model configurations before startup; using local configurations"

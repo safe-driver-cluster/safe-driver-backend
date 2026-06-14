@@ -87,7 +87,7 @@ BUZZER_ALERT_PATTERN = (
 # Enable FORCE_SPEAKER_BEEP_FALLBACK when GPIO works in software but the physical buzzer is silent.
 FORCE_SPEAKER_BEEP_FALLBACK = True
 SPEAKER_BEEP_FREQUENCY_HZ = 2200
-SPEAKER_BEEP_VOLUME = 0.9
+SPEAKER_BEEP_VOLUME = 1.0 # 0.0 to 1.0, where 1.0 is the maximum volume of the generated beep sound (not necessarily the maximum volume of the speaker)
 SPEAKER_BEEP_TIMEOUT_SEC = 5.0
 SPEAKER_BEEP_USE_PYGAME = True
 SPEAKER_BEEP_SDL_AUDIO_DRIVER = "pulseaudio"
@@ -95,7 +95,7 @@ SPEAKER_BEEP_AUTO_MAX_VOLUME = True
 SPEAKER_BEEP_VOLUME_PERCENT = 100
 
 # Voice Alert Audio Settings
-VOICE_ALERT_VOLUME = 1.0
+VOICE_ALERT_VOLUME = 1.0 # what this means: 1.0 = 100% of the original audio volume, 0.5 = 50% of the original audio volume, etc.
 VOICE_ALERT_AUTO_MAX_VOLUME = True
 VOICE_ALERT_VOLUME_PERCENT = 100
 

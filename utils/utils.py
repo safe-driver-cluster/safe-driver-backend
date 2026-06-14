@@ -65,6 +65,26 @@ def load_runtime_env():
     return loaded_paths
 
 
+def load_model_configurations_from_firestore(logger=None) -> dict:
+    """Load Firestore model configurations into the current Python process."""
+    import logging
+    from database.firestore_helper import FirestoreHelper
+
+    active_logger = logger or logging.getLogger(__name__)
+
+    model_configurations = FirestoreHelper().get_model_configurations_from_firestore()
+    if not model_configurations:
+        active_logger.warning("No Firestore model configurations found; using local configurations")
+        return {"success": False, "updated_count": 0}
+
+    update_result = update_local_config_from_firestore(model_configurations)
+    active_logger.info(
+        "Model configurations loaded from Firestore: %s updated",
+        update_result.get("updated_count", 0),
+    )
+    return update_result
+
+
 def now():
     """Return current timestamp in Sri Lanka time in ISO 8601 format"""
     # Get Sri Lanka timezone
