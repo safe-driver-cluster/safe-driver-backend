@@ -120,6 +120,24 @@ def test_microsleep_voice_level_waits_for_cooldown(monkeypatch):
     ]
 
 
+def test_object_voice_alert_uses_sinhala_text_with_base_label(monkeypatch):
+    monkeypatch.setattr(config, "LANGUAGE", "SINHALA")
+
+    manager = AlertManager(
+        logger=logging.getLogger("test-alerts"),
+        now_provider=lambda: "now",
+        output_stream=io.StringIO(),
+    )
+
+    voice_text, voice_label = manager.get_voice_msg_by_level(
+        config.BEHAVIOR_MOBILE_USE,
+        level=1,
+    )
+
+    assert voice_text == config.VOICE_ALERT_PHONE_SINHALA
+    assert voice_label == "VOICE_ALERT_PHONE"
+
+
 def test_cloud_alerts_continue_until_timeframe_limit(monkeypatch):
     _drain_behavior_queue()
     monkeypatch.setattr(config, "MICROSLEEP_EVENT_COUNT_THRESH", 7)

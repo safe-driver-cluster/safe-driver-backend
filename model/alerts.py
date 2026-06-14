@@ -96,6 +96,12 @@ class AlertManager:
         except Exception as exc:
             self.logger.warning("Vibration alert failed: %s", exc)
 
+    @staticmethod
+    def _localized_config_text(base_name: str) -> str:
+        language = config.LANGUAGE if config.LANGUAGE in ("ENGLISH", "SINHALA", "TAMIL") else "ENGLISH"
+        localized_name = f"{base_name}_{language}"
+        return getattr(config, localized_name, getattr(config, base_name))
+
     def _validate_alert_request(
         self,
         tag: str,
@@ -468,27 +474,27 @@ class AlertManager:
 
         if event_type == config.BEHAVIOR_MOBILE_USE:
             if level == 1:
-                return config.VOICE_ALERT_PHONE, "VOICE_ALERT_PHONE"
+                return self._localized_config_text("VOICE_ALERT_PHONE"), "VOICE_ALERT_PHONE"
             if level == 2:
-                return config.VOICE_ALERT_PHONE_L2, "VOICE_ALERT_PHONE_L2"
+                return self._localized_config_text("VOICE_ALERT_PHONE_L2"), "VOICE_ALERT_PHONE_L2"
             if level == 3:
-                return config.VOICE_ALERT_PHONE_L3, "VOICE_ALERT_PHONE_L3"
+                return self._localized_config_text("VOICE_ALERT_PHONE_L3"), "VOICE_ALERT_PHONE_L3"
             
         if event_type == config.BEHAVIOR_SMOKING:
             if level == 1:
-                return config.VOICE_ALERT_SMOKING, "VOICE_ALERT_SMOKING"
+                return self._localized_config_text("VOICE_ALERT_SMOKING"), "VOICE_ALERT_SMOKING"
             if level == 2:
-                return config.VOICE_ALERT_SMOKING_L2, "VOICE_ALERT_SMOKING_L2"
+                return self._localized_config_text("VOICE_ALERT_SMOKING_L2"), "VOICE_ALERT_SMOKING_L2"
             if level == 3:
-                return config.VOICE_ALERT_SMOKING_L3, "VOICE_ALERT_SMOKING_L3"
+                return self._localized_config_text("VOICE_ALERT_SMOKING_L3"), "VOICE_ALERT_SMOKING_L3"
 
         if event_type == config.BEHAVIOR_DRINKING:
             if level == 1:
-                return config.VOICE_ALERT_DRINKING, "VOICE_ALERT_DRINKING"
+                return self._localized_config_text("VOICE_ALERT_DRINKING"), "VOICE_ALERT_DRINKING"
             if level == 2:
-                return config.VOICE_ALERT_DRINKING_L2, "VOICE_ALERT_DRINKING_L2"
+                return self._localized_config_text("VOICE_ALERT_DRINKING_L2"), "VOICE_ALERT_DRINKING_L2"
             if level == 3:
-                return config.VOICE_ALERT_DRINKING_L3, "VOICE_ALERT_DRINKING_L3"
+                return self._localized_config_text("VOICE_ALERT_DRINKING_L3"), "VOICE_ALERT_DRINKING_L3"
 
         return config.VOICE_ALERT_DEFAULT, "VOICE_ALERT_DEFAULT"
 

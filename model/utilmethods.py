@@ -152,7 +152,12 @@ def perform_voice_alerts(message, label="VOICE_ALERT", language_dependent=True):
                         tts = gTTS(text=text_inner, lang=lang_code[language])
                         tts.save(filename)
 
-                    logger.info("Voice playback started: %s", label)
+                    logger.info(
+                        "Voice playback started: label=%s language=%s file=%s",
+                        label,
+                        language,
+                        filename,
+                    )
                     if config.VOICE_ALERT_AUTO_MAX_VOLUME and set_system_volume is not None:
                         set_system_volume(
                             config.VOICE_ALERT_VOLUME_PERCENT,
@@ -170,7 +175,12 @@ def perform_voice_alerts(message, label="VOICE_ALERT", language_dependent=True):
                             break
                         pygame.time.Clock().tick(10)
 
-                    logger.info("Voice playback completed: %s", label)
+                    logger.info(
+                        "Voice playback completed: label=%s language=%s file=%s",
+                        label,
+                        language,
+                        filename,
+                    )
 
             except Exception as e:
                 if not _VOICE_STOP_EVENT.is_set():

@@ -473,6 +473,18 @@ VOICE_ALERT_PHONE_L3 = "Frequent mobile phone use detected! I have to inform aut
 VOICE_ALERT_DRINKING_L3 = "Frequent drinking detected! I have to inform authorities if you continue to drive in this condition."
 VOICE_ALERT_SMOKING_L3 = "Frequent smoking detected! I have to inform authorities if you continue to drive in this condition."
 
+VOICE_ALERT_PHONE_SINHALA = "ජංගම දුරකථන භාවිතයක් හඳුනාගෙන ඇත! කරුණාකර රිය පැදවීමට අවධානය යොමු කරන්න."
+VOICE_ALERT_DRINKING_SINHALA = "බීම වර්ගයක් පානය කිරීම හඳුනාගෙන ඇත! රිය පදවන අතරතුර බීම වර්ග පානය කිරීමේදී කරුණාකර සැලකිලිමත් වන්න."
+VOICE_ALERT_SMOKING_SINHALA = "දුම්පානය කිරීමක් හඳුනාගෙන ඇත! කරුණාකර රිය පදවන අතරතුර දුම්පානයෙන් වැළකී සිටින්න."
+
+VOICE_ALERT_PHONE_L2_SINHALA = "ජංගම දුරකථනය කිහිප වරක් භාවිත කර ඇති බව හඳුනාගෙන ඇත! කරුණාකර වෙනත් බාහිර දේවලින් මිදී රිය පැදවීමට අවධානය යොමු කරන්න."
+VOICE_ALERT_DRINKING_L2_SINHALA = "කිහිප වරක් බීම වර්ග පානය කර ඇති බව හඳුනාගෙන ඇත! ඔබට නිදිමත ගතියක් දැනේ නම්, නැවත රිය පැදවීමට පෙර සුළු විවේකයක් ගැනීමට සලකා බලන්න."
+VOICE_ALERT_SMOKING_L2_SINHALA = "කිහිප වරක් දුම්පානය කර ඇති බව හඳුනාගෙන ඇත! කරුණාකර රිය පදවන අතරතුර දුම්පානයෙන් වැළකී සිටින්න."
+
+VOICE_ALERT_PHONE_L3_SINHALA = "නිතර නිතර ජංගම දුරකථනය භාවිත කරන බව හඳුනාගෙන ඇත! ඔබ දිගින් දිගටම මෙලෙස රිය පැදවුවහොත් මට බලධාරීන් දැනුවත් කිරීමට සිදුවේ."
+VOICE_ALERT_DRINKING_L3_SINHALA = "නිතර නිතර බීම වර්ග පානය කරන බව හඳුනාගෙන ඇත! ඔබ දිගින් දිගටම මෙලෙස රිය පැදවුවහොත් මට බලධාරීන් දැනුවත් කිරීමට සිදුවේ."
+VOICE_ALERT_SMOKING_L3_SINHALA = "නිතර නිතර දුම්පානය කරන බව හඳුනාගෙන ඇත! ඔබ දිගින් දිගටම මෙලෙස රිය පැදවුවහොත් මට බලධාරීන් දැනුවත් කිරීමට සිදුවේ."
+
 # # -- ENGLISH MESSAGES --
 
 # VOICE_ALERT_PHONE_ENGLISH = "Mobile phone use detected! Please focus on driving."
