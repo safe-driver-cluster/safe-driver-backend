@@ -1,3 +1,4 @@
+import utils.session
 from fastapi import FastAPI, HTTPException
 import subprocess
 import os

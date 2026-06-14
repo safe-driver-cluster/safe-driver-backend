@@ -1,5 +1,4 @@
 # Environments
-.env
 .venv
 env/
 venv/
@@ -27,3 +26,5 @@ venvfew/
 venvtest/
 venv311/
 venv310/
+config.bat
+node_modules
