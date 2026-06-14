@@ -91,6 +91,9 @@ class DriverAuthService:
         return True
 
     def mark_verified(self, driver_id, driver_language=None):
+        if driver_language in ("ENGLISH", "SINHALA", "TAMIL"):
+            config.LANGUAGE = driver_language
+
         with self._lock:
             previous_driver_id = self.verified_driver_id
             self.verified_driver_id = driver_id
@@ -98,14 +101,12 @@ class DriverAuthService:
             self.unauthorized_cloud_sent = False
             self.unverified_movement_active = False
         if previous_driver_id != driver_id:
-            reset_behavior_state(f"driver_verified:{driver_id}")
+            reset_behavior_state(f"driver_verified:{driver_id}", config.LANGUAGE)
             attendance_result = firestore_helper.create_driver_attendance_signin(driver_id)
             if attendance_result.get("success"):
                 with self._lock:
                     self.attendance_date = attendance_result.get("date")
                     self.attendance_document_id = attendance_result.get("document_id")
-        if driver_language in ("ENGLISH", "SINHALA", "TAMIL"):
-            config.LANGUAGE = driver_language
         model_utils.perform_voice_alerts(
             config.VOICE_ALERT_FINGERPRINT_VERIFIED,
             config.VOICE_ALERT_FINGERPRINT_VERIFIED_LABEL,

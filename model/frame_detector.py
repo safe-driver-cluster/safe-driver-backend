@@ -85,10 +85,13 @@ def _reset_detect_counts(counter_key):
     ALERT_MANAGER.reset_event_state(counter_key)
 
 
-def reset_behavior_counters(reason="driver_changed"):
+def reset_behavior_counters(reason="driver_changed", language=None):
     """Clear all object-behavior counters in the current process."""
     global DETECT_PHONE, DETECT_BOTTLE, DETECT_CIGARETTE, DETECT_GLASSES
     global DETECT_PHONE_COUNT, DETECT_BOTTLE_COUNT, DETECT_CIGARETTE_COUNT, DETECT_GLASSES_COUNT
+
+    if language in ("ENGLISH", "SINHALA", "TAMIL"):
+        config.LANGUAGE = language
 
     DETECT_PHONE = False
     DETECT_BOTTLE = False
@@ -107,7 +110,11 @@ def reset_behavior_counters(reason="driver_changed"):
         LAST_COUNTER_EVENT_TIME[counter_key] = None
 
     ALERT_MANAGER.reset_all_state()
-    logger.info("Object behavior counters reset: reason=%s", reason)
+    logger.info(
+        "Object behavior counters reset: reason=%s language=%s",
+        reason,
+        config.LANGUAGE,
+    )
 
 def _increment_detect_count(counter_key):
     global DETECT_PHONE_COUNT, DETECT_BOTTLE_COUNT, DETECT_CIGARETTE_COUNT, DETECT_GLASSES_COUNT
@@ -339,7 +346,10 @@ def detector_worker(frame_queue, output_queue=None):
                 break
 
             if isinstance(frame, dict) and frame.get("command") == RESET_BEHAVIOR_COMMAND:
-                reset_behavior_counters(frame.get("reason", "driver_changed"))
+                reset_behavior_counters(
+                    frame.get("reason", "driver_changed"),
+                    frame.get("language"),
+                )
                 continue
 
             frame_count += 1
@@ -715,12 +725,12 @@ class DetectorProcess:
         except:
             pass
 
-    def reset_behavior_counters(self, reason="driver_changed"):
+    def reset_behavior_counters(self, reason="driver_changed", language=None):
         if self._stopped:
             return
 
         if not self._use_process:
-            reset_behavior_counters(reason)
+            reset_behavior_counters(reason, language)
             return
 
         while self.frame_queue.full():
@@ -733,6 +743,7 @@ class DetectorProcess:
             self.frame_queue.put_nowait({
                 "command": RESET_BEHAVIOR_COMMAND,
                 "reason": reason,
+                "language": language or config.LANGUAGE,
             })
         except queue.Full:
             logger.warning("Could not queue object behavior counter reset")

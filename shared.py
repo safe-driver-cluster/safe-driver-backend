@@ -1,6 +1,8 @@
 import queue
 import threading
 
+import config.config as config
+
 # Shared queue between detect.py and main.py
 behavior_queue = queue.Queue()
 _latest_camera_frame = None
@@ -35,14 +37,16 @@ def unregister_behavior_reset_callback(callback):
             _behavior_reset_callbacks.remove(callback)
 
 
-def reset_behavior_state(reason="driver_changed"):
+def reset_behavior_state(reason="driver_changed", language=None):
     """Request all active detectors to clear driver-specific behavior state."""
+    active_language = language or config.LANGUAGE
+
     with _behavior_reset_callbacks_lock:
         callbacks = list(_behavior_reset_callbacks)
 
     for callback in callbacks:
         try:
-            callback(reason)
+            callback(reason, active_language)
         except Exception:
             pass
 

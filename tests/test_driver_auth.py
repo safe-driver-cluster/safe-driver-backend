@@ -24,7 +24,7 @@ def test_unauthorized_attempts_warn_three_times_then_cloud_alert(monkeypatch):
     monkeypatch.setattr(
         auth_module.model_utils,
         "perform_voice_alerts",
-        lambda message, label: voices.append((message, label)),
+        lambda message, label, language_dependent=True: voices.append((message, label)),
     )
     monkeypatch.setattr(
         auth_module,
@@ -85,21 +85,30 @@ def test_unverified_movement_alert_is_disabled_when_fingerprint_is_disabled(monk
 
 def test_verified_driver_bypasses_auth_gate(monkeypatch):
     played = []
+    resets = []
     monkeypatch.setattr(config, "ENABLE_FINGERPRINT", True)
     monkeypatch.setattr(config, "ENABLE_FINGERPRINT_WINDOWS", True)
+    monkeypatch.setattr(config, "LANGUAGE", "ENGLISH")
     monkeypatch.setattr(
         auth_module.model_utils,
         "perform_voice_alerts",
         lambda message, label, language_dependent=True: played.append((message, label, language_dependent)),
     )
+    monkeypatch.setattr(
+        auth_module,
+        "reset_behavior_state",
+        lambda reason, language=None: resets.append((reason, language, config.LANGUAGE)),
+    )
 
     service = DriverAuthService()
     assert service.is_verified() is False
 
-    service.mark_verified("driver-1", "ENGLISH")
+    service.mark_verified("driver-1", "SINHALA")
 
     assert service.is_verified() is True
     assert service.verified_driver() == "driver-1"
+    assert config.LANGUAGE == "SINHALA"
+    assert resets == [("driver_verified:driver-1", "SINHALA", "SINHALA")]
     assert played[-1][1] == config.VOICE_ALERT_FINGERPRINT_SIGNOFF_INSTRUCTION_LABEL
     assert played[-1][2] is True
 
@@ -161,7 +170,7 @@ def test_linux_security_snapshot_uses_pi_safe_camera_strategy(monkeypatch):
             pass
 
     capture = FakeCapture()
-    monkeypatch.setattr(auth_module.platform, "system", lambda: "Linux")
+    monkeypatch.setattr(auth_module.settings, "SYSTEM", "linux")
     monkeypatch.setattr(
         "model.detect.create_camera_capture",
         lambda camera_id, width, height: (capture, camera_id, "rpicam-vid:0"),
