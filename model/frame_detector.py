@@ -250,6 +250,13 @@ def _load_worker_model_configurations():
         logger.exception("Object detector worker could not load Firestore config; using local config")
 
 
+def _build_frame_payload(frame):
+    return {
+        "frame": frame,
+        "language": config.LANGUAGE if config.LANGUAGE in ("ENGLISH", "SINHALA", "TAMIL") else "ENGLISH",
+    }
+
+
 def detector_worker(frame_queue, output_queue=None):
     try:
         _load_worker_model_configurations()
@@ -335,22 +342,30 @@ def detector_worker(frame_queue, output_queue=None):
 
         while True:
             try:
-                frame = frame_queue.get(timeout=5)
+                frame_payload = frame_queue.get(timeout=5)
             except queue.Empty:
                 logger.warning("Detector: no frame received for 5s, still waiting...")
                 continue
             now = time.time()
 
-            if frame is None:
+            if frame_payload is None:
                 logger.info("Detection process stopping...")
                 break
 
-            if isinstance(frame, dict) and frame.get("command") == RESET_BEHAVIOR_COMMAND:
+            if isinstance(frame_payload, dict) and frame_payload.get("command") == RESET_BEHAVIOR_COMMAND:
                 reset_behavior_counters(
-                    frame.get("reason", "driver_changed"),
-                    frame.get("language"),
+                    frame_payload.get("reason", "driver_changed"),
+                    frame_payload.get("language"),
                 )
                 continue
+
+            frame = frame_payload
+            if isinstance(frame_payload, dict) and "frame" in frame_payload:
+                frame_language = frame_payload.get("language")
+                if frame_language in ("ENGLISH", "SINHALA", "TAMIL") and config.LANGUAGE != frame_language:
+                    config.LANGUAGE = frame_language
+                    logger.info("Object detector language synchronized from frame: %s", config.LANGUAGE)
+                frame = frame_payload["frame"]
 
             frame_count += 1
 
@@ -715,13 +730,15 @@ class DetectorProcess:
                 break
 
     def submit_frame(self, frame):
+        frame_payload = _build_frame_payload(frame)
+
         if self.frame_queue.full():
             try:
                 self.frame_queue.get_nowait()
             except:
                 pass
         try:
-            self.frame_queue.put_nowait(frame)
+            self.frame_queue.put_nowait(frame_payload)
         except:
             pass
 
